@@ -1,3 +1,5 @@
+#include <cmath>
+#include <cstring>
 #include <limits>
 #include "IllegalArgumentException.h"
 #include "IllegalStateException.h"
@@ -93,7 +95,7 @@ void Region::loadFromByteArray(const uint8_t * t_data)
 {
 	Region region;
 	Point low, high;
-	memcpy(&region.m_dimension, t_data, sizeof(uint8_t));
+	std::memcpy(&region.m_dimension, t_data, sizeof(uint8_t));
 	t_data += sizeof(uint8_t);
 	low.loadFromByteArray(t_data);
 	high.loadFromByteArray(t_data);
@@ -106,7 +108,7 @@ void Region::storeToByteArray(uint8_t ** t_data, uint32_t & t_length)
 {
 	t_length = getByteArraySize();
 	*t_data = new uint8_t[t_length];
-	memcpy(*t_data, &m_dimension, sizeof(uint8_t));
+	std::memcpy(*t_data, &m_dimension, sizeof(uint8_t));
 	*t_data += sizeof(uint8_t);
 	m_low->storeToByteArray(t_data, t_length);
 	m_high->storeToByteArray(t_data, t_length);

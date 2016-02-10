@@ -1,4 +1,5 @@
 #include <cmath>
+#include <cstring>
 #include <limits>
 #include "IllegalArgumentException.h"
 #include "IllegalStateException.h"
@@ -15,7 +16,7 @@ Point::Point() : m_coordinates(nullptr), m_dimension(0) {}
 Point::Point(const Point & t_point) : m_dimension(t_point.m_dimension)
 {
 	m_coordinates = new float[m_dimension];
-	memcpy(m_coordinates, t_point.m_coordinates, m_dimension * sizeof(float));
+	std::memcpy(m_coordinates, t_point.m_coordinates, m_dimension * sizeof(float));
 }
 
 //Move semantics (Move constructor) optimization for C++11
@@ -28,7 +29,7 @@ Point::Point(Point && t_point) : Point()
 Point::Point(const float * t_coordinates, const uint8_t t_dimension) : m_dimension(t_dimension)
 {
 	m_coordinates = new float[m_dimension];
-	memcpy(m_coordinates, t_coordinates, m_dimension * sizeof(float));
+	std::memcpy(m_coordinates, t_coordinates, m_dimension * sizeof(float));
 }
 
 Point::~Point()
@@ -101,9 +102,9 @@ uint32_t Point::getByteArraySize() const
 void Point::loadFromByteArray(const uint8_t * t_data)
 {
 	Point point;
-	memcpy(&point.m_dimension, t_data, sizeof(uint8_t));
+	std::memcpy(&point.m_dimension, t_data, sizeof(uint8_t));
 	t_data += sizeof(uint8_t);
-	memcpy(point.m_coordinates, t_data, point.m_dimension * sizeof(float));
+	std::memcpy(point.m_coordinates, t_data, point.m_dimension * sizeof(float));
 	t_data += point.m_dimension * sizeof(float);
 	swap(*this, point);
 }
@@ -112,9 +113,9 @@ void Point::storeToByteArray(uint8_t ** t_data, uint32_t & t_length)
 {
 	t_length = getByteArraySize();
 	*t_data = new uint8_t[t_length];
-	memcpy(*t_data, &m_dimension, sizeof(uint8_t));
+	std::memcpy(*t_data, &m_dimension, sizeof(uint8_t));
 	*t_data += sizeof(uint8_t);
-	memcpy(*t_data, m_coordinates, m_dimension * sizeof(float));
+	std::memcpy(*t_data, m_coordinates, m_dimension * sizeof(float));
 	*t_data += m_dimension * sizeof(float);
 }
 

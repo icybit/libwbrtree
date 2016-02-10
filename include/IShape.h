@@ -17,9 +17,6 @@ namespace RTree
 
 	namespace Contracts
 	{
-		class Components::Geometries::Point;
-		class Components::Geometries::Region;
-
 		class IShape : public Common::ISerializable
 		{
 		public:
