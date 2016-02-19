@@ -1,12 +1,12 @@
 #Reference http://www.iram.fr/~roche/code/c++/AddNumbers.html
 
-CC := g++
+CC := gcc
 DEBUG := -g
-CFLAGS := -Wall -Werror -pedantic -std=c++11 $(DEBUG)
-LFLAGS := -Wall -std=c++11 $(DEBUG)
-SRCEXT := cpp
+CFLAGS := -Wall -Werror -pedantic $(DEBUG)
+LFLAGS := -Wall $(DEBUG)
+SRCEXT := c
 
-LIBNAME := libgrtree
+LIBNAME := librtree
 
 INCPATH := include
 SRCPATH := src
