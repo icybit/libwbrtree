@@ -1,5 +1,6 @@
 #include <stddef.h>
 #include <stdlib.h>
+#include "Rectangle.h"
 #include "Node.h"
 #include "RTree.h"
 
@@ -43,7 +44,7 @@ void _adjust_tree(struct RTree *rtree, struct Node *node, struct Node *nnode)
 
 void _adjust_tree_recursive(struct RTree *rtree, struct Node *node, struct Node *nnode, int level)
 {
-	struct Entry *entries, *entry, *new_entry;
+	struct Entry *entries, *new_entry;
 	struct Node p_parent;
 
 	if (rtree->root == node)
@@ -51,7 +52,7 @@ void _adjust_tree_recursive(struct RTree *rtree, struct Node *node, struct Node 
 		if (nnode != NULL)
 		{
 			entries = malloc(2 * sizeof(struct Entry));
-			create_entry(&entries[0], nnode);
+			create_entry(&entries[0], node);
 			create_entry(&entries[1], nnode);
 
 			create_node(rtree->root, rtree->context, NULL, entries, level);
@@ -59,8 +60,7 @@ void _adjust_tree_recursive(struct RTree *rtree, struct Node *node, struct Node 
 		return;
 	}
 
-	entry = get_child_entry(node->parent, node);
-	combine_rectangle(&entry->rectangle, get_bounding_rectangle(node));
+	adjust_parent_entry(node);
 
 	if (nnode != NULL)
 	{

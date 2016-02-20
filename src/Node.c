@@ -1,6 +1,6 @@
-#include <math.h>
 #include <stddef.h>
 #include <stdlib.h>
+#include "Rectangle.h"
 #include "Node.h"
 
 int add_entry(struct Node *node, struct Entry entry)
@@ -18,18 +18,33 @@ int add_entry(struct Node *node, struct Entry entry)
 	return 0;
 }
 
+void adjust_parent_entry(struct Node *node)
+{
+	struct Entry *entry = get_child_entry(node->parent, node);
+	combine_rectangle(node->parent->MBR, entry->MBR);
+}
+
 struct Entry * choose_optimal_entry(struct Node *node, struct Entry entry)
 {
 	return NULL;
 }
 
+void calculate_MBR(struct Rectangle *MBR, struct Node *node)
+{
+	int i;
+	for (i = 0; i < node->count; i++)
+	{
+		combine_rectangle(MBR, node->entries[i].MBR);
+	}
+}
+
 void create_entry(struct Entry *dest, struct Node *child)
 {
 	dest->child = child;
-	dest->rectangle = get_bounding_rectangle(child);
+	dest->MBR = child->MBR;
 }
 
-void create_node(struct Node *dest, struct Context *context, struct Node *parent, struct Entry *entries, int level)
+void create_node(struct Node *dest, struct Context *context, struct Node *parent, struct Entry *entries, struct Rectangle *MBR, int level)
 {
 	int count = NELEMS(entries);
 
@@ -41,17 +56,24 @@ void create_node(struct Node *dest, struct Context *context, struct Node *parent
 		dest->context = context;
 		dest->parent = parent;
 		dest->level = level;
+		dest->MBR = MBR;
+		calculate_MBR(dest->MBR, dest);
 	}
 }
 
-struct Rectangle get_bounding_rectangle(struct Node *node)
-{
-	struct Rectangle rectangle = { { 0.0, 0.0 } };
-	return rectangle;
-}
 struct Entry * get_child_entry(struct Node *parent, struct Node *child)
 {
-	return NULL;
+	struct Entry *entry = NULL;
+	int i;
+	for (i = 0; i < parent->count; i++)
+	{
+		entry = &parent->entries[i];
+		if (entry->child == child)
+		{
+			return entry;
+		}
+	}
+	return entry;
 }
 
 int is_leaf(struct Node *node)
