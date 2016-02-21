@@ -13,28 +13,29 @@ struct Context {
 	struct Rectangle *space;
 };
 
-struct Entry {	// (2) If (1), Non-Leaf Node struct Entry *entries becomes struct Node *entries
-	struct Node *child;
-	struct Rectangle *MBR;	// (1) Points to child->MBR. COULD BE OPTIMIZED AWAY. IF TRUE, REFER TO (2)
+struct Entry {
+	void *tuple;
+	struct Rectangle *MBR;
 };
 
 struct Node {
 	struct Context *context;
 	struct Node *parent;
-	struct Entry *entries;
+	void **entries;
 	struct Rectangle *MBR;
 	int capacity;
 	int count;
 	int level;
 };
 
-int add_entry(struct Node *node, struct Entry entry);
-void adjust_parent_entry(struct Node *node);
-struct Entry * choose_optimal_entry(struct Node *node, struct Entry entry);
-void create_entry(struct Entry *dest, struct Node *child);
-void create_node(struct Node *dest, struct Context *context, struct Node *parent, struct Entry *entries, int level);
-struct Entry * get_child_entry(struct Node *parent, struct Node *child);
+int add_entry(struct Node *node, void *entry);
+void adjust_MBR(struct Node *node, void *entry);
+struct Node * choose_optimal_entry(struct Node *node, struct Entry *entry);
+void calculate_MBR(struct Rectangle *MBR, struct Node *node);
+void _calculate_node_MBR(struct Rectangle *MBR, struct Node *node);
+void _calculate_leaf_MBR(struct Rectangle *MBR, struct Node *leaf);
+void create_node(struct Node *dest, struct Context *context, struct Node *parent, void **entries, struct Rectangle *MBR, int level);
 int is_leaf(struct Node *node);
-struct Node split_node(struct Node *node, struct Entry entry);
+struct Node * split_node(struct Node *node, void *entry);
 
 #endif
