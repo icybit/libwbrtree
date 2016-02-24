@@ -1,10 +1,11 @@
 #include <math.h>
 #include <stddef.h>
 #include <stdlib.h>
+#include <string.h>
 #include "Rectangle.h"
 #include "Node.h"
 
-int add_entry(struct Node *node, void *entry)
+int node_add_entry(struct Node *node, void *entry)
 {
 	if (node->count < node->context->M)
 	{
@@ -14,48 +15,48 @@ int add_entry(struct Node *node, void *entry)
 			node->entries = realloc(node->entries, node->capacity * sizeof(void *));
 		}
 		node->entries[node->count++] = entry;
-		adjust_MBR(node, entry);
+		node_adjust_MBR(node, entry);
 		return 1;
 	}
 	return 0;
 }
 
-void adjust_MBR(struct Node *node, void *entry)
+void node_adjust_MBR(struct Node *node, void *entry)
 {
-	is_leaf(node) ?
-		combine_rectangle(node->MBR, ((struct Entry *)entry)->MBR) :
-		combine_rectangle(node->MBR, ((struct Node *)entry)->MBR);
+	node_is_leaf(node) ?
+		rectangle_combine(node->MBR, ((struct Entry *)entry)->MBR) :
+		rectangle_combine(node->MBR, ((struct Node *)entry)->MBR);
 }
 
-struct Node * choose_optimal_entry(struct Node *node, struct Entry *entry)
+struct Node * node_choose_optimal_entry(struct Node *node, struct Entry *entry)
 {
 	return NULL;
 }
 
-void calculate_MBR(struct Rectangle *MBR, struct Node *node)
+void node_calculate_MBR(struct Rectangle *MBR, struct Node *node)
 {
-	is_leaf(node) ? _calculate_leaf_MBR(MBR, node) : _calculate_node_MBR(MBR, node);
+	node_is_leaf(node) ? _node_calculate_leaf_MBR(MBR, node) : _node_calculate_node_MBR(MBR, node);
 }
 
-void _calculate_node_MBR(struct Rectangle *MBR, struct Node *node)
+void _node_calculate_node_MBR(struct Rectangle *MBR, struct Node *node)
 {
 	int i;
 	for (i = 0; i < node->count; i++)
 	{
-		combine_rectangle(MBR, ((struct Node *)(node->entries[i]))->MBR);
+		rectangle_combine(MBR, ((struct Node *)(node->entries[i]))->MBR);
 	}
 }
 
-void _calculate_leaf_MBR(struct Rectangle *MBR, struct Node *leaf)
+void _node_calculate_leaf_MBR(struct Rectangle *MBR, struct Node *leaf)
 {
 	int i;
 	for (i = 0; i < leaf->count; i++)
 	{
-		combine_rectangle(MBR, ((struct Entry *)(leaf->entries[i]))->MBR);
+		rectangle_combine(MBR, ((struct Entry *)(leaf->entries[i]))->MBR);
 	}
 }
 
-void create_node(struct Node *dest, struct Context *context, struct Node *parent, void **entries, struct Rectangle *MBR, int level)
+void node_create(struct Node *dest, struct Context *context, struct Node *parent, void **entries, struct Rectangle *MBR, int level)
 {
 	int count = NELEMS(entries);
 
@@ -77,15 +78,59 @@ void create_node(struct Node *dest, struct Context *context, struct Node *parent
 	}
 	
 	dest->MBR = MBR;
-	calculate_MBR(dest->MBR, dest);
+	node_calculate_MBR(dest->MBR, dest);
 }
 
-int is_leaf(struct Node *node)
+void node_delete_entry(struct Node *node, void *entry)
+{
+	int i;
+	for (i = 0; i < node->count; i++)
+	{
+		if (node->entries[i] == entry)
+		{
+			void **temp = malloc((node->capacity - 1) * sizeof(void *));
+
+			if (i == 0)
+			{
+				memmove(temp, node->entries + 1, (node->count - 1) * sizeof(void *));
+			}
+			else if (i > 0 && i < (node->count - 1))
+			{
+				memmove(temp, node->entries, (i - 1) * sizeof(void *));
+				memmove(temp, node->entries + i, (node->count - i) * sizeof(void *));
+			}
+			else if (i == (node->count - 1))
+			{
+				memmove(temp, node->entries, (node->count - 1) * sizeof(void *));
+			}
+
+			free(node->entries);
+			node->entries = temp;
+			node->count--;
+			node->capacity--;
+			return;
+		}
+	}
+}
+
+void node_destroy(struct Node *node)
+{
+	free(node->entries);
+	free(node->MBR);
+	free(node);
+}
+
+int node_is_leaf(struct Node *node)
 {
 	return (node->level == 0 ? 1 : 0);
 }
 
-struct Node * split_node(struct Node *node, void *entry)
+int node_is_root(struct Node *node)
+{
+	return (node->parent == NULL ? 1 : 0);
+}
+
+struct Node * node_split_node(struct Node *node, void *entry)
 {
 	return NULL;
 }

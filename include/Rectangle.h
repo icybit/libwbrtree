@@ -11,6 +11,7 @@ struct Rectangle {
 	struct Point high;
 };
 
-void combine_rectangle(struct Rectangle *rectangle, struct Rectangle *other);
+void rectangle_combine(struct Rectangle *rectangle, struct Rectangle *other);
+int rectangle_overlaps(struct Rectangle *rectangle, struct Rectangle *other);
 
 #endif

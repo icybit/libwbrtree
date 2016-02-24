@@ -28,14 +28,17 @@ struct Node {
 	int level;
 };
 
-int add_entry(struct Node *node, void *entry);
-void adjust_MBR(struct Node *node, void *entry);
-struct Node * choose_optimal_entry(struct Node *node, struct Entry *entry);
-void calculate_MBR(struct Rectangle *MBR, struct Node *node);
-void _calculate_node_MBR(struct Rectangle *MBR, struct Node *node);
-void _calculate_leaf_MBR(struct Rectangle *MBR, struct Node *leaf);
-void create_node(struct Node *dest, struct Context *context, struct Node *parent, void **entries, struct Rectangle *MBR, int level);
-int is_leaf(struct Node *node);
-struct Node * split_node(struct Node *node, void *entry);
+int node_add_entry(struct Node *node, void *entry);
+void node_adjust_MBR(struct Node *node, void *entry);
+struct Node * node_choose_optimal_entry(struct Node *node, struct Entry *entry);
+void node_calculate_MBR(struct Rectangle *MBR, struct Node *node);
+void _node_calculate_node_MBR(struct Rectangle *MBR, struct Node *node);
+void _node_calculate_leaf_MBR(struct Rectangle *MBR, struct Node *leaf);
+void node_create(struct Node *dest, struct Context *context, struct Node *parent, void **entries, struct Rectangle *MBR, int level);
+void node_delete_entry(struct Node *node, void *entry);
+void node_destroy(struct Node *node);
+int node_is_leaf(struct Node *node);
+int node_is_root(struct Node *node);
+struct Node * node_split_node(struct Node *node, void *entry);
 
 #endif
