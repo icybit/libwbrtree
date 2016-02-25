@@ -103,7 +103,7 @@ void _rtree_condense_tree(struct RTree *rtree, struct Node *node)
 	hashset_destroy(condensed_nodes);
 }
 
-void _rtree_condense_tree_recursive(struct RTree *rtree, struct Node *node, hashset_t condensed_nodes)
+void _rtree_condense_tree_recursive(struct RTree *rtree, struct Node *node, struct hashset_st *condensed_nodes)
 {
 	if (node_is_root(node))
 	{
@@ -185,4 +185,39 @@ struct Node * _rtree_find_leaf_recursive(struct Node *node, struct Entry *entry)
 	}
 
 	return NULL;
+}
+
+struct hashset_st * rtree_search(struct RTree *rtree, struct Rectangle *search_rectangle)
+{
+	hashset_t results = hashset_create();
+	_rtree_search_recursive(rtree->root, search_rectangle, results);
+	return results;
+}
+
+void _rtree_search_recursive(struct Node *node, struct Rectangle *search_rectangle, struct hashset_st *results)
+{
+	if (node_is_leaf(node))
+	{
+		int i;
+		for (i = 0; i < node->count; i++)
+		{
+			struct Entry *entry = (struct Entry *)node->entries[i];
+			if (rectangle_overlaps(search_rectangle, entry->MBR))
+			{
+				hashset_add(results, entry);
+			}
+		}
+	}
+	else
+	{
+		int i;
+		for (i = 0; i < node->count; i++)
+		{
+			struct Node *entry = (struct Node *)node->entries[i];
+			if (rectangle_overlaps(search_rectangle, entry->MBR))
+			{
+				_rtree_search_recursive(entry, search_rectangle, results);
+			}
+		}
+	}
 }
