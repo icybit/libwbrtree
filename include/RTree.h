@@ -7,7 +7,9 @@ struct RTree {
 };
 
 void rtree_insert(struct RTree *rtree, struct Entry *entry);
+void rtree_create(struct RTree *dest, struct Context *context);
 int rtree_delete(struct RTree *rtree, struct Entry *entry);
+void rtree_destroy(struct RTree *rtree);
 void _rtree_adjust_tree(struct RTree *rtree, struct Node *node, struct Node *nnode);
 void _rtree_adjust_tree_recursive(struct RTree *rtree, struct Node *node, struct Node *nnode, int level);
 struct Node * _rtree_choose_leaf(struct Node *node, struct Entry *entry);

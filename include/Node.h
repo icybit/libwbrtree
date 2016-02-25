@@ -1,9 +1,6 @@
 #ifndef _RTREE_NODE_H_
 #define _RTREE_NODE_H_
 
-#define MIN(a, b) ((a) < (b) ? (a) : (b))
-#define MAX(a, b) ((a) > (b) ? (a) : (b))
-#define NELEMS(x) (sizeof(x)/sizeof((x)[0]))
 #define NALLOC(m, M, f) MIN((int)ceil(m * f), M)
 
 struct Context {
@@ -27,6 +24,10 @@ struct Node {
 	int count;
 	int level;
 };
+
+void context_create(struct Context *dest, int m, int M, float alloc_factor, struct Rectangle *space_MBR);
+
+void entry_create(struct Entry *dest, void *tuple, struct Rectangle *MBR);
 
 int node_add_entry(struct Node *node, void *entry);
 void node_adjust_MBR(struct Node *node, void *entry);

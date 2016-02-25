@@ -21,6 +21,14 @@ void rtree_insert(struct RTree *rtree, struct Entry *entry)
 	}
 }
 
+void rtree_create(struct RTree *dest, struct Context *context)
+{
+	struct Node *root = malloc(sizeof(struct Node));
+	node_create(root, context, NULL, NULL, context->space, 0);
+	dest->context = context;
+	dest->root = root;
+}
+
 int rtree_delete(struct RTree *rtree, struct Entry *entry)
 {
 	struct Node *leaf = _rtree_find_leaf(rtree->root, entry);
@@ -38,6 +46,11 @@ int rtree_delete(struct RTree *rtree, struct Entry *entry)
 		return 1;
 	}
 	return 0;
+}
+
+void rtree_destroy(struct RTree *rtree)
+{
+	node_destroy(rtree->root);
 }
 
 void _rtree_adjust_tree(struct RTree *rtree, struct Node *node, struct Node *nnode)

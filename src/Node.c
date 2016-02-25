@@ -1,9 +1,29 @@
+#include <assert.h>
+#include <float.h>
 #include <math.h>
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
 #include "Rectangle.h"
 #include "Node.h"
+
+void context_create(struct Context *dest, int m, int M, float alloc_factor, struct Rectangle *space_MBR)
+{
+	assert(space_MBR != NULL);
+
+	dest->m = (m <= M/2 ? m : 2);
+	dest->M = (M > 2 ? M : 3);
+	dest->alloc_factor = (alloc_factor > 1.0 ? alloc_factor : 2.0);
+	dest->space = space_MBR;
+}
+
+void entry_create(struct Entry *dest, void *tuple, struct Rectangle *MBR)
+{
+	assert(MBR != NULL);
+
+	dest->tuple = tuple;
+	dest->MBR = MBR;
+}
 
 int node_add_entry(struct Node *node, void *entry)
 {
@@ -30,7 +50,28 @@ void node_adjust_MBR(struct Node *node, void *entry)
 
 struct Node * node_choose_optimal_entry(struct Node *node, struct Entry *entry)
 {
-	return NULL;
+	struct Node *optimal_entry = NULL;
+	double optimal_distance = DBL_MAX;
+	int i;
+
+	for (i = 0; i < node->count; i++)
+	{
+		struct Node *current_entry = (struct Node *)node->entries[i];
+		double distance = rectangle_min_distance(current_entry->MBR, entry->MBR);
+		if (distance < optimal_distance)
+		{
+			optimal_distance = distance;
+			optimal_entry = current_entry;
+		}
+		else if (fabs(distance - optimal_distance) < DBL_EPSILON)
+		{
+			optimal_entry = (rectangle_area(current_entry->MBR) < rectangle_area(optimal_entry->MBR) ? 
+				current_entry : 
+				optimal_entry);
+		}
+	}
+
+	return optimal_entry;
 }
 
 void node_calculate_MBR(struct Rectangle *MBR, struct Node *node)
@@ -58,7 +99,7 @@ void _node_calculate_leaf_MBR(struct Rectangle *MBR, struct Node *leaf)
 
 void node_create(struct Node *dest, struct Context *context, struct Node *parent, void **entries, struct Rectangle *MBR, int level)
 {
-	int count = NELEMS(entries);
+	int count = (entries != NULL ? NELEMS(entries) : 0);
 
 	if ((count < context->m && parent != NULL) || count > context->M)
 	{
