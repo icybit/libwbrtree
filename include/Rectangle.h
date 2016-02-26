@@ -3,10 +3,6 @@
 
 #include <stdint.h>
 
-#define MIN(a, b) ((a) < (b) ? (a) : (b))
-#define MAX(a, b) ((a) > (b) ? (a) : (b))
-#define NELEMS(x) (sizeof(x)/sizeof((x)[0]))
-
 struct Point {
 	uint8_t dim;
 	float *coords;

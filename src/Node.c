@@ -4,6 +4,7 @@
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
+#include "Common.h"
 #include "Rectangle.h"
 #include "Node.h"
 

@@ -2,6 +2,7 @@
 #include <float.h>
 #include <math.h>
 #include <stdlib.h>
+#include "Common.h"
 #include "Rectangle.h"
 
 void point_create(struct Point *dest, uint8_t dimension, float *coordinates)

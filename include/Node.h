@@ -1,8 +1,6 @@
 #ifndef _RTREE_NODE_H_
 #define _RTREE_NODE_H_
 
-#define NALLOC(m, M, f) MIN((int)ceil(m * f), M)
-
 struct Context {
 	int m;
 	int M;
