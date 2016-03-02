@@ -5,6 +5,11 @@
 #include "Common.h"
 #include "Rectangle.h"
 
+int point_compare(const struct Point *point, const struct Point *other, uint8_t *dimension)
+{
+	return (int)(point->coords[*dimension] - other->coords[*dimension]);
+}
+
 void point_create(struct Point *dest, uint8_t dimension, float *coordinates)
 {
 	assert(coordinates);
@@ -39,6 +44,11 @@ void rectangle_combine(struct Rectangle *rectangle, struct Rectangle *other)
 	}
 }
 
+int rectangle_compare(const struct Rectangle *rectangle, const struct Rectangle *other, uint8_t *dimension)
+{
+	return point_compare(rectangle->low, other->low, dimension);
+}
+
 void rectangle_create(struct Rectangle *dest, struct Point *low, struct Point *high)
 {
 	assert(low && high);
@@ -57,6 +67,41 @@ void rectangle_extend_infinitely(struct Rectangle *dest)
 		dest->low->coords[dim] = -FLT_MAX;
 		dest->high->coords[dim] = FLT_MAX;
 	}
+}
+
+double rectangle_intersection_area(struct Rectangle *rectangle, struct Rectangle *other)
+{
+	double area = 0.0;
+	float f0, f1;
+	uint8_t dim;
+
+	assert(rectangle->dim == other->dim);
+
+	if (rectangle_overlaps(rectangle, other))
+	{
+		for (dim = 0; dim < rectangle->dim; dim++)
+		{
+			f0 = fmaxf(rectangle->low->coords[dim], other->low->coords[dim]);
+			f1 = fminf(rectangle->high->coords[dim], other->high->coords[dim]);
+			area *= f1 - f0;
+		}
+	}
+
+	return area;
+}
+
+double rectangle_margin(struct Rectangle *rectangle)
+{
+	uint8_t dim;
+	double multiplicity = pow(2.0, (double)(rectangle->dim - 1));
+	double margin = 0.0;
+
+	for (dim = 0; dim < rectangle->dim; dim++)
+	{
+		margin += (rectangle->high->coords[dim] - rectangle->low->coords[dim]) * multiplicity;
+	}
+
+	return margin;
 }
 
 double rectangle_min_distance(struct Rectangle *rectangle, struct Rectangle *other)
