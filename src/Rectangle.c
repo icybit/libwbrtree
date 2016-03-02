@@ -104,6 +104,11 @@ double rectangle_margin(struct Rectangle *rectangle)
 	return margin;
 }
 
+double rectangle_margin_value(struct Rectangle *rectangle, struct Rectangle *other)
+{
+	return (rectangle_margin(rectangle) + rectangle_margin(other));
+}
+
 double rectangle_min_distance(struct Rectangle *rectangle, struct Rectangle *other)
 {
 	double result = 0.0;

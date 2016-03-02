@@ -24,6 +24,7 @@ void rectangle_create(struct Rectangle *dest, struct Point *low, struct Point *h
 void rectangle_extend_infinitely(struct Rectangle *dest);
 double rectangle_intersection_area(struct Rectangle *rectangle, struct Rectangle *other);
 double rectangle_margin(struct Rectangle *rectangle);
+double rectangle_margin_value(struct Rectangle *rectangle, struct Rectangle *other);
 double rectangle_min_distance(struct Rectangle *rectangle, struct Rectangle *other);
 int rectangle_overlaps(struct Rectangle *rectangle, struct Rectangle *other);
 
