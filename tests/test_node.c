@@ -1,0 +1,459 @@
+#include <stdarg.h>
+#include <stddef.h>
+#include <setjmp.h>
+#include <cmocka.h>
+#include <stdlib.h>
+#include "Common.h"
+#include "Rectangle.h"
+#include "Node.h"
+
+void test_context_create() {
+	// Create Rectangle
+	struct Rectangle *rectangle = malloc(sizeof(struct Rectangle));
+
+	int dim = 2;
+	struct Point *low = malloc(sizeof(struct Point));
+	struct Point *high = malloc(sizeof(struct Point));
+	float coords_low[] = { 0, 0 };
+	float coords_high[] = { 2, 2 };
+
+	point_create(low, dim, coords_low);
+	point_create(high, dim, coords_high);
+
+	rectangle_create(rectangle, low, high);
+
+	// Create Context
+	struct Context *context = malloc(sizeof(struct Context));
+	float alloc_factor = 4;
+	int m = 4;
+	int M = 12;
+
+	context_create(context, m, M, alloc_factor, rectangle);
+	assert_int_equal(context->m, m);
+	assert_int_equal(context->M, M);
+	assert_true(context->alloc_factor == 4);
+	assert_ptr_equal(context->space, rectangle);
+
+	free(low);
+	free(high);
+	free(rectangle);
+	free(context);
+}
+
+void test_entry_create() {
+	// Create Rectangle
+	struct Rectangle *rectangle = malloc(sizeof(struct Rectangle));
+
+	int dim = 2;
+	struct Point *low = malloc(sizeof(struct Point));
+	struct Point *high = malloc(sizeof(struct Point));
+	float coords_low[] = { 0, 0 };
+	float coords_high[] = { 2, 2 };
+
+	point_create(low, dim, coords_low);
+	point_create(high, dim, coords_high);
+
+	rectangle_create(rectangle, low, high);
+	// Create Entry
+	struct Entry *entry = malloc(sizeof(struct Entry));
+	void *tuple = 4;
+
+	entry_create(entry, tuple, rectangle);
+	assert_ptr_equal(entry->tuple, tuple);
+	assert_ptr_equal(entry->MBR, rectangle);
+
+	free(low);
+	free(high);
+	free(rectangle);
+	free(entry);
+}
+
+//TODO: Cover node create with more tests
+void test_node_create() {
+	// Create Rectangle
+	struct Rectangle *rectangle = malloc(sizeof(struct Rectangle));
+
+	int dim = 2;
+	struct Point *low = malloc(sizeof(struct Point));
+	struct Point *high = malloc(sizeof(struct Point));
+	float coords_low[] = { 0, 0 };
+	float coords_high[] = { 2, 2 };
+
+	point_create(low, dim, coords_low);
+	point_create(high, dim, coords_high);
+
+	rectangle_create(rectangle, low, high);
+
+	// Create Context
+	struct Context *context = malloc(sizeof(struct Context));
+	float alloc_factor = 4;
+	int m = 4;
+	int M = 12;
+
+	context_create(context, m, M, alloc_factor, rectangle);
+	
+	// Create Node
+	struct Node *node = malloc(sizeof(struct Node));
+	int level = 0;
+	node_create(node, context, NULL, NULL, 0, context->space, level);
+	assert_ptr_equal(node->context, context);
+	assert_ptr_equal(node->MBR, context->space);
+	assert_int_equal(node->level, level);
+	assert_null(node->parent);	
+	assert_non_null(node->entries);
+	assert_int_equal(node->capacity, MAX(0, NALLOC(context->m, context->M, context->alloc_factor)));
+
+	free(low);
+	free(high);
+	free(rectangle);
+	free(context);
+	free(node);
+}
+
+void test_node_is_leaf() {
+	// Create Rectangle
+	struct Rectangle *rectangle = malloc(sizeof(struct Rectangle));
+
+	int dim = 2;
+	struct Point *low = malloc(sizeof(struct Point));
+	struct Point *high = malloc(sizeof(struct Point));
+	float coords_low[] = { 0, 0 };
+	float coords_high[] = { 2, 2 };
+
+	point_create(low, dim, coords_low);
+	point_create(high, dim, coords_high);
+
+	rectangle_create(rectangle, low, high);
+
+	// Create Context
+	struct Context *context = malloc(sizeof(struct Context));
+	float alloc_factor = 4;
+	int m = 4;
+	int M = 12;
+
+	context_create(context, m, M, alloc_factor, rectangle);
+
+	// Create Node
+	struct Node *node = malloc(sizeof(struct Node));
+	int level = 0;
+	node_create(node, context, NULL, NULL, 0, context->space, level);
+
+	// node_is_leaf - Should return 1
+	assert_true(node_is_leaf(node));
+
+	node->level = 1;
+
+	// node_is_leaf - Should return 0
+	assert_false(node_is_leaf(node));
+	
+	free(low);
+	free(high);
+	free(rectangle);
+	free(context);
+	free(node);
+}
+
+void test_node_is_root() {
+	// Create Rectangle
+	struct Rectangle *rectangle = malloc(sizeof(struct Rectangle));
+
+	int dim = 2;
+	struct Point *low = malloc(sizeof(struct Point));
+	struct Point *high = malloc(sizeof(struct Point));
+	float coords_low[] = { 0, 0 };
+	float coords_high[] = { 2, 2 };
+
+	point_create(low, dim, coords_low);
+	point_create(high, dim, coords_high);
+
+	rectangle_create(rectangle, low, high);
+
+	// Create Context
+	struct Context *context = malloc(sizeof(struct Context));
+	float alloc_factor = 4;
+	int m = 4;
+	int M = 12;
+
+	context_create(context, m, M, alloc_factor, rectangle);
+
+	// Create Node A
+	struct Node *node_a = malloc(sizeof(struct Node));
+	int level_a = 0;
+	node_create(node_a, context, NULL, NULL, 0, context->space, level_a);
+
+	assert_true(node_is_root(node_a));
+
+	// Create Node B
+	struct Node *node_b = malloc(sizeof(struct Node));
+	int level_b = 0;
+	node_create(node_b, context, node_a, NULL, 0, context->space, level_b);
+
+	assert_false(node_is_root(node_b));
+
+	free(low);
+	free(high);
+	free(rectangle);
+	free(context);
+	free(node_a);
+	free(node_b);
+}
+
+void test_node_add_entry() {
+	int dim = 2;
+
+	// Node setup
+	struct Rectangle *rectangle_a = malloc(sizeof(struct Rectangle));
+
+	struct Point *low_a = malloc(sizeof(struct Point));
+	struct Point *high_a = malloc(sizeof(struct Point));
+	float coords_low_a[] = { 0, 0 };
+	float coords_high_a[] = { 2, 2 };
+
+	point_create(low_a, dim, coords_low_a);
+	point_create(high_a, dim, coords_high_a);
+
+	rectangle_create(rectangle_a, low_a, high_a);
+
+	struct Context *context = malloc(sizeof(struct Context));
+	float alloc_factor = 2;
+	int m = 4;
+	int M = 12;
+
+	context_create(context, m, M, alloc_factor, rectangle_a);
+
+	struct Node *node = malloc(sizeof(struct Node));
+	int level = 0;
+	node_create(node, context, NULL, NULL, 0, context->space, level);
+
+	// Entry setup
+	struct Rectangle *rectangle_b = malloc(sizeof(struct Rectangle));
+
+	struct Point *low_b = malloc(sizeof(struct Point));
+	struct Point *high_b = malloc(sizeof(struct Point));
+	float coords_low_b[] = { 1, 1 };
+	float coords_high_b[] = { 3, 3 };
+
+	point_create(low_b, dim, coords_low_b);
+	point_create(high_b, dim, coords_high_b);
+
+	rectangle_create(rectangle_b, low_b, high_b);
+	
+	
+	// Create Entry
+	struct Entry *entry = malloc(sizeof(struct Entry));
+	void *tuple = 4;
+
+	entry_create(entry, tuple, rectangle_b);
+
+	// Test node_add_entry
+	int success = node_add_entry(node, entry);
+	assert_true(success);
+	assert_ptr_equal(node->entries[0], entry);
+
+	for (int i = 0; i < dim; i++) {
+		assert_ptr_equal(node->MBR->low->coords[i], rectangle_a->low->coords[i]);
+		assert_ptr_equal(node->MBR->high->coords[i], rectangle_b->high->coords[i]);
+	}
+
+	// Test memory realocation
+	for (int i = 0; i < node->capacity; i++) {
+		if (i < M - 1) {
+			assert_true(node_add_entry(node, entry));
+			assert_ptr_equal(node->entries[i], entry);
+		}
+		else {
+			assert_false(node_add_entry(node, entry));
+		}		
+	}
+
+	free(low_a);
+	free(high_a);
+	free(rectangle_a);
+
+	free(low_b);
+	free(high_b);
+	free(rectangle_b);
+
+	free(entry);
+	free(context);
+}
+
+void test_node_delete_entry() {
+	int dim = 2;
+
+	// Node setup
+	struct Rectangle *rectangle_a = malloc(sizeof(struct Rectangle));
+
+	struct Point *low_a = malloc(sizeof(struct Point));
+	struct Point *high_a = malloc(sizeof(struct Point));
+	float coords_low_a[] = { 0, 0 };
+	float coords_high_a[] = { 2, 2 };
+
+	point_create(low_a, dim, coords_low_a);
+	point_create(high_a, dim, coords_high_a);
+
+	rectangle_create(rectangle_a, low_a, high_a);
+
+	struct Context *context = malloc(sizeof(struct Context));
+	float alloc_factor = 2;
+	int m = 4;
+	int M = 12;
+
+	context_create(context, m, M, alloc_factor, rectangle_a);
+
+	struct Node *node = malloc(sizeof(struct Node));
+	int level = 0;
+	node_create(node, context, NULL, NULL, 0, context->space, level);
+
+	// Entry setup
+	struct Rectangle *rectangle_b = malloc(sizeof(struct Rectangle));
+
+	struct Point *low_b = malloc(sizeof(struct Point));
+	struct Point *high_b = malloc(sizeof(struct Point));
+	float coords_low_b[] = { 1, 1 };
+	float coords_high_b[] = { 3, 3 };
+
+	point_create(low_b, dim, coords_low_b);
+	point_create(high_b, dim, coords_high_b);
+
+	rectangle_create(rectangle_b, low_b, high_b);
+
+
+	// Create Entries
+	struct Entry *entry_1 = malloc(sizeof(struct Entry));
+	struct Entry *entry_2 = malloc(sizeof(struct Entry));
+	struct Entry *entry_3 = malloc(sizeof(struct Entry));
+	struct Entry *entry_4 = malloc(sizeof(struct Entry));
+	void *tuple_1 = 1;
+	void *tuple_2 = 2;
+	void *tuple_3 = 3;
+	void *tuple_4 = 4;
+
+	entry_create(entry_1, tuple_1, rectangle_b);
+	entry_create(entry_2, tuple_2, rectangle_b);
+	entry_create(entry_3, tuple_3, rectangle_b);
+	entry_create(entry_4, tuple_4, rectangle_b);
+
+	node_add_entry(node, entry_1);
+	node_add_entry(node, entry_2);
+	node_add_entry(node, entry_3);
+	node_add_entry(node, entry_4);
+
+	// Test node_delete_entry
+
+	// Removed entry_2, sequence should be 1, 3, 4
+	node_delete_entry(node, entry_2);
+	assert_ptr_equal(node->entries[0], entry_1);
+	assert_ptr_equal(node->entries[1], entry_3);
+	assert_ptr_equal(node->entries[2], entry_4);
+	assert_int_equal(node->count, 3);
+
+	// Removed entry_1, sequence should be 3, 4
+	node_delete_entry(node, entry_1);
+	assert_ptr_equal(node->entries[0], entry_3);
+	assert_ptr_equal(node->entries[1], entry_4);
+	assert_int_equal(node->count, 2);
+
+	// Removed entry_4, sequence should be 3
+	node_delete_entry(node, entry_4);
+	assert_ptr_equal(node->entries[0], entry_3);
+	assert_int_equal(node->count, 1);
+
+	// Removed entry_3, there should be 0 entries
+	node_delete_entry(node, entry_3);	
+	assert_int_equal(node->count, 0);
+
+	free(low_a);
+	free(high_a);
+	free(rectangle_a);
+
+	free(low_b);
+	free(high_b);
+	free(rectangle_b);
+
+	free(entry_1);
+	free(entry_2);
+	free(entry_3);
+	free(entry_4);
+	free(context);
+}
+
+void test_node_adjust_MBR() {
+	int dim = 2;
+
+	// Node setup
+	struct Rectangle *rectangle_a = malloc(sizeof(struct Rectangle));
+
+	struct Point *low_a = malloc(sizeof(struct Point));
+	struct Point *high_a = malloc(sizeof(struct Point));
+	float coords_low_a[] = { 0, 0 };
+	float coords_high_a[] = { 2, 2 };
+
+	point_create(low_a, dim, coords_low_a);
+	point_create(high_a, dim, coords_high_a);
+
+	rectangle_create(rectangle_a, low_a, high_a);
+		
+	struct Context *context = malloc(sizeof(struct Context));
+	float alloc_factor = 4;
+	int m = 4;
+	int M = 12;
+
+	context_create(context, m, M, alloc_factor, rectangle_a);
+		
+	struct Node *node = malloc(sizeof(struct Node));
+	int level = 0;
+	node_create(node, context, NULL, NULL, 0, context->space, level);
+
+	// Entry setup
+	struct Rectangle *rectangle_b = malloc(sizeof(struct Rectangle));
+		
+	struct Point *low_b = malloc(sizeof(struct Point));
+	struct Point *high_b = malloc(sizeof(struct Point));
+	float coords_low_b[] = { 1, 1 };
+	float coords_high_b[] = { 3, 3 };
+
+	point_create(low_b, dim, coords_low_b);
+	point_create(high_b, dim, coords_high_b);
+
+	rectangle_create(rectangle_b, low_b, high_b);
+	// Create Entry
+	struct Entry *entry = malloc(sizeof(struct Entry));
+	void *tuple = 4;
+
+	entry_create(entry, tuple, rectangle_b);
+
+	// Test node_adjust_MBR
+	node_adjust_MBR(node, entry);
+	for (int i = 0; i < dim; i++) {
+		assert_ptr_equal(node->MBR->low->coords[i], rectangle_a->low->coords[i]);
+		assert_ptr_equal(node->MBR->high->coords[i], rectangle_b->high->coords[i]);
+	}	
+}
+
+void test_node_choose_optimal_entry() {
+
+}
+
+void test_node_calculate_MBR() {
+
+}
+
+void test_node_split_node() {
+
+}
+
+
+int main(void) {
+	const struct CMUnitTest tests[] = {
+		cmocka_unit_test(test_context_create),
+		cmocka_unit_test(test_entry_create),
+		cmocka_unit_test(test_node_create),
+		cmocka_unit_test(test_node_is_leaf),
+		cmocka_unit_test(test_node_is_root),
+		cmocka_unit_test(test_node_adjust_MBR),
+		cmocka_unit_test(test_node_add_entry),
+		cmocka_unit_test(test_node_delete_entry)
+	};
+	return cmocka_run_group_tests(tests, NULL, NULL);
+}
