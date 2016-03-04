@@ -376,6 +376,8 @@ void test_node_delete_entry() {
 	free(entry_3);
 	free(entry_4);
 	free(context);
+
+	free(node);
 }
 
 void test_node_adjust_MBR() {

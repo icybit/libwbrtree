@@ -137,8 +137,8 @@ uint8_t _node_choose_split_index(uint8_t dimension, struct Node *node, void ***s
 {
 	uint8_t k, optimal_distribution_index;
 	double optimal_overlap_value = DBL_MAX, optimal_area_value = DBL_MAX, overlap_value, area_value;
-	struct Rectangle *MBR_group_one = malloc(sizeof(MBR_one));
-	struct Rectangle *MBR_group_two = malloc(sizeof(MBR_two));
+	struct Rectangle *MBR_group_one = malloc(sizeof(*MBR_one));
+	struct Rectangle *MBR_group_two = malloc(sizeof(*MBR_two));
 
 	for (k = 1; k <= (node->context->M - (2 * node->context->m) + 2); k++)
 	{
@@ -149,8 +149,8 @@ uint8_t _node_choose_split_index(uint8_t dimension, struct Node *node, void ***s
 			optimal_overlap_value = overlap_value;
 			optimal_area_value = area_value;
 			optimal_distribution_index = node->context->m - 1 + k;
-			memmove(MBR_one, MBR_group_one, sizeof(MBR_group_one));
-			memmove(MBR_two, MBR_group_two, sizeof(MBR_group_two));
+			memmove(MBR_one, MBR_group_one, sizeof(*MBR_group_one));
+			memmove(MBR_two, MBR_group_two, sizeof(*MBR_group_two));
 		}
 		else if (fabs(overlap_value - optimal_overlap_value) < DBL_EPSILON)
 		{
@@ -159,8 +159,8 @@ uint8_t _node_choose_split_index(uint8_t dimension, struct Node *node, void ***s
 				optimal_overlap_value = overlap_value;
 				optimal_area_value = area_value;
 				optimal_distribution_index = node->context->m - 1 + k;
-				memmove(MBR_one, MBR_group_one, sizeof(MBR_group_one));
-				memmove(MBR_two, MBR_group_two, sizeof(MBR_group_two));
+				memmove(MBR_one, MBR_group_one, sizeof(*MBR_group_one));
+				memmove(MBR_two, MBR_group_two, sizeof(*MBR_group_two));
 			}
 		}
 	}
@@ -211,8 +211,8 @@ void node_delete_entry(struct Node *node, void *entry)
 			}
 			else if (i > 0 && i < (node->count - 1))
 			{
-				memmove(temp, node->entries, (i - 1) * sizeof(void *));
-				memmove(temp, node->entries + i, (node->count - i) * sizeof(void *));
+				memmove(temp, node->entries, i * sizeof(void *));
+				memmove(temp + i, node->entries + (i + 1), (node->count - i - 1) * sizeof(void *));
 			}
 			else if (i == (node->count - 1))
 			{
@@ -356,7 +356,7 @@ struct Node * node_split_node(struct Node *node, void *entry)
 	node->entries = malloc(split_size * sizeof(void *));
 	memmove(node->entries, sorted_entries[split_axis], split_size);
 	node->capacity = node->count = split_size;
-	memmove(node->MBR, MBR_one, sizeof(MBR_one));
+	memmove(node->MBR, MBR_one, sizeof(*MBR_one));
 	free(MBR_one);
 
 	node_create(nnode, node->context, node->parent, NULL, 0, MBR_two, node->level);
