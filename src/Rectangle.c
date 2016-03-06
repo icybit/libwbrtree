@@ -12,7 +12,7 @@ int point_compare(const struct Point *point, const struct Point *other, uint8_t 
 
 void point_create(struct Point *dest, uint8_t dimension, float *coordinates)
 {
-	assert(coordinates);
+	assert(coordinates && dimension);
 
 	dest->dim = dimension;
 	dest->coords = coordinates;
@@ -71,7 +71,7 @@ void rectangle_extend_infinitely(struct Rectangle *dest)
 
 double rectangle_intersection_area(struct Rectangle *rectangle, struct Rectangle *other)
 {
-	double area = 0.0;
+	double area = 1.0;
 	float f0, f1;
 	uint8_t dim;
 

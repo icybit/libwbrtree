@@ -41,7 +41,7 @@ void node_create(struct Node *dest, struct Context *context, struct Node *parent
 void node_delete_entry(struct Node *node, void *entry);
 void node_destroy(struct Node *node);
 double _node_evaluate_distribution(uint8_t k, void ***sorted_entries, uint8_t dimension, struct Node *node, struct Rectangle *MBR_one, struct Rectangle *MBR_two, double(*evaluator)(struct Rectangle *MBR_one, struct Rectangle *MBR_two));
-struct Rectangle * node_get_entry_MBR(struct Node *node, void *entry);
+struct Rectangle * _node_get_entry_MBR(struct Node *node, void *entry);
 int node_is_leaf(struct Node *node);
 int node_is_root(struct Node *node);
 struct Node * node_split_node(struct Node *node, void *entry);

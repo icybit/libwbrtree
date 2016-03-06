@@ -240,19 +240,19 @@ double _node_evaluate_distribution(uint8_t k, void ***sorted_entries, uint8_t di
 	uint8_t split_index = 0, sub_dim = 0;
 	hashset_t split_group = hashset_create();
 
-	MBR_one->low->coords[dimension] = node_get_entry_MBR(node, sorted_entries[dimension][split_index])->low->coords[dimension];
+	MBR_one->low->coords[dimension] = _node_get_entry_MBR(node, sorted_entries[dimension][split_index])->low->coords[dimension];
 	while (split_index < (node->context->m - 1 + k))
 	{
 		hashset_add(split_group, sorted_entries[dimension][split_index]);
 		/* TODO: Solve the case when sorted entries have the same lower values */
 		if ((split_index + 1) == (node->context->m - 1 + k))
 		{
-			MBR_one->high->coords[dimension] = node_get_entry_MBR(node, sorted_entries[dimension][split_index])->high->coords[dimension];
+			MBR_one->high->coords[dimension] = _node_get_entry_MBR(node, sorted_entries[dimension][split_index])->high->coords[dimension];
 		}
 		split_index++;
 	}
-	MBR_two->low->coords[dimension] = node_get_entry_MBR(node, sorted_entries[dimension][split_index])->low->coords[dimension];
-	MBR_two->high->coords[dimension] = node_get_entry_MBR(node, sorted_entries[dimension][node->context->M])->high->coords[dimension];
+	MBR_two->low->coords[dimension] = _node_get_entry_MBR(node, sorted_entries[dimension][split_index])->low->coords[dimension];
+	MBR_two->high->coords[dimension] = _node_get_entry_MBR(node, sorted_entries[dimension][node->context->M])->high->coords[dimension];
 
 	while (sub_dim < node->context->dim)
 	{
@@ -270,7 +270,7 @@ double _node_evaluate_distribution(uint8_t k, void ***sorted_entries, uint8_t di
 			{
 				if (MBR_one->low->coords[sub_dim] == 0.0f)
 				{
-					MBR_one->low->coords[sub_dim] = node_get_entry_MBR(node, sorted_entries[sub_dim][j])->low->coords[sub_dim];
+					MBR_one->low->coords[sub_dim] = _node_get_entry_MBR(node, sorted_entries[sub_dim][j])->low->coords[sub_dim];
 					match++;
 				}
 			}
@@ -278,7 +278,7 @@ double _node_evaluate_distribution(uint8_t k, void ***sorted_entries, uint8_t di
 			{
 				if (MBR_two->low->coords[sub_dim] == 0.0f)
 				{
-					MBR_two->low->coords[sub_dim] = node_get_entry_MBR(node, sorted_entries[sub_dim][j])->low->coords[sub_dim];
+					MBR_two->low->coords[sub_dim] = _node_get_entry_MBR(node, sorted_entries[sub_dim][j])->low->coords[sub_dim];
 					match++;
 				}
 			}
@@ -293,7 +293,7 @@ double _node_evaluate_distribution(uint8_t k, void ***sorted_entries, uint8_t di
 			{
 				if (MBR_one->high->coords[sub_dim] == 0.0f)
 				{
-					MBR_one->high->coords[sub_dim] = node_get_entry_MBR(node, sorted_entries[sub_dim][j])->high->coords[sub_dim];
+					MBR_one->high->coords[sub_dim] = _node_get_entry_MBR(node, sorted_entries[sub_dim][j])->high->coords[sub_dim];
 					match++;
 				}
 			}
@@ -301,7 +301,7 @@ double _node_evaluate_distribution(uint8_t k, void ***sorted_entries, uint8_t di
 			{
 				if (MBR_two->high->coords[sub_dim] == 0.0f)
 				{
-					MBR_two->high->coords[sub_dim] = node_get_entry_MBR(node, sorted_entries[sub_dim][j])->high->coords[sub_dim];
+					MBR_two->high->coords[sub_dim] = _node_get_entry_MBR(node, sorted_entries[sub_dim][j])->high->coords[sub_dim];
 					match++;
 				}
 			}
@@ -314,7 +314,7 @@ double _node_evaluate_distribution(uint8_t k, void ***sorted_entries, uint8_t di
 	return (*evaluator)(MBR_one, MBR_two);
 }
 
-struct Rectangle * node_get_entry_MBR(struct Node *node, void *entry)
+struct Rectangle * _node_get_entry_MBR(struct Node *node, void *entry)
 {
 	struct Rectangle *MBR;
 	MBR = (node_is_leaf(node) ? ((struct Entry *)entry)->MBR : ((struct Node *)entry)->MBR);
