@@ -1,6 +1,9 @@
 #include <assert.h>
 #include <float.h>
 #include <math.h>
+#ifdef DEBUG
+#include <stdio.h>
+#endif
 #include <stdlib.h>
 #include "Common.h"
 #include "Rectangle.h"
@@ -17,6 +20,21 @@ void point_create(struct Point *dest, uint8_t dimension, float *coordinates)
 	dest->dim = dimension;
 	dest->coords = coordinates;
 }
+
+#ifdef DEBUG
+void point_print(struct Point *point)
+{
+	uint8_t dim;
+	for (dim = 0; dim < point->dim; dim++)
+	{
+		printf("%g", point->coords[dim]);
+		if (dim < point->dim - 1)
+		{
+			puts(",");
+		}
+	}
+}
+#endif
 
 double rectangle_area(struct Rectangle *rectangle)
 {
@@ -148,3 +166,14 @@ int rectangle_overlaps(struct Rectangle *rectangle, struct Rectangle *other)
 
 	return 1;
 }
+
+#ifdef DEBUG
+void rectangle_print(struct Rectangle *rectangle)
+{
+	puts("MBR: LOW(");
+	point_print(rectangle->low);
+	puts("), HIGH(");
+	point_print(rectangle->high);
+	puts(")\n");
+}
+#endif

@@ -16,6 +16,9 @@ struct Rectangle {
 
 int point_compare(const struct Point *point, const struct Point *other, uint8_t *dimension);
 void point_create(struct Point *dest, uint8_t dimension, float *coordinates);
+#ifdef DEBUG
+void point_print(struct Point *point);
+#endif
 
 double rectangle_area(struct Rectangle *rectangle);
 void rectangle_combine(struct Rectangle *rectangle, struct Rectangle *other);
@@ -27,5 +30,8 @@ double rectangle_margin(struct Rectangle *rectangle);
 double rectangle_margin_value(struct Rectangle *rectangle, struct Rectangle *other);
 double rectangle_min_distance(struct Rectangle *rectangle, struct Rectangle *other);
 int rectangle_overlaps(struct Rectangle *rectangle, struct Rectangle *other);
+#ifdef DEBUG
+void rectangle_print(struct Rectangle *rectangle);
+#endif
 
 #endif

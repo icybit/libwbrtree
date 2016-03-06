@@ -1,5 +1,9 @@
 #include <stddef.h>
+#ifdef DEBUG
+#include <stdio.h>
+#endif
 #include <stdlib.h>
+#include <string.h>
 #include "hashset.h"
 #include "hashset_itr.h"
 #include "Rectangle.h"
@@ -234,3 +238,49 @@ void _rtree_search_recursive(struct Node *node, struct Rectangle *search_rectang
 		}
 	}
 }
+
+#ifdef DEBUG
+void rtree_visualize(struct RTree *rtree)
+{
+	printf("RTREE: CONTEXT(m = %u, M = %u, dim = %u, alloc_factor = %3.2f, space = ", 
+		rtree->context->m, 
+		rtree->context->M,
+		rtree->context->dim,
+		rtree->context->alloc_factor);
+
+	rectangle_print(rtree->context->space);
+	puts(")\n");
+
+	_rtree_visualize_recursive(rtree->root, rtree->root->level);
+}
+void _rtree_visualize_recursive(struct Node *node, uint16_t max_level) 
+{
+	uint16_t level_pad = max_level - node->level;
+	char *padding = malloc(level_pad * sizeof(char));
+
+	memset(padding, ' ', level_pad);
+	padding[level_pad] = '\0';
+	puts(padding);
+	free(padding);
+
+	if (node_is_leaf(node))
+	{
+		uint8_t i;
+		for (i = 0; i < node->count; i++)
+		{
+			entry_print((struct Entry *)node->entries[i]);
+		}
+	}
+	else
+	{
+		uint8_t i;
+
+		rectangle_print(node->MBR);
+		
+		for (i = 0; i < node->count; i++)
+		{
+			_rtree_visualize_recursive((struct Node *)node->entries[i], max_level);
+		}
+	}
+}
+#endif

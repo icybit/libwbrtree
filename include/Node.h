@@ -28,6 +28,9 @@ void context_create(struct Context *dest, uint8_t m, uint8_t M, float alloc_fact
 
 int entry_compare(const void *entry, const void *other, void *dimension);
 void entry_create(struct Entry *dest, void *tuple, struct Rectangle *MBR);
+#ifdef DEBUG
+void entry_print(struct Entry *entry);
+#endif
 
 int node_add_entry(struct Node *node, void *entry);
 void node_adjust_MBR(struct Node *node, void *entry);

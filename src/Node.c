@@ -2,6 +2,9 @@
 #include <float.h>
 #include <math.h>
 #include <stddef.h>
+#ifdef DEBUG
+#include <stdio.h>
+#endif
 #include <stdlib.h>
 #include <string.h>
 #include "hashset.h"
@@ -31,6 +34,15 @@ void entry_create(struct Entry *dest, void *tuple, struct Rectangle *MBR)
 	dest->tuple = tuple;
 	dest->MBR = MBR;
 }
+
+#ifdef DEBUG
+void entry_print(struct Entry *entry)
+{
+	printf("ENTRY: [VALUE: %p,", entry->tuple);
+	rectangle_print(entry->MBR);
+	puts("]\n");
+}
+#endif
 
 int node_add_entry(struct Node *node, void *entry)
 {
