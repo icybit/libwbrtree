@@ -376,8 +376,6 @@ void test_node_delete_entry() {
 	free(entry_3);
 	free(entry_4);
 	free(context);
-
-	free(node);
 }
 
 void test_node_adjust_MBR() {
@@ -431,10 +429,133 @@ void test_node_adjust_MBR() {
 		assert_ptr_equal(node->MBR->low->coords[i], rectangle_a->low->coords[i]);
 		assert_ptr_equal(node->MBR->high->coords[i], rectangle_b->high->coords[i]);
 	}	
+
+	free(low_a);
+	free(high_a);
+	free(rectangle_a);
+
+	free(low_b);
+	free(high_b);
+	free(rectangle_b);
+	
+	free(context);
+	free(node);
+	free(entry);
 }
 
 void test_node_choose_optimal_entry() {
+	int dim = 2;
 
+	// Node setup
+	struct Rectangle *rectangle_a = malloc(sizeof(struct Rectangle));
+
+	struct Point *low_a = malloc(sizeof(struct Point));
+	struct Point *high_a = malloc(sizeof(struct Point));
+	float coords_low_a[] = { 0, 0 };
+	float coords_high_a[] = { 4, 2 };
+
+	point_create(low_a, dim, coords_low_a);
+	point_create(high_a, dim, coords_high_a);
+
+	rectangle_create(rectangle_a, low_a, high_a);
+
+	struct Context *context = malloc(sizeof(struct Context));
+	float alloc_factor = 2;
+	int m = 4;
+	int M = 12;
+
+	context_create(context, m, M, alloc_factor, rectangle_a);
+
+	struct Node *node = malloc(sizeof(struct Node));
+	int level = 0;
+	node_create(node, context, NULL, NULL, 0, context->space, level);
+
+	// Add some entries
+
+	// Entry_1 setup
+	struct Rectangle *rectangle_b = malloc(sizeof(struct Rectangle));
+
+	struct Point *low_b = malloc(sizeof(struct Point));
+	struct Point *high_b = malloc(sizeof(struct Point));
+	float coords_low_b[] = { 0, 0 };
+	float coords_high_b[] = { 2, 2 };
+
+	point_create(low_b, dim, coords_low_b);
+	point_create(high_b, dim, coords_high_b);
+
+	rectangle_create(rectangle_b, low_b, high_b);
+		
+	struct Entry *entry_1 = malloc(sizeof(struct Entry));
+	void *tuple_1 = 1;
+
+	entry_create(entry_1, tuple_1, rectangle_b);
+	node_add_entry(node, entry_1);
+
+	// Entry_2 setup
+	struct Rectangle *rectangle_c = malloc(sizeof(struct Rectangle));
+
+	struct Point *low_c = malloc(sizeof(struct Point));
+	struct Point *high_c = malloc(sizeof(struct Point));
+	float coords_low_c[] = { 2, 0 };
+	float coords_high_c[] = { 4, 2 };
+
+	point_create(low_c, dim, coords_low_c);
+	point_create(high_c, dim, coords_high_c);
+
+	rectangle_create(rectangle_c, low_c, high_c);
+		
+	struct Entry *entry_2 = malloc(sizeof(struct Entry));
+	void *tuple_2 = 2;
+
+	entry_create(entry_2, tuple_2, rectangle_c);
+	node_add_entry(node, entry_2);
+
+	// Entry_3 setup
+	struct Rectangle *rectangle_d = malloc(sizeof(struct Rectangle));
+
+	struct Point *low_d = malloc(sizeof(struct Point));
+	struct Point *high_d = malloc(sizeof(struct Point));
+	float coords_low_d[] = { 1, 2 };
+	float coords_high_d[] = { 4, 4 };
+
+	point_create(low_d, dim, coords_low_d);
+	point_create(high_d, dim, coords_high_d);
+
+	rectangle_create(rectangle_d, low_d, high_d);
+
+	struct Entry *entry_3 = malloc(sizeof(struct Entry));
+	void *tuple_3 = 3;
+
+	entry_create(entry_3, tuple_3, rectangle_d);
+	
+	// Test node_choose_optimal_entry
+	struct Node * optimal_entry = node_choose_optimal_entry(node, entry_3);
+	assert_ptr_equal(optimal_entry, entry_2);
+
+	free(low_a);
+	free(high_a);
+	free(rectangle_a);
+	free(context);
+	free(node);
+
+	free(low_b);
+	free(high_b);
+	free(rectangle_b);
+	free(entry_1);
+
+	free(low_c);
+	free(high_c);
+	free(rectangle_c);
+	free(entry_2);
+
+	free(low_d);
+	free(high_d);
+	free(rectangle_d);
+	free(entry_3);
+}
+
+void test_entry_compare() {
+	// Rectangle compare needs to be clarified for this
 }
 
 void test_node_calculate_MBR() {
@@ -446,7 +567,7 @@ void test_node_split_node() {
 }
 
 
-int main(void) {
+int TestNode(void) {
 	const struct CMUnitTest tests[] = {
 		cmocka_unit_test(test_context_create),
 		cmocka_unit_test(test_entry_create),
@@ -455,7 +576,8 @@ int main(void) {
 		cmocka_unit_test(test_node_is_root),
 		cmocka_unit_test(test_node_adjust_MBR),
 		cmocka_unit_test(test_node_add_entry),
-		cmocka_unit_test(test_node_delete_entry)
+		cmocka_unit_test(test_node_delete_entry),
+		cmocka_unit_test(test_node_choose_optimal_entry)
 	};
 	return cmocka_run_group_tests(tests, NULL, NULL);
 }

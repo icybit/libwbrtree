@@ -5,7 +5,6 @@
 
 #include <float.h>
 #include <stdlib.h>
-#include "Common.h"
 #include "Rectangle.h"
 
 void test_point_create() {
@@ -150,7 +149,6 @@ void test_rectangle_combine_2() {
 	free(rectangle_b);
 }
 
-
 void test_rectangle_extend_infinitely() {
 	struct Rectangle *rectangle = malloc(sizeof(struct Rectangle));
 
@@ -205,7 +203,8 @@ void test_rectangle_min_distance() {
 	rectangle_create(rectangle_b, low_b, high_b);
 
 	// Test rectangle_min_distance
-	assert_true(rectangle_min_distance(rectangle_a, rectangle_b) == 5.0);
+	assert_int_equal(rectangle_min_distance(rectangle_a, rectangle_b), 5);
+	assert_int_equal(rectangle_min_distance(rectangle_b, rectangle_a), 5);
 
 	free(low_a);
 	free(high_a);
@@ -216,7 +215,7 @@ void test_rectangle_min_distance() {
 	free(rectangle_b);
 }
 
-void test_rectangle_overlap() {
+void test_rectangle_overlaps() {
 	int dim = 2;
 	// Create rectangle A
 	struct Rectangle *rectangle_a = malloc(sizeof(struct Rectangle));
@@ -271,7 +270,137 @@ void test_rectangle_overlap() {
 	free(rectangle_c);
 }
 
-int main(void) {
+// TODO: Finish test implementation
+void test_rectangle_compare() {
+	int dim = 2;
+	// Create rectangle A
+	struct Rectangle *rectangle_a = malloc(sizeof(struct Rectangle));
+	struct Point *low_a = malloc(sizeof(struct Point));
+	struct Point *high_a = malloc(sizeof(struct Point));
+	float coords_low_a[] = { 0, 0 };
+	float coords_high_a[] = { 2, 2 };
+
+	point_create(low_a, dim, coords_low_a);
+	point_create(high_a, dim, coords_high_a);
+
+	rectangle_create(rectangle_a, low_a, high_a);
+
+	// Create rectangle B	
+	struct Rectangle *rectangle_b = malloc(sizeof(struct Rectangle));
+	struct Point *low_b = malloc(sizeof(struct Point));
+	struct Point *high_b = malloc(sizeof(struct Point));
+	float coords_low_b[2] = { 1, 1 };
+	float coords_high_b[2] = { 3, 3 };
+
+	point_create(low_b, dim, coords_low_b);
+	point_create(high_b, dim, coords_high_b);
+
+	rectangle_create(rectangle_b, low_b, high_b);
+
+	// Test rectangle_compare
+
+}
+
+void test_rectangle_intersection_area() {
+	int dim = 2;
+	// Create rectangle A
+	struct Rectangle *rectangle_a = malloc(sizeof(struct Rectangle));
+	struct Point *low_a = malloc(sizeof(struct Point));
+	struct Point *high_a = malloc(sizeof(struct Point));
+	float coords_low_a[] = { 0, 0 };
+	float coords_high_a[] = { 2, 2 };
+
+	point_create(low_a, dim, coords_low_a);
+	point_create(high_a, dim, coords_high_a);
+
+	rectangle_create(rectangle_a, low_a, high_a);
+
+	// Create rectangle B	
+	struct Rectangle *rectangle_b = malloc(sizeof(struct Rectangle));
+	struct Point *low_b = malloc(sizeof(struct Point));
+	struct Point *high_b = malloc(sizeof(struct Point));
+	float coords_low_b[2] = { 1, 1 };
+	float coords_high_b[2] = { 3, 3 };
+
+	point_create(low_b, dim, coords_low_b);
+	point_create(high_b, dim, coords_high_b);
+
+	rectangle_create(rectangle_b, low_b, high_b);
+
+	// Test rectangle_intersection_area	
+	assert_int_equal(rectangle_intersection_area(rectangle_a, rectangle_b), 1);
+	assert_int_equal(rectangle_intersection_area(rectangle_b, rectangle_a), 1);
+
+	free(low_a);
+	free(high_a);
+	free(rectangle_a);
+
+	free(low_b);
+	free(high_b);
+	free(rectangle_b);
+}
+
+void test_rectangle_margin() {
+	struct Rectangle *rectangle = malloc(sizeof(struct Rectangle));
+
+	int dim = 2;
+	struct Point *low = malloc(sizeof(struct Point));
+	struct Point *high = malloc(sizeof(struct Point));
+	float coords_low[] = { 0, 0 };
+	float coords_high[] = { 2, 3 };
+
+	point_create(low, dim, coords_low);
+	point_create(high, dim, coords_high);
+
+
+	rectangle_create(rectangle, low, high);
+	assert_int_equal(rectangle_margin(rectangle), 10);
+
+	free(low);
+	free(high);
+	free(rectangle);
+}
+
+void test_rectangle_margin_value() {
+	int dim = 2;
+	// Create rectangle A
+	struct Rectangle *rectangle_a = malloc(sizeof(struct Rectangle));
+	struct Point *low_a = malloc(sizeof(struct Point));
+	struct Point *high_a = malloc(sizeof(struct Point));
+	float coords_low_a[] = { 0, 0 };
+	float coords_high_a[] = { 2, 2 };
+
+	point_create(low_a, dim, coords_low_a);
+	point_create(high_a, dim, coords_high_a);
+
+	rectangle_create(rectangle_a, low_a, high_a);
+
+	// Create rectangle B	
+	struct Rectangle *rectangle_b = malloc(sizeof(struct Rectangle));
+	struct Point *low_b = malloc(sizeof(struct Point));
+	struct Point *high_b = malloc(sizeof(struct Point));
+	float coords_low_b[2] = { 1, 1 };
+	float coords_high_b[2] = { 5, 3 };
+
+	point_create(low_b, dim, coords_low_b);
+	point_create(high_b, dim, coords_high_b);
+
+	rectangle_create(rectangle_b, low_b, high_b);
+	
+	// Test rectangle_margin_value
+	assert_int_equal(rectangle_margin_value(rectangle_a, rectangle_b), 20);
+	assert_int_equal(rectangle_margin_value(rectangle_b, rectangle_a), 20);
+
+	free(low_a);
+	free(high_a);
+	free(rectangle_a);
+
+	free(low_b);
+	free(high_b);
+	free(rectangle_b);
+}
+
+int TestRectangle(void) {
 	const struct CMUnitTest tests[] = {
 		cmocka_unit_test(test_point_create),
 		cmocka_unit_test(test_rectangle_create),
@@ -279,8 +408,12 @@ int main(void) {
 		cmocka_unit_test(test_rectangle_combine_1),
 		cmocka_unit_test(test_rectangle_combine_2),
 		cmocka_unit_test(test_rectangle_extend_infinitely),
-		cmocka_unit_test(test_rectangle_overlap),
+		cmocka_unit_test(test_rectangle_overlaps),
 		cmocka_unit_test(test_rectangle_min_distance),
+		//cmocka_unit_test(test__point_compare),
+		cmocka_unit_test(test_rectangle_intersection_area),
+		cmocka_unit_test(test_rectangle_margin),
+		cmocka_unit_test(test_rectangle_margin_value)
 	};
 
 	return cmocka_run_group_tests(tests, NULL, NULL);
