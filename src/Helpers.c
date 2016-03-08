@@ -1,6 +1,7 @@
 #include "Helpers.h"
 #include "Rectangle.h"
 #include "Node.h"
+#include "RTree.h"
 
 struct Point * create_2d_point(float *coords) {
 	int dim = 2;
@@ -31,6 +32,22 @@ struct Node * create_2d_node(uint8_t m, uint8_t M, float alloc_factor, float *co
 	node_create(node, context, NULL, NULL, 0, context->space, level);
 
 	return node;
+}
+
+struct Context * create_2d_context(uint8_t m, uint8_t M, float alloc_factor, float *coords_low, float *coords_high) {
+	struct Rectangle *rectangle = create_2d_rectangle(coords_low, coords_high);
+	struct Context *context = malloc(sizeof(struct Context));
+	context_create(context, m, M, alloc_factor);
+
+	return context;
+}
+
+struct RTree * create_2d_rtree(uint8_t m, uint8_t M, float alloc_factor, float *coords_low, float *coords_high) {
+	struct Context *context = create_2d_context(m, M, alloc_factor, coords_low, coords_high);
+	struct RTree *rtree = malloc(sizeof(struct RTree));
+	rtree_create(rtree, context);
+
+	return rtree;
 }
 
 void destroy_rectangle(struct Rectangle *rectangle) {
