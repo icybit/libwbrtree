@@ -1,6 +1,13 @@
 #ifndef _RTREE_NODE_H_
 #define _RTREE_NODE_H_
 
+#if (defined _GNU_SOURCE || defined __gnu_hurd__ || defined __GNU__ || \
+       defined __linux__ || defined __MINGW32__ || defined __GLIBC__)
+#define _QSORT_LINUX
+#elif (defined _WIN32 || defined _WIN64 || defined __WINDOWS__)
+#define _QSORT_WINDOWS
+#endif
+
 struct Context {
 	uint8_t m;
 	uint8_t M;
@@ -24,9 +31,15 @@ struct Node {
 	uint16_t level;
 };
 
-void context_create(struct Context *dest, uint8_t m, uint8_t M, float alloc_factor, struct Rectangle *space_MBR);
+void context_create(struct Context *dest, uint8_t m, uint8_t M, uint8_t dim, float alloc_factor, struct Rectangle *space_MBR);
 
+#ifdef _QSORT_LINUX
 int entry_compare(const void *entry, const void *other, void *dimension);
+#endif
+#ifdef _QSORT_WINDOWS
+int entry_compare(void *dimension, const void *entry, const void *other);
+#endif
+
 void entry_create(struct Entry *dest, void *tuple, struct Rectangle *MBR);
 #ifdef DEBUG
 void entry_print(struct Entry *entry);

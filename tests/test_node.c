@@ -28,7 +28,7 @@ void test_context_create() {
 	int m = 4;
 	int M = 12;
 
-	context_create(context, m, M, alloc_factor, rectangle);
+	context_create(context, m, M, dim, alloc_factor, rectangle);
 	assert_int_equal(context->m, m);
 	assert_int_equal(context->M, M);
 	assert_true(context->alloc_factor == 4);
@@ -90,7 +90,7 @@ void test_node_create() {
 	int m = 4;
 	int M = 12;
 
-	context_create(context, m, M, alloc_factor, rectangle);
+	context_create(context, m, M, dim, alloc_factor, rectangle);
 	
 	// Create Node
 	struct Node *node = malloc(sizeof(struct Node));
@@ -131,7 +131,7 @@ void test_node_is_leaf() {
 	int m = 4;
 	int M = 12;
 
-	context_create(context, m, M, alloc_factor, rectangle);
+	context_create(context, m, M, dim, alloc_factor, rectangle);
 
 	// Create Node
 	struct Node *node = malloc(sizeof(struct Node));
@@ -174,7 +174,7 @@ void test_node_is_root() {
 	int m = 4;
 	int M = 12;
 
-	context_create(context, m, M, alloc_factor, rectangle);
+	context_create(context, m, M, dim, alloc_factor, rectangle);
 
 	// Create Node A
 	struct Node *node_a = malloc(sizeof(struct Node));
@@ -219,7 +219,7 @@ void test_node_add_entry() {
 	int m = 4;
 	int M = 12;
 
-	context_create(context, m, M, alloc_factor, rectangle_a);
+	context_create(context, m, M, dim, alloc_factor, rectangle_a);
 
 	struct Node *node = malloc(sizeof(struct Node));
 	int level = 0;
@@ -299,7 +299,7 @@ void test_node_delete_entry() {
 	int m = 4;
 	int M = 12;
 
-	context_create(context, m, M, alloc_factor, rectangle_a);
+	context_create(context, m, M, dim, alloc_factor, rectangle_a);
 
 	struct Node *node = malloc(sizeof(struct Node));
 	int level = 0;
@@ -399,7 +399,7 @@ void test_node_adjust_MBR() {
 	int m = 4;
 	int M = 12;
 
-	context_create(context, m, M, alloc_factor, rectangle_a);
+	context_create(context, m, M, dim, alloc_factor, rectangle_a);
 		
 	struct Node *node = malloc(sizeof(struct Node));
 	int level = 0;
@@ -464,7 +464,7 @@ void test_node_choose_optimal_entry() {
 	int m = 4;
 	int M = 12;
 
-	context_create(context, m, M, alloc_factor, rectangle_a);
+	context_create(context, m, M, dim, alloc_factor, rectangle_a);
 
 	struct Node *node = malloc(sizeof(struct Node));
 	int level = 0;

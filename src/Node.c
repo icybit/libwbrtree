@@ -12,20 +12,30 @@
 #include "Rectangle.h"
 #include "Node.h"
 
-void context_create(struct Context *dest, uint8_t m, uint8_t M, float alloc_factor, struct Rectangle *space_MBR)
+void context_create(struct Context *dest, uint8_t m, uint8_t M, uint8_t dim, float alloc_factor, struct Rectangle *space_MBR)
 {
 	assert(space_MBR != NULL);
 
 	dest->m = (m <= M/2 ? m : 2);
 	dest->M = (M > 2 ? M : 3);
+	dest->dim = dim;
 	dest->alloc_factor = (alloc_factor > 1.0f ? alloc_factor : 2.0f);
 	dest->space = space_MBR;
 }
 
+#ifdef _QSORT_LINUX
 int entry_compare(const void *entry, const void *other, void *dimension)
 {
 	return rectangle_compare(((struct Entry *)entry)->MBR, ((struct Entry *)other)->MBR, dimension);
 }
+#endif
+
+#ifdef _QSORT_WINDOWS
+int entry_compare(void *dimension, const void *entry, const void *other)
+{
+	return rectangle_compare(((struct Entry *)entry)->MBR, ((struct Entry *)other)->MBR, dimension);
+}
+#endif
 
 void entry_create(struct Entry *dest, void *tuple, struct Rectangle *MBR)
 {
@@ -357,7 +367,12 @@ struct Node * node_split_node(struct Node *node, void *entry)
 		sorted_entries[dim] = malloc((node->context->M + 1) * sizeof(void *));
 		memcpy(sorted_entries[dim], node->entries, node->count);
 		memcpy(sorted_entries[dim] + node->count, entry, 1);
+#ifdef _QSORT_LINUX
 		qsort_r(sorted_entries[dim], node->context->M + 1, sizeof(void *), entry_compare, dim);
+#endif
+#ifdef _QSORT_WINDOWS
+		qsort_s(sorted_entries[dim], node->context->M + 1, sizeof(void *), entry_compare, &dim);
+#endif
 	}
 
 	split_axis = _node_choose_split_axis(node, sorted_entries, MBR_one, MBR_two);
