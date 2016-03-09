@@ -24,20 +24,22 @@ struct Rectangle * create_2d_rectangle(float *coords_low, float *coords_high) {
 }
 
 struct Node * create_2d_node(uint8_t m, uint8_t M, float alloc_factor, float *coords_low, float *coords_high, uint16_t level) {
+	int dim = 2;
 	struct Rectangle *rectangle = create_2d_rectangle(coords_low, coords_high);
 	struct Context *context = malloc(sizeof(struct Context));
 	struct Node *node = malloc(sizeof(struct Node));
 
-	context_create(context, m, M, alloc_factor, rectangle);
+	context_create(context, m, M, dim, alloc_factor, rectangle);
 	node_create(node, context, NULL, NULL, 0, context->space, level);
 
 	return node;
 }
 
 struct Context * create_2d_context(uint8_t m, uint8_t M, float alloc_factor, float *coords_low, float *coords_high) {
+	int dim = 2;
 	struct Rectangle *rectangle = create_2d_rectangle(coords_low, coords_high);
 	struct Context *context = malloc(sizeof(struct Context));
-	context_create(context, m, M, alloc_factor);
+	context_create(context, m, M, dim, alloc_factor, rectangle);
 
 	return context;
 }
@@ -48,6 +50,14 @@ struct RTree * create_2d_rtree(uint8_t m, uint8_t M, float alloc_factor, float *
 	rtree_create(rtree, context);
 
 	return rtree;
+}
+
+struct Entry * create_2d_entry(void *tuple, float *coords_low, float *coords_high) {
+	struct Rectangle *rectangle = create_2d_rectangle(coords_low, coords_high);
+	struct Entry *entry = malloc(sizeof(struct Entry));
+	entry_create(entry, tuple, rectangle);
+
+	return entry;
 }
 
 void destroy_rectangle(struct Rectangle *rectangle) {
