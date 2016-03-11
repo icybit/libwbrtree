@@ -5,9 +5,11 @@
 
 #include <float.h>
 #include <stdlib.h>
+#include "Helpers.h"
 #include "Rectangle.h"
+#include "TestRectangle.h"
 
-void test_point_create() {
+void _test_point_create() {
 	int dim = 2;
 	struct Point *point = malloc(sizeof(struct Point));
 	float coords[] = { 0, 0 };
@@ -20,7 +22,7 @@ void test_point_create() {
 	free(point);	
 }
 
-void test_rectangle_create() {
+void _test_rectangle_create() {
 	struct Rectangle *rectangle = malloc(sizeof(struct Rectangle));
 	
 	int dim = 2;
@@ -43,7 +45,7 @@ void test_rectangle_create() {
 	free(rectangle);
 }
 
-void test_rectangle_area() {
+void _test_rectangle_area() {
 	struct Rectangle *rectangle = malloc(sizeof(struct Rectangle));
 
 	int dim = 2;
@@ -63,7 +65,7 @@ void test_rectangle_area() {
 	free(rectangle);
 }
 
-void test_rectangle_combine_1() {
+void _test_rectangle_combine_1() {
 	int dim = 2;
 	// Create rectangle A
 	struct Rectangle *rectangle_a = malloc(sizeof(struct Rectangle));
@@ -106,7 +108,7 @@ void test_rectangle_combine_1() {
 	free(rectangle_b);
 }
 
-void test_rectangle_combine_2() {
+void _test_rectangle_combine_2() {
 	int dim = 2;
 	// Create rectangle A
 	struct Rectangle *rectangle_a = malloc(sizeof(struct Rectangle));
@@ -149,7 +151,7 @@ void test_rectangle_combine_2() {
 	free(rectangle_b);
 }
 
-void test_rectangle_extend_infinitely() {
+void _test_rectangle_extend_infinitely() {
 	struct Rectangle *rectangle = malloc(sizeof(struct Rectangle));
 
 	int dim = 2;
@@ -176,7 +178,7 @@ void test_rectangle_extend_infinitely() {
 	free(rectangle);
 }
 
-void test_rectangle_min_distance() {
+void _test_rectangle_min_distance() {
 	int dim = 2;
 	// Create rectangle A
 	struct Rectangle *rectangle_a = malloc(sizeof(struct Rectangle));
@@ -215,7 +217,7 @@ void test_rectangle_min_distance() {
 	free(rectangle_b);
 }
 
-void test_rectangle_overlaps() {
+void _test_rectangle_overlaps() {
 	int dim = 2;
 	// Create rectangle A
 	struct Rectangle *rectangle_a = malloc(sizeof(struct Rectangle));
@@ -270,38 +272,32 @@ void test_rectangle_overlaps() {
 	free(rectangle_c);
 }
 
-// TODO: Finish test implementation
-void test_rectangle_compare() {
-	int dim = 2;
+void _test_rectangle_compare() {
 	// Create rectangle A
-	struct Rectangle *rectangle_a = malloc(sizeof(struct Rectangle));
-	struct Point *low_a = malloc(sizeof(struct Point));
-	struct Point *high_a = malloc(sizeof(struct Point));
-	float coords_low_a[] = { 0, 0 };
-	float coords_high_a[] = { 2, 2 };
-
-	point_create(low_a, dim, coords_low_a);
-	point_create(high_a, dim, coords_high_a);
-
-	rectangle_create(rectangle_a, low_a, high_a);
+	float coords_low_a[] = { 1, 2 };
+	float coords_high_a[] = { 3, 4 };
+	struct Rectangle *rectangle_a = create_2d_rectangle(coords_low_a, coords_high_a);
 
 	// Create rectangle B	
-	struct Rectangle *rectangle_b = malloc(sizeof(struct Rectangle));
-	struct Point *low_b = malloc(sizeof(struct Point));
-	struct Point *high_b = malloc(sizeof(struct Point));
-	float coords_low_b[2] = { 1, 1 };
-	float coords_high_b[2] = { 3, 3 };
-
-	point_create(low_b, dim, coords_low_b);
-	point_create(high_b, dim, coords_high_b);
-
-	rectangle_create(rectangle_b, low_b, high_b);
-
+	float coords_low_b[] = { 2, 1 };
+	float coords_high_b[] = { 4, 3 };
+	struct Rectangle *rectangle_b = create_2d_rectangle(coords_low_b, coords_high_b);
+	
 	// Test rectangle_compare
+	uint8_t dim[] = { 0, 1 };
 
+	assert_true(rectangle_compare(rectangle_a, rectangle_b, &dim[0]) < 0);
+	assert_true(rectangle_compare(rectangle_a, rectangle_b, &dim[1]) > 0);
+	assert_true(rectangle_compare(rectangle_b, rectangle_a, &dim[0]) > 0);
+	assert_true(rectangle_compare(rectangle_b, rectangle_a, &dim[1]) < 0);
+	assert_true(rectangle_compare(rectangle_b, rectangle_b, &dim[0]) == 0);
+	assert_true(rectangle_compare(rectangle_b, rectangle_b, &dim[1]) == 0);
+
+	destroy_rectangle(rectangle_a);
+	destroy_rectangle(rectangle_b);	
 }
 
-void test_rectangle_intersection_area() {
+void _test_rectangle_intersection_area() {
 	int dim = 2;
 	// Create rectangle A
 	struct Rectangle *rectangle_a = malloc(sizeof(struct Rectangle));
@@ -340,7 +336,7 @@ void test_rectangle_intersection_area() {
 	free(rectangle_b);
 }
 
-void test_rectangle_margin() {
+void _test_rectangle_margin() {
 	struct Rectangle *rectangle = malloc(sizeof(struct Rectangle));
 
 	int dim = 2;
@@ -361,7 +357,7 @@ void test_rectangle_margin() {
 	free(rectangle);
 }
 
-void test_rectangle_margin_value() {
+void _test_rectangle_margin_value() {
 	int dim = 2;
 	// Create rectangle A
 	struct Rectangle *rectangle_a = malloc(sizeof(struct Rectangle));
@@ -400,20 +396,37 @@ void test_rectangle_margin_value() {
 	free(rectangle_b);
 }
 
-int TestRectangle(void) {
+void _test_point_compare() {
+	float coords_1[] = { 0, 1 };
+	float coords_2[] = { 1, 0 };
+	struct Point *point_1 = create_2d_point(coords_1);
+	struct Point *point_2 = create_2d_point(coords_2);
+	uint8_t dim[] = { 0, 1 };
+
+	assert_true(point_compare(point_1, point_2, &dim[0]) < 0);
+	assert_true(point_compare(point_1, point_2, &dim[1]) > 0);
+	assert_true(point_compare(point_2, point_2, &dim[0]) == 0);
+	assert_true(point_compare(point_2, point_2, &dim[1]) == 0);
+
+	free(point_1);
+	free(point_2);
+}
+
+int test_rectangle(void) {
 	const struct CMUnitTest tests[] = {
-		cmocka_unit_test(test_point_create),
-		cmocka_unit_test(test_rectangle_create),
-		cmocka_unit_test(test_rectangle_area),
-		cmocka_unit_test(test_rectangle_combine_1),
-		cmocka_unit_test(test_rectangle_combine_2),
-		cmocka_unit_test(test_rectangle_extend_infinitely),
-		cmocka_unit_test(test_rectangle_overlaps),
-		cmocka_unit_test(test_rectangle_min_distance),
-		//cmocka_unit_test(test__point_compare),
-		cmocka_unit_test(test_rectangle_intersection_area),
-		cmocka_unit_test(test_rectangle_margin),
-		cmocka_unit_test(test_rectangle_margin_value)
+		cmocka_unit_test(_test_point_create),
+		cmocka_unit_test(_test_rectangle_create),
+		cmocka_unit_test(_test_rectangle_area),
+		cmocka_unit_test(_test_rectangle_combine_1),
+		cmocka_unit_test(_test_rectangle_combine_2),
+		cmocka_unit_test(_test_rectangle_extend_infinitely),
+		cmocka_unit_test(_test_rectangle_overlaps),
+		cmocka_unit_test(_test_rectangle_min_distance),
+		cmocka_unit_test(_test_point_compare),
+		cmocka_unit_test(_test_rectangle_intersection_area),
+		cmocka_unit_test(_test_rectangle_margin),
+		cmocka_unit_test(_test_rectangle_margin_value),
+		cmocka_unit_test(_test_rectangle_compare)
 	};
 
 	return cmocka_run_group_tests(tests, NULL, NULL);

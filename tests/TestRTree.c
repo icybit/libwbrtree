@@ -7,8 +7,9 @@
 #include "Rectangle.h"
 #include "Node.h"
 #include "RTree.h"
+#include "TestRTree.h"
 
-void test_rtree_create() {
+void _test_rtree_create() {
 	struct RTree *rtree = malloc(sizeof(struct RTree));
 
 	// Create rectangle
@@ -26,7 +27,7 @@ void test_rtree_create() {
 	free(rtree);
 }
 
-void test_rtree_insert() {
+void _test_rtree_insert() {
 	float coords_low[] = { 1, 1 };
 	float coords_high[] = { 5, 5 };
 	struct RTree *rtree = create_2d_rtree(2, 4, 4, coords_low, coords_high);
@@ -97,23 +98,23 @@ void test_rtree_insert() {
 	assert_true(rtree->root->level == 1);
 }
 
-void test_rtree_delete() {
+void _test_rtree_delete() {
 
 }
 
-void test_rtree_destroy() {
+void _test_rtree_destroy() {
 
 }
 
-void test_rtree_search() {
+void _test_rtree_search() {
 
 }
 
-//int main(void) {
-//	const struct CMUnitTest tests[] = {
-//		cmocka_unit_test(test_rtree_create),
-//		cmocka_unit_test(test_rtree_insert),
-//	};
-//
-//	return cmocka_run_group_tests(tests, NULL, NULL);
-//}
+int test_rtree(void) {
+	const struct CMUnitTest tests[] = {
+		cmocka_unit_test(_test_rtree_create),
+		cmocka_unit_test(_test_rtree_insert)
+	};
+
+	return cmocka_run_group_tests(tests, NULL, NULL);
+}

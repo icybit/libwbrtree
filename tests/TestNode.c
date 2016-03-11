@@ -7,8 +7,9 @@
 #include "Helpers.h"
 #include "Rectangle.h"
 #include "Node.h"
+#include "TestNode.h"
 
-void test_context_create() {
+void _test_context_create() {
 	int dim = 2;
 
 	// Create Rectangle
@@ -32,7 +33,7 @@ void test_context_create() {
 	free(context);
 }
 
-void test_entry_create() {	
+void _test_entry_create() {	
 	// Create Rectangle
 	float coords_low[] = { 0, 0 };
 	float coords_high[] = { 2, 2 };
@@ -51,7 +52,7 @@ void test_entry_create() {
 }
 
 //TODO: Cover node create with more tests
-void test_node_create() {
+void _test_node_create() {
 	int dim = 2;
 
 	// Create Rectangle
@@ -83,7 +84,7 @@ void test_node_create() {
 	free(node);
 }
 
-void test_node_is_leaf() {
+void _test_node_is_leaf() {
 	// Create Node
 	float coords_low[] = { 0, 0 };
 	float coords_high[] = { 2, 2 };
@@ -103,7 +104,7 @@ void test_node_is_leaf() {
 	free(node);
 }
 
-void test_node_is_root() {	
+void _test_node_is_root() {	
 	// Create Node
 	float coords_low[] = { 0, 0 };
 	float coords_high[] = { 2, 2 };
@@ -120,7 +121,7 @@ void test_node_is_root() {
 	free(node);
 }
 
-void test_node_add_entry() {
+void _test_node_add_entry() {
 	int dim = 2;
 
 	// Node setup
@@ -200,7 +201,7 @@ void test_node_add_entry() {
 	free(context);
 }
 
-void test_node_delete_entry() {
+void _test_node_delete_entry() {
 	int dim = 2;
 
 	// Node setup
@@ -300,7 +301,7 @@ void test_node_delete_entry() {
 	free(context);
 }
 
-void test_node_adjust_MBR() {
+void _test_node_adjust_MBR() {
 	int dim = 2;
 
 	// Node setup
@@ -365,141 +366,170 @@ void test_node_adjust_MBR() {
 	free(entry);
 }
 
-void test_node_choose_optimal_entry() {
-	int dim = 2;
+void _test_node_choose_optimal_entry() {
+	float low[] = { 0, 0 };
+	float high[] = { 2, 2 };
+	struct Node *node = create_2d_node(2, 4, 4, low, high, 1);
 
-	// Node setup
-	struct Rectangle *rectangle_a = malloc(sizeof(struct Rectangle));
+	float low_1[] = { 3, -1 };
+	float high_1[] = { 5, 1 };
+	struct Node *node_1 = create_2d_node(2, 4, 4, low_1, high_1, 0);
 
-	struct Point *low_a = malloc(sizeof(struct Point));
-	struct Point *high_a = malloc(sizeof(struct Point));
-	float coords_low_a[] = { 0, 0 };
-	float coords_high_a[] = { 4, 2 };
+	float low_2[] = { -1, -1 };
+	float high_2[] = { 1, 1 };
+	struct Node *node_2 = create_2d_node(2, 4, 4, low_2, high_2, 0);
 
-	point_create(low_a, dim, coords_low_a);
-	point_create(high_a, dim, coords_high_a);
 
-	rectangle_create(rectangle_a, low_a, high_a);
+	float low_3[] = { -1, 5 };
+	float high_3[] = { 2, 7 };
+	struct Node *node_3 = create_2d_node(2, 4, 4, low_3, high_3, 0);
 
-	struct Context *context = malloc(sizeof(struct Context));
-	float alloc_factor = 2;
-	int m = 4;
-	int M = 12;
+	float low_4[] = { -3, 0 };
+	float high_4[] = { -2, 1 };
+	int tuple = 1;
+	struct Entry *entry = create_2d_entry(tuple, low_4, high_4);
 
-	context_create(context, m, M, dim, alloc_factor, rectangle_a);
 
-	struct Node *node = malloc(sizeof(struct Node));
-	int level = 0;
-	node_create(node, context, NULL, NULL, 0, context->space, level);
+	node_add_entry(node, node_1);
+	node_add_entry(node, node_2);
+	node_add_entry(node, node_3);
+	assert_ptr_equal(node_choose_optimal_entry(node, entry), node_2);
 
-	// Add some entries
+	node_destroy(node);
+}
 
-	// Entry_1 setup
-	struct Rectangle *rectangle_b = malloc(sizeof(struct Rectangle));
+void _test_entry_compare() {
+	float low_1[] = { 1, 1 };
+	float high_1[] = { 3, 3 };
+	int tuple_1 = 1;
+	struct Entry *entry_1 = create_2d_entry((void *)tuple_1, low_1, high_1);
 
-	struct Point *low_b = malloc(sizeof(struct Point));
-	struct Point *high_b = malloc(sizeof(struct Point));
-	float coords_low_b[] = { 0, 0 };
-	float coords_high_b[] = { 2, 2 };
+	float low_2[] = { 0, 2 };
+	float high_2[] = { 4, 2 };
+	int tuple_2 = 2;
+	struct Entry *entry_2 = create_2d_entry((void *)tuple_2, low_2, high_2);
 
-	point_create(low_b, dim, coords_low_b);
-	point_create(high_b, dim, coords_high_b);
+	uint8_t *dim_1 = 0;
+	uint8_t *dim_2 = 1;
 
-	rectangle_create(rectangle_b, low_b, high_b);
-		
-	struct Entry *entry_1 = malloc(sizeof(struct Entry));
-	void *tuple_1 = 1;
+	assert_true(entry_compare(dim_1, entry_1, entry_2) < 0);
+	assert_true(entry_compare(dim_2, entry_1, entry_2) > 0);
+	assert_true(entry_compare(dim_1, entry_2, entry_1) > 0);
+	assert_true(entry_compare(dim_2, entry_2, entry_1) < 0);
+	assert_true(entry_compare(dim_1, entry_2, entry_2) == 0);
+	assert_true(entry_compare(dim_2, entry_2, entry_2) == 0);
 
-	entry_create(entry_1, tuple_1, rectangle_b);
-	node_add_entry(node, entry_1);
+	destroy_entry(entry_1);
+	destroy_entry(entry_2);
+}
 
-	// Entry_2 setup
-	struct Rectangle *rectangle_c = malloc(sizeof(struct Rectangle));
+// For leaf node
+void _test_node_calculate_MBR_1() {
+	float low[] = { 0, 0 };
+	float high[] = { 2, 2 };
+	struct Node *node = create_2d_node(2, 4, 4, low, high, 0);
 
-	struct Point *low_c = malloc(sizeof(struct Point));
-	struct Point *high_c = malloc(sizeof(struct Point));
-	float coords_low_c[] = { 2, 0 };
-	float coords_high_c[] = { 4, 2 };
+	float low_1[] = { 3, -1 };
+	float high_1[] = { 5, 1 };
+	int tuple_1 = 1;
+	struct Entry *entry_1 = create_2d_entry((void *)tuple_1, low_1, high_1);
 
-	point_create(low_c, dim, coords_low_c);
-	point_create(high_c, dim, coords_high_c);
+	float low_2[] = { -1, -1 };
+	float high_2[] = { 1, 1 };
+	int tuple_2 = 2;
+	struct Entry *entry_2 = create_2d_entry((void *)tuple_2, low_2, high_2);
 
-	rectangle_create(rectangle_c, low_c, high_c);
-		
-	struct Entry *entry_2 = malloc(sizeof(struct Entry));
-	void *tuple_2 = 2;
-
-	entry_create(entry_2, tuple_2, rectangle_c);
-	node_add_entry(node, entry_2);
-
-	// Entry_3 setup
-	struct Rectangle *rectangle_d = malloc(sizeof(struct Rectangle));
-
-	struct Point *low_d = malloc(sizeof(struct Point));
-	struct Point *high_d = malloc(sizeof(struct Point));
-	float coords_low_d[] = { 1, 2 };
-	float coords_high_d[] = { 4, 4 };
-
-	point_create(low_d, dim, coords_low_d);
-	point_create(high_d, dim, coords_high_d);
-
-	rectangle_create(rectangle_d, low_d, high_d);
-
-	struct Entry *entry_3 = malloc(sizeof(struct Entry));
-	void *tuple_3 = 3;
-
-	entry_create(entry_3, tuple_3, rectangle_d);
+	float low_3[] = { -1, 5 };
+	float high_3[] = { 2, 7 };
+	int tuple_3 = 3;
+	struct Entry *entry_3 = create_2d_entry((void *)tuple_3, low_3, high_3);
 	
-	// Test node_choose_optimal_entry
-	struct Node * optimal_entry = node_choose_optimal_entry(node, entry_3);
-	assert_ptr_equal(optimal_entry, entry_2);
+	node_add_entry(node, entry_1);
+	node_calculate_MBR(node->MBR, node);
+	assert_true(node->MBR->low->coords[0] == 0);
+	assert_true(node->MBR->low->coords[1] == -1);
+	assert_true(node->MBR->high->coords[0] == 5);
+	assert_true(node->MBR->high->coords[1] == 2);
 
-	free(low_a);
-	free(high_a);
-	free(rectangle_a);
-	free(context);
-	free(node);
+	node_add_entry(node, entry_2);
+	node_calculate_MBR(node->MBR, node);
+	assert_true(node->MBR->low->coords[0] == -1);
+	assert_true(node->MBR->low->coords[1] == -1);
+	assert_true(node->MBR->high->coords[0] == 5);
+	assert_true(node->MBR->high->coords[1] == 2);
 
-	free(low_b);
-	free(high_b);
-	free(rectangle_b);
-	free(entry_1);
+	node_add_entry(node, entry_3);
+	node_calculate_MBR(node->MBR, node);
+	assert_true(node->MBR->low->coords[0] == -1);
+	assert_true(node->MBR->low->coords[1] == -1);
+	assert_true(node->MBR->high->coords[0] == 5);
+	assert_true(node->MBR->high->coords[1] == 7);
 
-	free(low_c);
-	free(high_c);
-	free(rectangle_c);
-	free(entry_2);
-
-	free(low_d);
-	free(high_d);
-	free(rectangle_d);
-	free(entry_3);
+	node_destroy(node);
 }
 
-void test_entry_compare() {
-	// Rectangle compare needs to be clarified for this
+// For non-leaf node
+void _test_node_calculate_MBR_2() {
+	float low[] = { 0, 0 };
+	float high[] = { 2, 2 };
+	struct Node *node = create_2d_node(2, 4, 4, low, high, 1);
+
+	float low_1[] = { 3, -1 };
+	float high_1[] = { 5, 1 };
+	struct Node *node_1 = create_2d_node(2, 4, 4, low_1, high_1, 0);
+
+	float low_2[] = { -1, -1 };
+	float high_2[] = { 1, 1 };
+	struct Node *node_2 = create_2d_node(2, 4, 4, low_2, high_2, 0);
+	
+
+	float low_3[] = { -1, 5 };
+	float high_3[] = { 2, 7 };
+	struct Node *node_3 = create_2d_node(2, 4, 4, low_3, high_3, 0);
+	
+
+	node_add_entry(node, node_1);
+	node_calculate_MBR(node->MBR, node);
+	assert_true(node->MBR->low->coords[0] == 0);
+	assert_true(node->MBR->low->coords[1] == -1);
+	assert_true(node->MBR->high->coords[0] == 5);
+	assert_true(node->MBR->high->coords[1] == 2);
+
+	node_add_entry(node, node_2);
+	node_calculate_MBR(node->MBR, node);
+	assert_true(node->MBR->low->coords[0] == -1);
+	assert_true(node->MBR->low->coords[1] == -1);
+	assert_true(node->MBR->high->coords[0] == 5);
+	assert_true(node->MBR->high->coords[1] == 2);
+
+	node_add_entry(node, node_3);
+	node_calculate_MBR(node->MBR, node);
+	assert_true(node->MBR->low->coords[0] == -1);
+	assert_true(node->MBR->low->coords[1] == -1);
+	assert_true(node->MBR->high->coords[0] == 5);
+	assert_true(node->MBR->high->coords[1] == 7);
+
+	node_destroy(node);
 }
 
-void test_node_calculate_MBR() {
+void _test_node_split_node() {
 
 }
 
-void test_node_split_node() {
-
-}
-
-
-int TestNode(void) {
+int test_node(void) {
 	const struct CMUnitTest tests[] = {
-		cmocka_unit_test(test_context_create),
-		cmocka_unit_test(test_entry_create),
-		cmocka_unit_test(test_node_create),
-		cmocka_unit_test(test_node_is_leaf),
-		cmocka_unit_test(test_node_is_root),
-		cmocka_unit_test(test_node_adjust_MBR),
-		cmocka_unit_test(test_node_add_entry),
-		cmocka_unit_test(test_node_delete_entry),
-		//cmocka_unit_test(test_node_choose_optimal_entry)
+		cmocka_unit_test(_test_context_create),
+		cmocka_unit_test(_test_entry_create),
+		cmocka_unit_test(_test_node_create),
+		cmocka_unit_test(_test_node_is_leaf),
+		cmocka_unit_test(_test_node_is_root),
+		cmocka_unit_test(_test_node_adjust_MBR),
+		cmocka_unit_test(_test_node_add_entry),
+		cmocka_unit_test(_test_node_delete_entry),
+		//cmocka_unit_test(_test_entry_compare),
+		cmocka_unit_test(_test_node_calculate_MBR_1),
+		cmocka_unit_test(_test_node_calculate_MBR_2),
+		cmocka_unit_test(_test_node_choose_optimal_entry)
 	};
 	return cmocka_run_group_tests(tests, NULL, NULL);
 }
