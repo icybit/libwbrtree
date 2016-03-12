@@ -3,11 +3,12 @@
 #include <setjmp.h>
 #include <cmocka.h>
 #include <stdlib.h>
-#include "Helpers.h"
-#include "Rectangle.h"
-#include "Node.h"
-#include "RTree.h"
 #include "TestRTree.h"
+#include "Helpers.h"
+#include "../include/Rectangle.h"
+#include "../include/Node.h"
+#include "../include/RTree.h"
+
 
 void _test_rtree_create() {
 	struct RTree *rtree = malloc(sizeof(struct RTree));

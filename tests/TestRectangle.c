@@ -5,9 +5,9 @@
 
 #include <float.h>
 #include <stdlib.h>
-#include "Helpers.h"
-#include "Rectangle.h"
 #include "TestRectangle.h"
+#include "Helpers.h"
+#include "../include/Rectangle.h"
 
 void _test_point_create() {
 	int dim = 2;

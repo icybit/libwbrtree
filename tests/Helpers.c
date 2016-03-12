@@ -1,7 +1,7 @@
 #include "Helpers.h"
-#include "Rectangle.h"
-#include "Node.h"
-#include "RTree.h"
+#include "../include/Rectangle.h"
+#include "../include/Node.h"
+#include "../include/RTree.h"
 
 struct Point * create_2d_point(float *coords) {
 	int dim = 2;

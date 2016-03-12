@@ -2,7 +2,8 @@
 #include "TestNode.h"
 #include "TestRTree.h"
 
-void run_all_tests() {
+void main(int argc, char *argv[])
+{
 	test_rectangle();
 	test_node();
 	test_rtree();

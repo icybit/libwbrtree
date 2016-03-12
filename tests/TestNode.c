@@ -3,11 +3,11 @@
 #include <setjmp.h>
 #include <cmocka.h>
 #include <stdlib.h>
-#include "Common.h"
-#include "Helpers.h"
-#include "Rectangle.h"
-#include "Node.h"
 #include "TestNode.h"
+#include "Helpers.h"
+#include "../include/Common.h"
+#include "../include/Rectangle.h"
+#include "../include/Node.h"
 
 void _test_context_create() {
 	int dim = 2;
