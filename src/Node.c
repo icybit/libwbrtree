@@ -12,13 +12,14 @@
 #include "Rectangle.h"
 #include "Node.h"
 
-void context_create(struct Context *dest, uint8_t m, uint8_t M, uint8_t dim, float alloc_factor, struct Rectangle *space_MBR)
+void context_create(struct Context *dest, uint8_t m, uint8_t M, uint8_t dim, size_t buffer_size, float alloc_factor, struct Rectangle *space_MBR)
 {
 	assert(space_MBR != NULL);
 
 	dest->m = (m <= M/2 ? m : 2);
 	dest->M = (M > 2 ? M : 3);
 	dest->dim = dim;
+	dest->buffer_size = buffer_size;
 	dest->alloc_factor = (alloc_factor > 1.0f ? alloc_factor : 2.0f);
 	dest->space = space_MBR;
 }
@@ -53,6 +54,19 @@ void entry_print(struct Entry *entry)
 	puts("]\n");
 }
 #endif
+
+size_t entry_serialize(struct Entry *entry, unsigned char *buffer)
+{
+	size_t index = 0;
+	memcpy(&buffer[index], &entry, sizeof(struct Entry *));
+	index += sizeof(struct Entry *);
+	memcpy(&buffer[index], entry->tuple, sizeof(entry->tuple));
+	index += sizeof(entry->tuple);
+	memcpy(&buffer[index], entry->MBR->low->coords, entry->MBR->dim * sizeof(float));
+	index += entry->MBR->dim * sizeof(float);
+
+	return index;
+}
 
 int node_add_entry(struct Node *node, void *entry)
 {

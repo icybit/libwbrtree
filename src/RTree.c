@@ -1,3 +1,4 @@
+#include <assert.h>
 #include <stddef.h>
 #ifdef DEBUG
 #include <stdio.h>
@@ -204,11 +205,9 @@ struct Node * _rtree_find_leaf_recursive(struct Node *node, struct Entry *entry)
 	return NULL;
 }
 
-struct hashset_st * rtree_search(struct RTree *rtree, struct Rectangle *search_rectangle)
+void rtree_search(struct RTree *rtree, struct Rectangle *search_rectangle, struct hashset_st *results)
 {
-	hashset_t results = hashset_create();
 	_rtree_search_recursive(rtree->root, search_rectangle, results);
-	return results;
 }
 
 void _rtree_search_recursive(struct Node *node, struct Rectangle *search_rectangle, struct hashset_st *results)
@@ -239,13 +238,49 @@ void _rtree_search_recursive(struct Node *node, struct Rectangle *search_rectang
 	}
 }
 
+void rtree_serialize(struct RTree *rtree, unsigned char *buffer)
+{
+	size_t buffer_index = 0;
+
+	_rtree_serialize_recursive(rtree->root, buffer, &buffer_index);
+}
+
+void _rtree_serialize_recursive(struct Node *node, unsigned char *buffer, size_t *index)
+{
+	if (node_is_leaf(node))
+	{
+		uint8_t i;
+		unsigned char * entry_buffer = malloc(node->context->buffer_size);
+		
+		for (i = 0; i < node->count; i++)
+		{
+			struct Entry *entry = (struct Entry *)node->entries[i];
+			size_t buffer_size = entry_serialize(entry, entry_buffer);
+			assert(node->context->buffer_size == buffer_size);
+			memmove(&buffer[*index], entry_buffer, buffer_size);
+			*index += buffer_size;
+		}
+		free(entry_buffer);
+	}
+	else
+	{
+		uint8_t i;
+		for (i = 0; i < node->count; i++)
+		{
+			struct Node *entry = (struct Node *)node->entries[i];
+			_rtree_serialize_recursive(entry, buffer, index);
+		}
+	}
+}
+
 #ifdef DEBUG
 void rtree_visualize(struct RTree *rtree)
 {
-	printf("RTREE: CONTEXT(m = %u, M = %u, dim = %u, alloc_factor = %3.2f, space = ", 
+	printf("RTREE: CONTEXT(m = %u, M = %u, dim = %u, buffer_size = %zu, alloc_factor = %3.2f, space = ", 
 		rtree->context->m, 
 		rtree->context->M,
 		rtree->context->dim,
+		rtree->context->buffer_size,
 		rtree->context->alloc_factor);
 
 	rectangle_print(rtree->context->space);
