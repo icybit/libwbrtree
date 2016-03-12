@@ -47,12 +47,18 @@ void entry_print(struct Entry *entry);
 
 int node_add_entry(struct Node *node, void *entry);
 void node_adjust_MBR(struct Node *node, void *entry);
-struct Node * node_choose_optimal_entry(struct Node *node, struct Entry *entry);
 void node_calculate_MBR(struct Rectangle *MBR, struct Node *node);
 void _node_calculate_node_MBR(struct Rectangle *MBR, struct Node *node);
 void _node_calculate_leaf_MBR(struct Rectangle *MBR, struct Node *leaf);
+struct Node * node_choose_optimal_entry(struct Node *node, struct Entry *entry);
 uint8_t _node_choose_split_axis(struct Node *node, void ***sorted_entries, struct Rectangle *MBR_one, struct Rectangle *MBR_two);
 uint8_t _node_choose_split_index(uint8_t dimension, struct Node *node, void ***sorted_entries, struct Rectangle *MBR_one, struct Rectangle *MBR_two);
+#ifdef _QSORT_LINUX
+int node_compare(const void *entry, const void *other, void *dimension);
+#endif
+#ifdef _QSORT_WINDOWS
+int node_compare(void *dimension, const void *entry, const void *other);
+#endif
 void node_create(struct Node *dest, struct Context *context, struct Node *parent, void **entries, uint8_t entry_count, struct Rectangle *MBR, uint16_t level);
 void node_delete_entry(struct Node *node, void *entry);
 void node_destroy(struct Node *node);
