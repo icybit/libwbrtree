@@ -32,7 +32,7 @@ struct Node {
 	uint16_t level;
 };
 
-void context_create(struct Context *dest, uint8_t m, uint8_t M, uint8_t dim, size_t tuple_size, float alloc_factor, struct Rectangle *space_MBR);
+void context_create(struct Context *dest, uint8_t m, uint8_t M, uint8_t dim, size_t buffer_size, float alloc_factor, struct Rectangle *space_MBR);
 
 #ifdef _QSORT_LINUX
 int entry_compare(const void *entry, const void *other, void *dimension);

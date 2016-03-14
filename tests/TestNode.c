@@ -5,9 +5,9 @@
 #include <stdlib.h>
 #include "TestNode.h"
 #include "Helpers.h"
-#include "../include/Common.h"
-#include "../include/Rectangle.h"
-#include "../include/Node.h"
+#include "Common.h"
+#include "Rectangle.h"
+#include "Node.h"
 
 void _test_context_create() {
 	int dim = 2;
@@ -23,7 +23,7 @@ void _test_context_create() {
 	int m = 4;
 	int M = 12;
 
-	context_create(context, m, M, dim, alloc_factor, rectangle);
+	context_create(context, m, M, dim, 35, alloc_factor, rectangle);
 	assert_int_equal(context->m, m);
 	assert_int_equal(context->M, M);
 	assert_true(context->alloc_factor == 4);
@@ -43,8 +43,8 @@ void _test_entry_create() {
 	struct Entry *entry = malloc(sizeof(struct Entry));
 	uint8_t tuple = 4;
 
-	entry_create(entry, (void *) tuple, rectangle);
-	assert_ptr_equal(entry->tuple, (void *) tuple);
+	entry_create(entry, tuple, rectangle);
+	assert_true(entry->tuple == tuple);
 	assert_ptr_equal(entry->MBR, rectangle);
 
 	destroy_rectangle(rectangle);
@@ -66,7 +66,7 @@ void _test_node_create() {
 	int m = 4;
 	int M = 12;
 
-	context_create(context, m, M, dim, alloc_factor, rectangle);
+	context_create(context, m, M, dim, 35, alloc_factor, rectangle);
 	
 	// Create Node
 	struct Node *node = malloc(sizeof(struct Node));
@@ -142,7 +142,7 @@ void _test_node_add_entry() {
 	int m = 4;
 	int M = 12;
 
-	context_create(context, m, M, dim, alloc_factor, rectangle_a);
+	context_create(context, m, M, dim, 35, alloc_factor, rectangle_a);
 
 	struct Node *node = malloc(sizeof(struct Node));
 	int level = 0;
@@ -222,7 +222,7 @@ void _test_node_delete_entry() {
 	int m = 4;
 	int M = 12;
 
-	context_create(context, m, M, dim, alloc_factor, rectangle_a);
+	context_create(context, m, M, dim, 35, alloc_factor, rectangle_a);
 
 	struct Node *node = malloc(sizeof(struct Node));
 	int level = 0;
@@ -322,7 +322,7 @@ void _test_node_adjust_MBR() {
 	int m = 4;
 	int M = 12;
 
-	context_create(context, m, M, dim, alloc_factor, rectangle_a);
+	context_create(context, m, M, dim, 35, alloc_factor, rectangle_a);
 		
 	struct Node *node = malloc(sizeof(struct Node));
 	int level = 0;
@@ -387,7 +387,7 @@ void _test_node_choose_optimal_entry() {
 	float low_4[] = { -3, 0 };
 	float high_4[] = { -2, 1 };
 	int tuple = 1;
-	struct Entry *entry = create_2d_entry(tuple, low_4, high_4);
+	struct Entry *entry = create_2d_entry(&tuple, low_4, high_4);
 
 
 	node_add_entry(node, node_1);
@@ -402,22 +402,25 @@ void _test_entry_compare() {
 	float low_1[] = { 1, 1 };
 	float high_1[] = { 3, 3 };
 	int tuple_1 = 1;
-	struct Entry *entry_1 = create_2d_entry((void *)tuple_1, low_1, high_1);
+	struct Entry *entry_1 = create_2d_entry(tuple_1, low_1, high_1);
 
 	float low_2[] = { 0, 2 };
 	float high_2[] = { 4, 2 };
 	int tuple_2 = 2;
-	struct Entry *entry_2 = create_2d_entry((void *)tuple_2, low_2, high_2);
+	struct Entry *entry_2 = create_2d_entry(tuple_2, low_2, high_2);
 
-	uint8_t *dim_1 = 0;
-	uint8_t *dim_2 = 1;
+	uint8_t dim_1 = 0;
+	uint8_t dim_2 = 1;
 
-	assert_true(entry_compare(dim_1, entry_1, entry_2) < 0);
-	assert_true(entry_compare(dim_2, entry_1, entry_2) > 0);
-	assert_true(entry_compare(dim_1, entry_2, entry_1) > 0);
-	assert_true(entry_compare(dim_2, entry_2, entry_1) < 0);
-	assert_true(entry_compare(dim_1, entry_2, entry_2) == 0);
-	assert_true(entry_compare(dim_2, entry_2, entry_2) == 0);
+	assert_true(entry_1->tuple == 1);
+	assert_true(entry_2->tuple == 2);
+
+	assert_true(entry_compare(&dim_1, entry_1, entry_2) > 0);
+	assert_true(entry_compare(&dim_2, entry_1, entry_2) < 0);
+	assert_true(entry_compare(&dim_1, entry_2, entry_1) < 0);
+	assert_true(entry_compare(&dim_2, entry_2, entry_1) > 0);
+	assert_true(entry_compare(&dim_1, entry_2, entry_2) == 0);
+	assert_true(entry_compare(&dim_2, entry_2, entry_2) == 0);
 
 	destroy_entry(entry_1);
 	destroy_entry(entry_2);
@@ -432,17 +435,17 @@ void _test_node_calculate_MBR_1() {
 	float low_1[] = { 3, -1 };
 	float high_1[] = { 5, 1 };
 	int tuple_1 = 1;
-	struct Entry *entry_1 = create_2d_entry((void *)tuple_1, low_1, high_1);
+	struct Entry *entry_1 = create_2d_entry(&tuple_1, low_1, high_1);
 
 	float low_2[] = { -1, -1 };
 	float high_2[] = { 1, 1 };
 	int tuple_2 = 2;
-	struct Entry *entry_2 = create_2d_entry((void *)tuple_2, low_2, high_2);
+	struct Entry *entry_2 = create_2d_entry(&tuple_2, low_2, high_2);
 
 	float low_3[] = { -1, 5 };
 	float high_3[] = { 2, 7 };
 	int tuple_3 = 3;
-	struct Entry *entry_3 = create_2d_entry((void *)tuple_3, low_3, high_3);
+	struct Entry *entry_3 = create_2d_entry(&tuple_3, low_3, high_3);
 	
 	node_add_entry(node, entry_1);
 	node_calculate_MBR(node->MBR, node);
@@ -526,7 +529,7 @@ int test_node(void) {
 		cmocka_unit_test(_test_node_adjust_MBR),
 		cmocka_unit_test(_test_node_add_entry),
 		cmocka_unit_test(_test_node_delete_entry),
-		//cmocka_unit_test(_test_entry_compare),
+		cmocka_unit_test(_test_entry_compare),
 		cmocka_unit_test(_test_node_calculate_MBR_1),
 		cmocka_unit_test(_test_node_calculate_MBR_2),
 		cmocka_unit_test(_test_node_choose_optimal_entry)

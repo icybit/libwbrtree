@@ -5,9 +5,9 @@
 #include <stdlib.h>
 #include "TestRTree.h"
 #include "Helpers.h"
-#include "../include/Rectangle.h"
-#include "../include/Node.h"
-#include "../include/RTree.h"
+#include "Rectangle.h"
+#include "Node.h"
+#include "RTree.h"
 
 
 void _test_rtree_create() {
@@ -52,11 +52,11 @@ void _test_rtree_insert() {
 	float low_5[] = { 18, 15 };
 	float high_5[] = { 20, 17 };
 	
-	struct Entry *entry_1 = create_2d_entry((void *)tuples[0], low_1, high_1);
-	struct Entry *entry_2 = create_2d_entry((void *)tuples[1], low_2, high_2);
-	struct Entry *entry_3 = create_2d_entry((void *)tuples[2], low_3, high_3);
-	struct Entry *entry_4 = create_2d_entry((void *)tuples[3], low_4, high_4);
-	struct Entry *entry_5 = create_2d_entry((void *)tuples[4], low_5, high_5);
+	struct Entry *entry_1 = create_2d_entry(tuples[0], low_1, high_1);
+	struct Entry *entry_2 = create_2d_entry(tuples[1], low_2, high_2);
+	struct Entry *entry_3 = create_2d_entry(tuples[2], low_3, high_3);
+	struct Entry *entry_4 = create_2d_entry(tuples[3], low_4, high_4);
+	struct Entry *entry_5 = create_2d_entry(tuples[4], low_5, high_5);
 	
 	// Test rtree_insert
 	rtree_insert(rtree, entry_1);
@@ -88,6 +88,11 @@ void _test_rtree_insert() {
 	assert_true(node_is_root(rtree->root));
 
 	// Node should split to 2 nodes. New root node should be created.
+	puts(entry_1->tuple);
+	puts(entry_2->tuple);
+	puts(entry_3->tuple);
+	puts(entry_4->tuple);
+	puts(entry_5->tuple);
 	rtree_insert(rtree, entry_5);
 	assert_ptr_equal(rtree->root->MBR->low->coords, coords_low);
 	assert_true(rtree->root->MBR->high->coords[0], high_5[0]);
