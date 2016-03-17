@@ -142,8 +142,8 @@ void _test_rectangle_extend_infinitely() {
 	assert_int_equal(rectangle->dim, dim);
 	
 	for (int i = 0; i < dim; i++) {
-		assert_true(rectangle->low->coords[i] == -FLT_MAX);
-		assert_true(rectangle->high->coords[i] == FLT_MAX);
+		assert_true(rectangle->low->coords[i] == FLT_MAX);
+		assert_true(rectangle->high->coords[i] == -FLT_MAX);
 	}
 
 	free(low);

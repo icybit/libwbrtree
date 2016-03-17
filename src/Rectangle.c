@@ -63,8 +63,8 @@ void rectangle_extend_infinitely(rt_rect_t *dest)
 	uint8_t dim;
 	for (dim = 0; dim < dest->dim; dim++)
 	{
-		dest->low[dim] = -FLT_MAX;
-		dest->high[dim] = FLT_MAX;
+		dest->low[dim] = FLT_MAX;
+		dest->high[dim] = -FLT_MAX;
 	}
 }
 
