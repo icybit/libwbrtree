@@ -3,15 +3,17 @@
 
 #include <stdint.h>
 
-struct Point * create_2d_point(float *coords);
-struct Rectangle * create_2d_rectangle(float *coords_low, float *coords_high);
-struct Node * create_2d_node(uint8_t m, uint8_t M, float alloc_factor, float *coords_low, float *coords_high, uint16_t level);
-struct Context * create_2d_context(uint8_t m, uint8_t M, float alloc_factor, float *coords_low, float *coords_high);
-struct RTree * create_2d_rtree(uint8_t m, uint8_t M, float alloc_factor, float *coords_low, float *coords_high);
-struct Entry * create_2d_entry(void *tuple, float *coords_low, float *coords_high);
+/* TODO: Revise use of Helpers and remove them if not needed */
 
-void destroy_rectangle(struct Rectangle *rectangle);
-void destroy_context(struct Context *context);
-void destroy_entry(struct Entry *entry);
+/*struct Point * create_2d_point(float *coords);
+rt_rect_t * create_2d_rectangle(float *coords_low, float *coords_high);
+rt_node_t * create_2d_node(uint8_t m, uint8_t M, float alloc_factor, float *coords_low, float *coords_high, uint16_t level);
+rt_ctx_t * create_2d_context(uint8_t m, uint8_t M, float alloc_factor, float *coords_low, float *coords_high);
+rt_rtree_t * create_2d_rtree(uint8_t m, uint8_t M, float alloc_factor, float *coords_low, float *coords_high);
+rt_entry_t * create_2d_entry(void *tuple, float *coords_low, float *coords_high);
+
+void destroy_rectangle(rt_rect_t *rectangle);
+void destroy_context(rt_ctx_t *context);
+void destroy_entry(rt_entry_t *entry);*/
 
 #endif

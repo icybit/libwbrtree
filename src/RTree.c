@@ -11,9 +11,9 @@
 #include "Node.h"
 #include "RTree.h"
 
-void rtree_insert(struct RTree *rtree, struct Entry *entry) 
+void rtree_insert(rt_rtree_t *rtree, rt_entry_t *entry) 
 {
-	struct Node *leaf = _rtree_choose_leaf(rtree->root, entry);
+	rt_node_t *leaf = _rtree_choose_leaf(rtree->root, entry);
 
 	if (node_add_entry(leaf, entry))
 	{
@@ -21,22 +21,22 @@ void rtree_insert(struct RTree *rtree, struct Entry *entry)
 	}
 	else
 	{
-		struct Node *lleaf = node_split_node(leaf, entry);
+		rt_node_t *lleaf = node_split(leaf, entry);
 		_rtree_adjust_tree(rtree, leaf, lleaf);
 	}
 }
 
-void rtree_create(struct RTree *dest, struct Context *context)
+void rtree_create(rt_rtree_t *dest, rt_ctx_t *context)
 {
-	struct Node *root = malloc(sizeof(struct Node));
+	rt_node_t *root = malloc(sizeof(rt_node_t));
 	node_create(root, context, NULL, NULL, 0, context->space, 0);
 	dest->context = context;
 	dest->root = root;
 }
 
-int rtree_delete(struct RTree *rtree, struct Entry *entry)
+int rtree_delete(rt_rtree_t *rtree, rt_entry_t *entry)
 {
-	struct Node *leaf = _rtree_find_leaf(rtree->root, entry);
+	rt_node_t *leaf = _rtree_find_leaf(rtree->root, entry);
 
 	if (leaf != NULL)
 	{
@@ -44,7 +44,7 @@ int rtree_delete(struct RTree *rtree, struct Entry *entry)
 		_rtree_condense_tree(rtree, leaf);
 		if (rtree->root->count == 1)
 		{
-			struct Node *root = (struct Node *)rtree->root->entries[0];
+			rt_node_t *root = (rt_node_t *)rtree->root->entries[0];
 			node_destroy(rtree->root);
 			rtree->root = root;
 		}
@@ -53,28 +53,29 @@ int rtree_delete(struct RTree *rtree, struct Entry *entry)
 	return 0;
 }
 
-void rtree_destroy(struct RTree *rtree)
+void rtree_destroy(rt_rtree_t *rtree)
 {
 	node_destroy(rtree->root);
 }
 
-void _rtree_adjust_tree(struct RTree *rtree, struct Node *node, struct Node *nnode)
+void _rtree_adjust_tree(rt_rtree_t *rtree, rt_node_t *node, rt_node_t *nnode)
 {
 	_rtree_adjust_tree_recursive(rtree, node, nnode, 0);
 }
 
-void _rtree_adjust_tree_recursive(struct RTree *rtree, struct Node *node, struct Node *nnode, int level)
+void _rtree_adjust_tree_recursive(rt_rtree_t *rtree, rt_node_t *node, rt_node_t *nnode, int level)
 {
 	if (rtree->root == node)
 	{
 		if (nnode != NULL)
 		{
-			struct Rectangle *MBR = malloc(sizeof(struct Rectangle));
-			void **entries = malloc(2 * sizeof(struct Node *));
+			rt_node_t *root = malloc(sizeof(*(rtree->root)));
+			void **entries = malloc(2 * sizeof(rt_node_t *));
 			entries[0] = node;
 			entries[1] = nnode;
 
-			node_create(rtree->root, rtree->context, NULL, entries, 2, MBR, level);
+			node_copy(root, rtree->root);
+			node_create(root, rtree->context, NULL, entries, 2, node->MBR, level);
 		}
 		return;
 	}
@@ -89,7 +90,7 @@ void _rtree_adjust_tree_recursive(struct RTree *rtree, struct Node *node, struct
 		}
 		else
 		{
-			struct Node *p_parent = node_split_node(node->parent, nnode);
+			rt_node_t *p_parent = node_split(node->parent, nnode);
 			_rtree_adjust_tree_recursive(rtree, node->parent, p_parent, level + 1);
 		}
 	}
@@ -99,12 +100,12 @@ void _rtree_adjust_tree_recursive(struct RTree *rtree, struct Node *node, struct
 	}
 }
 
-struct Node * _rtree_choose_leaf(struct Node *node, struct Entry *entry)
+rt_node_t * _rtree_choose_leaf(rt_node_t *node, rt_entry_t *entry)
 {
 	return _rtree_choose_leaf_recursive(node, entry);
 }
 
-struct Node * _rtree_choose_leaf_recursive(struct Node *node, struct Entry *entry)
+rt_node_t * _rtree_choose_leaf_recursive(rt_node_t *node, rt_entry_t *entry)
 {
 	if (node_is_leaf(node))
 	{
@@ -114,27 +115,27 @@ struct Node * _rtree_choose_leaf_recursive(struct Node *node, struct Entry *entr
 	return _rtree_choose_leaf_recursive(node_choose_optimal_entry(node, entry), entry);
 }
 
-void _rtree_condense_tree(struct RTree *rtree, struct Node *node)
+void _rtree_condense_tree(rt_rtree_t *rtree, rt_node_t *node)
 {
 	hashset_t condensed_nodes = hashset_create();
 	_rtree_condense_tree_recursive(rtree, node, condensed_nodes);
 	hashset_destroy(condensed_nodes);
 }
 
-void _rtree_condense_tree_recursive(struct RTree *rtree, struct Node *node, struct hashset_st *condensed_nodes)
+void _rtree_condense_tree_recursive(rt_rtree_t *rtree, rt_node_t *node, struct hashset_st *condensed_nodes)
 {
 	if (node_is_root(node))
 	{
 		hashset_itr_t set_iter = hashset_iterator(condensed_nodes);
 		while (hashset_iterator_has_next(set_iter))
 		{
-			struct Node * condensed_node = (struct Node *)hashset_iterator_value(set_iter);
+			rt_node_t * condensed_node = (rt_node_t *)hashset_iterator_value(set_iter);
 			if (node_is_leaf(condensed_node))
 			{
 				uint8_t i;
 				for (i = 0; i < condensed_node->count; i++)
 				{
-					rtree_insert(rtree, (struct Entry *)condensed_node->entries[i]);
+					rtree_insert(rtree, (rt_entry_t *)condensed_node->entries[i]);
 				}
 				node_destroy(condensed_node);
 			}
@@ -143,7 +144,7 @@ void _rtree_condense_tree_recursive(struct RTree *rtree, struct Node *node, stru
 				uint8_t i;
 				for (i = 0; i < condensed_node->count; i++)
 				{
-					node_add_entry(condensed_node->parent, (struct Node *)condensed_node->entries[i]);
+					node_add_entry(condensed_node->parent, (rt_node_t *)condensed_node->entries[i]);
 				}
 			}
 			hashset_iterator_next(set_iter);
@@ -165,12 +166,12 @@ void _rtree_condense_tree_recursive(struct RTree *rtree, struct Node *node, stru
 	}
 }
 
-struct Node * _rtree_find_leaf(struct Node *node, struct Entry *entry)
+rt_node_t * _rtree_find_leaf(rt_node_t *node, rt_entry_t *entry)
 {
 	return _rtree_find_leaf_recursive(node, entry);
 }
 
-struct Node * _rtree_find_leaf_recursive(struct Node *node, struct Entry *entry)
+rt_node_t * _rtree_find_leaf_recursive(rt_node_t *node, rt_entry_t *entry)
 {
 	uint8_t i;
 
@@ -178,7 +179,7 @@ struct Node * _rtree_find_leaf_recursive(struct Node *node, struct Entry *entry)
 	{
 		for (i = 0; i < node->count; i++)
 		{
-			if ((struct Entry *)node->entries[i] == entry)
+			if ((rt_entry_t *)node->entries[i] == entry)
 			{
 				return node;
 			}
@@ -186,11 +187,11 @@ struct Node * _rtree_find_leaf_recursive(struct Node *node, struct Entry *entry)
 	}
 	else
 	{
-		struct Node *result = NULL;
+		rt_node_t *result = NULL;
 
 		for (i = 0; i < node->count; i++)
 		{
-			struct Node *node_entry = (struct Node *)node->entries[i];
+			rt_node_t *node_entry = (rt_node_t *)node->entries[i];
 			if (rectangle_overlaps(node_entry->MBR, entry->MBR))
 			{
 				result = _rtree_find_leaf_recursive(node_entry, entry);
@@ -205,19 +206,19 @@ struct Node * _rtree_find_leaf_recursive(struct Node *node, struct Entry *entry)
 	return NULL;
 }
 
-void rtree_search(struct RTree *rtree, struct Rectangle *search_rectangle, struct hashset_st *results)
+void rtree_search(rt_rtree_t *rtree, rt_rect_t *search_rectangle, struct hashset_st *results)
 {
 	_rtree_search_recursive(rtree->root, search_rectangle, results);
 }
 
-void _rtree_search_recursive(struct Node *node, struct Rectangle *search_rectangle, struct hashset_st *results)
+void _rtree_search_recursive(rt_node_t *node, rt_rect_t *search_rectangle, struct hashset_st *results)
 {
 	if (node_is_leaf(node))
 	{
 		uint8_t i;
 		for (i = 0; i < node->count; i++)
 		{
-			struct Entry *entry = (struct Entry *)node->entries[i];
+			rt_entry_t *entry = (rt_entry_t *)node->entries[i];
 			if (rectangle_overlaps(search_rectangle, entry->MBR))
 			{
 				hashset_add(results, entry);
@@ -229,7 +230,7 @@ void _rtree_search_recursive(struct Node *node, struct Rectangle *search_rectang
 		uint8_t i;
 		for (i = 0; i < node->count; i++)
 		{
-			struct Node *entry = (struct Node *)node->entries[i];
+			rt_node_t *entry = (rt_node_t *)node->entries[i];
 			if (rectangle_overlaps(search_rectangle, entry->MBR))
 			{
 				_rtree_search_recursive(entry, search_rectangle, results);
@@ -238,14 +239,14 @@ void _rtree_search_recursive(struct Node *node, struct Rectangle *search_rectang
 	}
 }
 
-void rtree_serialize(struct RTree *rtree, unsigned char *buffer)
+void rtree_serialize(rt_rtree_t *rtree, unsigned char *buffer)
 {
 	size_t buffer_index = 0;
 
 	_rtree_serialize_recursive(rtree->root, buffer, &buffer_index);
 }
 
-void _rtree_serialize_recursive(struct Node *node, unsigned char *buffer, size_t *index)
+void _rtree_serialize_recursive(rt_node_t *node, unsigned char *buffer, size_t *index)
 {
 	if (node_is_leaf(node))
 	{
@@ -254,7 +255,7 @@ void _rtree_serialize_recursive(struct Node *node, unsigned char *buffer, size_t
 		
 		for (i = 0; i < node->count; i++)
 		{
-			struct Entry *entry = (struct Entry *)node->entries[i];
+			rt_entry_t *entry = (rt_entry_t *)node->entries[i];
 			size_t buffer_size = entry_serialize(entry, entry_buffer);
 			assert(node->context->buffer_size == buffer_size);
 			memmove(&buffer[*index], entry_buffer, buffer_size);
@@ -267,14 +268,14 @@ void _rtree_serialize_recursive(struct Node *node, unsigned char *buffer, size_t
 		uint8_t i;
 		for (i = 0; i < node->count; i++)
 		{
-			struct Node *entry = (struct Node *)node->entries[i];
+			rt_node_t *entry = (rt_node_t *)node->entries[i];
 			_rtree_serialize_recursive(entry, buffer, index);
 		}
 	}
 }
 
 #ifdef DEBUG
-void rtree_visualize(struct RTree *rtree)
+void rtree_visualize(rt_rtree_t *rtree)
 {
 	printf("RTREE: CONTEXT(m = %u, M = %u, dim = %u, buffer_size = %zu, alloc_factor = %3.2f, space = ", 
 		rtree->context->m, 
@@ -288,7 +289,7 @@ void rtree_visualize(struct RTree *rtree)
 
 	_rtree_visualize_recursive(rtree->root, rtree->root->level);
 }
-void _rtree_visualize_recursive(struct Node *node, uint16_t max_level) 
+void _rtree_visualize_recursive(rt_node_t *node, uint16_t max_level) 
 {
 	uint16_t level_pad = max_level - node->level;
 	char *padding = malloc(level_pad * sizeof(char));
@@ -303,7 +304,7 @@ void _rtree_visualize_recursive(struct Node *node, uint16_t max_level)
 		uint8_t i;
 		for (i = 0; i < node->count; i++)
 		{
-			entry_print((struct Entry *)node->entries[i]);
+			entry_print((rt_entry_t *)node->entries[i]);
 		}
 	}
 	else
@@ -314,7 +315,7 @@ void _rtree_visualize_recursive(struct Node *node, uint16_t max_level)
 		
 		for (i = 0; i < node->count; i++)
 		{
-			_rtree_visualize_recursive((struct Node *)node->entries[i], max_level);
+			_rtree_visualize_recursive((rt_node_t *)node->entries[i], max_level);
 		}
 	}
 }

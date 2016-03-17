@@ -8,31 +8,35 @@
 #define _QSORT_WINDOWS
 #endif
 
-struct Context {
+#include <stdint.h>
+
+typedef struct Rectangle rt_rect_t;
+
+typedef struct Context {
 	uint8_t m;
 	uint8_t M;
 	uint8_t dim;
 	size_t buffer_size;
 	float alloc_factor;
-	struct Rectangle *space;
-};
+	rt_rect_t *space;
+} rt_ctx_t;
 
-struct Entry {
+typedef struct Entry {
 	void *tuple;
-	struct Rectangle *MBR;
-};
+	rt_rect_t *MBR;
+} rt_entry_t;
 
-struct Node {
-	struct Context *context;
+typedef struct Node {
+	rt_ctx_t *context;
 	struct Node *parent;
 	void **entries;
-	struct Rectangle *MBR;
+	rt_rect_t *MBR;
 	uint8_t capacity;
 	uint8_t count;
 	uint16_t level;
-};
+} rt_node_t;
 
-void context_create(struct Context *dest, uint8_t m, uint8_t M, uint8_t dim, size_t buffer_size, float alloc_factor, struct Rectangle *space_MBR);
+void context_create(rt_ctx_t *dest, uint8_t m, uint8_t M, uint8_t dim, size_t buffer_size, float alloc_factor, rt_rect_t *space_MBR);
 
 #ifdef _QSORT_LINUX
 int entry_compare(const void *entry, const void *other, void *dimension);
@@ -41,33 +45,34 @@ int entry_compare(const void *entry, const void *other, void *dimension);
 int entry_compare(void *dimension, const void *entry, const void *other);
 #endif
 
-void entry_create(struct Entry *dest, void *tuple, struct Rectangle *MBR);
+void entry_create(rt_entry_t *dest, void *tuple, rt_rect_t *MBR);
 #ifdef DEBUG
-void entry_print(struct Entry *entry);
+void entry_print(rt_entry_t *entry);
 #endif
-size_t entry_serialize(struct Entry *entry, unsigned char *buffer);
+size_t entry_serialize(rt_entry_t *entry, unsigned char *buffer);
 
-int node_add_entry(struct Node *node, void *entry);
-void node_adjust_MBR(struct Node *node, void *entry);
-void node_calculate_MBR(struct Rectangle *MBR, struct Node *node);
-void _node_calculate_node_MBR(struct Rectangle *MBR, struct Node *node);
-void _node_calculate_leaf_MBR(struct Rectangle *MBR, struct Node *leaf);
-struct Node * node_choose_optimal_entry(struct Node *node, struct Entry *entry);
-uint8_t _node_choose_split_axis(struct Node *node, void ***sorted_entries, struct Rectangle *MBR_one, struct Rectangle *MBR_two);
-uint8_t _node_choose_split_index(uint8_t dimension, struct Node *node, void ***sorted_entries, struct Rectangle *MBR_one, struct Rectangle *MBR_two);
+int node_add_entry(rt_node_t *node, void *entry);
+void node_adjust_MBR(rt_node_t *node, void *entry);
+void node_calculate_MBR(rt_rect_t *MBR, rt_node_t *node);
+void _node_calculate_node_MBR(rt_rect_t *MBR, rt_node_t *node);
+void _node_calculate_leaf_MBR(rt_rect_t *MBR, rt_node_t *leaf);
+rt_node_t * node_choose_optimal_entry(rt_node_t *node, rt_entry_t *entry);
+uint8_t _node_choose_split_axis(rt_node_t *node, void ***sorted_entries, rt_rect_t *MBR_one, rt_rect_t *MBR_two);
+uint8_t _node_choose_split_index(uint8_t dimension, rt_node_t *node, void ***sorted_entries, rt_rect_t *MBR_one, rt_rect_t *MBR_two);
 #ifdef _QSORT_LINUX
 int node_compare(const void *entry, const void *other, void *dimension);
 #endif
 #ifdef _QSORT_WINDOWS
 int node_compare(void *dimension, const void *entry, const void *other);
 #endif
-void node_create(struct Node *dest, struct Context *context, struct Node *parent, void **entries, uint8_t entry_count, struct Rectangle *MBR, uint16_t level);
-void node_delete_entry(struct Node *node, void *entry);
-void node_destroy(struct Node *node);
-double _node_evaluate_distribution(uint8_t k, void ***sorted_entries, uint8_t dimension, struct Node *node, struct Rectangle *MBR_one, struct Rectangle *MBR_two, double(*evaluator)(struct Rectangle *MBR_one, struct Rectangle *MBR_two));
-struct Rectangle * _node_get_entry_MBR(struct Node *node, void *entry);
-int node_is_leaf(struct Node *node);
-int node_is_root(struct Node *node);
-struct Node * node_split_node(struct Node *node, void *entry);
+void node_copy(rt_node_t *dest, const rt_node_t *source);
+void node_create(rt_node_t *dest, rt_ctx_t *context, rt_node_t *parent, void **entries, uint8_t entry_count, rt_rect_t *MBR, uint16_t level);
+void node_delete_entry(rt_node_t *node, void *entry);
+void node_destroy(rt_node_t *node);
+double _node_evaluate_distribution(uint8_t k, void ***sorted_entries, uint8_t dimension, rt_node_t *node, rt_rect_t *MBR_one, rt_rect_t *MBR_two, double(*evaluator)(rt_rect_t *MBR_one, rt_rect_t *MBR_two));
+rt_rect_t * _node_get_entry_MBR(rt_node_t *node, void *entry);
+int node_is_leaf(rt_node_t *node);
+int node_is_root(rt_node_t *node);
+rt_node_t * node_split(rt_node_t *node, void *entry);
 
 #endif

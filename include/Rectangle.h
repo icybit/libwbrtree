@@ -3,35 +3,25 @@
 
 #include <stdint.h>
 
-struct Point {
+typedef struct Rectangle {
 	uint8_t dim;
-	float *coords;
-};
+	float *low;
+	float *high;
+} rt_rect_t;
 
-struct Rectangle {
-	uint8_t dim;
-	struct Point *low;
-	struct Point *high;
-};
-
-int point_compare(const struct Point *point, const struct Point *other, uint8_t *dimension);
-void point_create(struct Point *dest, uint8_t dimension, float *coordinates);
+double rectangle_area(rt_rect_t *rectangle);
+void rectangle_combine(rt_rect_t *rectangle, rt_rect_t *other);
+int rectangle_compare(const rt_rect_t *rectangle, const rt_rect_t *other, uint8_t *dimension);
+void rectangle_copy(rt_rect_t *dest, const rt_rect_t *source);
+void rectangle_create(rt_rect_t *dest, float *low, float *high, uint8_t dimension);
+void rectangle_extend_infinitely(rt_rect_t *dest);
+double rectangle_intersection_area(rt_rect_t *rectangle, rt_rect_t *other);
+double rectangle_margin(rt_rect_t *rectangle);
+double rectangle_margin_value(rt_rect_t *rectangle, rt_rect_t *other);
+double rectangle_min_distance(rt_rect_t *rectangle, rt_rect_t *other);
+int rectangle_overlaps(rt_rect_t *rectangle, rt_rect_t *other);
 #ifdef DEBUG
-void point_print(struct Point *point);
-#endif
-
-double rectangle_area(struct Rectangle *rectangle);
-void rectangle_combine(struct Rectangle *rectangle, struct Rectangle *other);
-int rectangle_compare(const struct Rectangle *rectangle, const struct Rectangle *other, uint8_t *dimension);
-void rectangle_create(struct Rectangle *dest, struct Point *low, struct Point *high);
-void rectangle_extend_infinitely(struct Rectangle *dest);
-double rectangle_intersection_area(struct Rectangle *rectangle, struct Rectangle *other);
-double rectangle_margin(struct Rectangle *rectangle);
-double rectangle_margin_value(struct Rectangle *rectangle, struct Rectangle *other);
-double rectangle_min_distance(struct Rectangle *rectangle, struct Rectangle *other);
-int rectangle_overlaps(struct Rectangle *rectangle, struct Rectangle *other);
-#ifdef DEBUG
-void rectangle_print(struct Rectangle *rectangle);
+void rectangle_print(rt_rect_t *rectangle);
 #endif
 
 #endif

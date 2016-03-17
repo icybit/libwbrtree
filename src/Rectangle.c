@@ -5,51 +5,24 @@
 #include <stdio.h>
 #endif
 #include <stdlib.h>
+#include <string.h>
 #include "Common.h"
 #include "Rectangle.h"
 
-int point_compare(const struct Point *point, const struct Point *other, uint8_t *dimension)
-{
-	return (int)(point->coords[*dimension] - other->coords[*dimension]);
-}
-
-void point_create(struct Point *dest, uint8_t dimension, float *coordinates)
-{
-	assert(coordinates && dimension);
-
-	dest->dim = dimension;
-	dest->coords = coordinates;
-}
-
-#ifdef DEBUG
-void point_print(struct Point *point)
-{
-	uint8_t dim;
-	for (dim = 0; dim < point->dim; dim++)
-	{
-		printf("%g", point->coords[dim]);
-		if (dim < point->dim - 1)
-		{
-			puts(",");
-		}
-	}
-}
-#endif
-
-double rectangle_area(struct Rectangle *rectangle)
+double rectangle_area(rt_rect_t *rectangle)
 {
 	double area = 1.0;
 	uint8_t dim;
 
 	for (dim = 0; dim < rectangle->dim; dim++)
 	{
-		area *= rectangle->high->coords[dim] - rectangle->low->coords[dim];
+		area *= rectangle->high[dim] - rectangle->low[dim];
 	}
 
 	return area;
 }
 
-void rectangle_combine(struct Rectangle *rectangle, struct Rectangle *other) 
+void rectangle_combine(rt_rect_t *rectangle, rt_rect_t *other) 
 {
 	uint8_t dim;
 
@@ -57,37 +30,45 @@ void rectangle_combine(struct Rectangle *rectangle, struct Rectangle *other)
 
 	for (dim = 0; dim < rectangle->dim; dim++)
 	{
-		rectangle->low->coords[dim] = fminf(rectangle->low->coords[dim], other->low->coords[dim]);
-		rectangle->high->coords[dim] = fmaxf(rectangle->high->coords[dim], other->high->coords[dim]);
+		rectangle->low[dim] = fminf(rectangle->low[dim], other->low[dim]);
+		rectangle->high[dim] = fmaxf(rectangle->high[dim], other->high[dim]);
 	}
 }
 
-int rectangle_compare(const struct Rectangle *rectangle, const struct Rectangle *other, uint8_t *dimension)
+int rectangle_compare(const rt_rect_t *rectangle, const rt_rect_t *other, uint8_t *dimension)
 {
-	return point_compare(rectangle->low, other->low, dimension);
+	return (int)(rectangle->low[*dimension] - other->low[*dimension]);
 }
 
-void rectangle_create(struct Rectangle *dest, struct Point *low, struct Point *high)
+void rectangle_copy(rt_rect_t *dest, const rt_rect_t *source)
+{
+	assert(sizeof(*dest) == sizeof(*source));
+
+	dest->dim = source->dim;
+	memcpy(dest->low, source->low, source->dim * sizeof(float));
+	memcpy(dest->high, source->high, source->dim * sizeof(float));
+}
+
+void rectangle_create(rt_rect_t *dest, float *low, float *high, uint8_t dimension)
 {
 	assert(low && high);
-	assert(low->dim == high->dim);
 
-	dest->dim = low->dim;
+	dest->dim = dimension;
 	dest->low = low;
 	dest->high = high;
 }
 
-void rectangle_extend_infinitely(struct Rectangle *dest)
+void rectangle_extend_infinitely(rt_rect_t *dest)
 {
 	uint8_t dim;
 	for (dim = 0; dim < dest->dim; dim++)
 	{
-		dest->low->coords[dim] = -FLT_MAX;
-		dest->high->coords[dim] = FLT_MAX;
+		dest->low[dim] = -FLT_MAX;
+		dest->high[dim] = FLT_MAX;
 	}
 }
 
-double rectangle_intersection_area(struct Rectangle *rectangle, struct Rectangle *other)
+double rectangle_intersection_area(rt_rect_t *rectangle, rt_rect_t *other)
 {
 	double area = 1.0;
 	float f0, f1;
@@ -99,8 +80,8 @@ double rectangle_intersection_area(struct Rectangle *rectangle, struct Rectangle
 	{
 		for (dim = 0; dim < rectangle->dim; dim++)
 		{
-			f0 = fmaxf(rectangle->low->coords[dim], other->low->coords[dim]);
-			f1 = fminf(rectangle->high->coords[dim], other->high->coords[dim]);
+			f0 = fmaxf(rectangle->low[dim], other->low[dim]);
+			f1 = fminf(rectangle->high[dim], other->high[dim]);
 			area *= f1 - f0;
 		}
 	}
@@ -108,7 +89,7 @@ double rectangle_intersection_area(struct Rectangle *rectangle, struct Rectangle
 	return area;
 }
 
-double rectangle_margin(struct Rectangle *rectangle)
+double rectangle_margin(rt_rect_t *rectangle)
 {
 	uint8_t dim;
 	double multiplicity = pow(2.0, (double)(rectangle->dim - 1));
@@ -116,18 +97,18 @@ double rectangle_margin(struct Rectangle *rectangle)
 
 	for (dim = 0; dim < rectangle->dim; dim++)
 	{
-		margin += (rectangle->high->coords[dim] - rectangle->low->coords[dim]) * multiplicity;
+		margin += (rectangle->high[dim] - rectangle->low[dim]) * multiplicity;
 	}
 
 	return margin;
 }
 
-double rectangle_margin_value(struct Rectangle *rectangle, struct Rectangle *other)
+double rectangle_margin_value(rt_rect_t *rectangle, rt_rect_t *other)
 {
 	return (rectangle_margin(rectangle) + rectangle_margin(other));
 }
 
-double rectangle_min_distance(struct Rectangle *rectangle, struct Rectangle *other)
+double rectangle_min_distance(rt_rect_t *rectangle, rt_rect_t *other)
 {
 	double result = 0.0;
 	uint8_t dim;
@@ -136,20 +117,20 @@ double rectangle_min_distance(struct Rectangle *rectangle, struct Rectangle *oth
 
 	for (dim = 0; dim < rectangle->dim; dim++)
 	{
-		if (rectangle->low->coords[dim] > other->high->coords[dim])
+		if (rectangle->low[dim] > other->high[dim])
 		{
-			result += powf(rectangle->low->coords[dim] - other->high->coords[dim], 2.0);
+			result += powf(rectangle->low[dim] - other->high[dim], 2.0);
 		}
-		else if (rectangle->high->coords[dim] < other->low->coords[dim])
+		else if (rectangle->high[dim] < other->low[dim])
 		{
-			result += powf(other->low->coords[dim] - rectangle->high->coords[dim], 2.0);
+			result += powf(other->low[dim] - rectangle->high[dim], 2.0);
 		}
 	}
 
 	return sqrt(result);
 }
 
-int rectangle_overlaps(struct Rectangle *rectangle, struct Rectangle *other) 
+int rectangle_overlaps(rt_rect_t *rectangle, rt_rect_t *other) 
 {
 	uint8_t dim;
 
@@ -157,8 +138,8 @@ int rectangle_overlaps(struct Rectangle *rectangle, struct Rectangle *other)
 
 	for (dim = 0; dim < rectangle->dim; dim++)
 	{
-		if (rectangle->high->coords[dim] < other->low->coords[dim] ||
-			rectangle->low->coords[dim] > other->high->coords[dim])
+		if (rectangle->high[dim] < other->low[dim] ||
+			rectangle->low[dim] > other->high[dim])
 		{
 			return 0;
 		}
@@ -168,12 +149,27 @@ int rectangle_overlaps(struct Rectangle *rectangle, struct Rectangle *other)
 }
 
 #ifdef DEBUG
-void rectangle_print(struct Rectangle *rectangle)
+void rectangle_print(rt_rect_t *rectangle)
 {
+	uint8_t dim;
 	puts("MBR: LOW(");
-	point_print(rectangle->low);
+	for (dim = 0; dim < rectangle->dim; dim++)
+	{
+		printf("%g", rectangle->low[dim]);
+		if (dim < rectangle->dim - 1)
+		{
+			puts(",");
+		}
+	}
 	puts("), HIGH(");
-	point_print(rectangle->high);
+	for (dim = 0; dim < rectangle->dim; dim++)
+	{
+		printf("%g", rectangle->high[dim]);
+		if (dim < rectangle->dim - 1)
+		{
+			puts(",");
+		}
+	}
 	puts(")\n");
 }
 #endif
