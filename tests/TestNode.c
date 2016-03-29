@@ -29,506 +29,462 @@ void _test_context_create() {
 
 /* TODO: The following tests should be refactored to remove superfluous heap allocations and to comply with -Pedantic rules */
 
-/*void _test_entry_create() {	
-	// Create Rectangle
-	float coords_low[] = { 0, 0 };
-	float coords_high[] = { 2, 2 };
-	rt_rect_t *rectangle = create_2d_rectangle(coords_low, coords_high);
+void _test_entry_create() {	
+	uint8_t tuple = 4, dim = 2;
+	float low[] = { 0.0f, 0.0f };
+	float high[] = { 2.0f, 2.0f };
+	rt_rect_t rectangle;
+	rt_entry_t entry;	
+	
+	rectangle_create(&rectangle, low, high, dim);	
 
-	// Create Entry
-	rt_entry_t *entry = malloc(sizeof(rt_entry_t));
-	uint8_t tuple = 4;
+	// Test entry_create
+	entry_create(&entry, &tuple, &rectangle);
 
-	entry_create(entry, tuple, rectangle);
-	assert_true(entry->tuple == tuple);
-	assert_ptr_equal(entry->MBR, rectangle);
-
-	destroy_rectangle(rectangle);
-	free(entry);
+	assert_ptr_equal(entry.tuple, &tuple);
+	assert_ptr_equal(entry.MBR, &rectangle);	
 }
 
 //TODO: Cover node create with more tests
 void _test_node_create() {
-	int dim = 2;
-
-	// Create Rectangle
-	float coords_low[] = { 0, 0 };
-	float coords_high[] = { 2, 2 };
-	rt_rect_t *rectangle = create_2d_rectangle(coords_low, coords_high);
-
-	// Create Context
-	rt_ctx_t *context = malloc(sizeof(rt_ctx_t));
+	uint8_t tuple = 4, dim = 2, m = 4, M = 12, level = 0;	
 	float alloc_factor = 4;
-	int m = 4;
-	int M = 12;
+	float low[] = { 0.0f, 0.0f };
+	float high[] = { 2.0f, 2.0f };
+	rt_rect_t rectangle;	
+	rt_ctx_t context;	
+	rt_node_t node;
 
-	context_create(context, m, M, dim, 35, alloc_factor, rectangle);
-	
-	// Create Node
-	rt_node_t *node = malloc(sizeof(rt_node_t));
-	int level = 0;
-	node_create(node, context, NULL, NULL, 0, context->space, level);
-	assert_ptr_equal(node->context, context);
-	assert_ptr_equal(node->MBR, context->space);
-	assert_int_equal(node->level, level);
-	assert_null(node->parent);	
-	assert_non_null(node->entries);
-	assert_int_equal(node->capacity, MAX(0, NALLOC(context->m, context->M, context->alloc_factor)));
-
-	destroy_rectangle(rectangle);
-	free(context);
-	free(node);
+	context_create(&context, m, M, dim, 35, alloc_factor, &rectangle);
+	node_create(&node, &context, NULL, NULL, 0, context.space, level);
+		
+	assert_ptr_equal(node.context, &context);
+	assert_ptr_equal(node.MBR, context.space);
+	assert_int_equal(node.level, level);
+	assert_null(node.parent);	
+	assert_non_null(node.entries);
+	assert_int_equal(node.capacity, MAX(0, NALLOC(context.m, context.M, context.alloc_factor)));
 }
 
 void _test_node_is_leaf() {
-	// Create Node
-	float coords_low[] = { 0, 0 };
-	float coords_high[] = { 2, 2 };
-	rt_node_t *node = create_2d_node(4, 12, 4, coords_low, coords_high, 0);	
+	uint8_t m = 4, M = 12, level = 0, dim = 2;
+	size_t buffer_size = 35;
+	float alloc_factor = 4.0f;
+	float low[] = { 0.0f, 0.0f };
+	float high[] = { 2.0f, 2.0f };
+	rt_rect_t rectangle;
+	rt_ctx_t context;
+	rt_node_t node;
+
+	rectangle_create(&rectangle, low, high, dim);
+	context_create(&context, m, M, dim, buffer_size, alloc_factor, &rectangle);
+	
+	node_create(&node, &context, NULL, NULL, 0, context.space, level);
 
 	// node_is_leaf - Should return 1
-	assert_true(node_is_leaf(node));
+	assert_true(node_is_leaf(&node));
 
-	node->level = 1;
+	node.level = 1;
 
 	// node_is_leaf - Should return 0
-	assert_false(node_is_leaf(node));
-	
-	destroy_context(node->context);
-	free(node->entries);
-	free(node->parent);
-	free(node);
+	assert_false(node_is_leaf(&node));
 }
 
 void _test_node_is_root() {	
-	// Create Node
-	float coords_low[] = { 0, 0 };
-	float coords_high[] = { 2, 2 };
-	rt_node_t *node = create_2d_node(4, 12, 4, coords_low, coords_high, 0);
+	uint8_t m = 4, M = 12, level = 0, dim = 2;
+	size_t buffer_size = 35;
+	float alloc_factor = 4.0f;
+	float low[] = { 0.0f, 0.0f };
+	float high[] = { 2.0f, 2.0f };
+	rt_rect_t rectangle;
+	rt_ctx_t context;
+	rt_node_t node;
 
-	assert_true(node_is_root(node));
+	rectangle_create(&rectangle, low, high, dim);
+	context_create(&context, m, M, dim, buffer_size, alloc_factor, &rectangle);
 
-	node->parent = node;
+	node_create(&node, &context, NULL, NULL, 0, context.space, level);
 
-	assert_false(node_is_root(node));
+	assert_true(node_is_root(&node));
 
-	destroy_context(node->context);
-	free(node->entries);	
-	free(node);
+	node.parent = &node;
+
+	assert_false(node_is_root(&node));
 }
 
 void _test_node_add_entry() {
-	int dim = 2;
+	uint8_t index, success = 0, dim = 2, tuple = 4, m = 4, M = 12, level = 0;
+	size_t buffer_size = 35;
+	float alloc_factor = 2.0f;
+	float low_a[] = { 0.0f, 0.0f };
+	float high_a[] = { 2.0f, 2.0f };
+	float low_b[] = { 1.0f, 1.0f };
+	float high_b[] = { 3.0f, 3.0f };
+	rt_rect_t rectangle_a, rectangle_b;
+	rt_ctx_t context;
+	rt_node_t node;
+	rt_entry_t entry;
 
-	// Node setup
-	rt_rect_t *rectangle_a = malloc(sizeof(rt_rect_t));
-
-	struct Point *low_a = malloc(sizeof(struct Point));
-	struct Point *high_a = malloc(sizeof(struct Point));
-	float coords_low_a[] = { 0, 0 };
-	float coords_high_a[] = { 2, 2 };
-
-	point_create(low_a, dim, coords_low_a);
-	point_create(high_a, dim, coords_high_a);
-
-	rectangle_create(rectangle_a, low_a, high_a);
-
-	rt_ctx_t *context = malloc(sizeof(rt_ctx_t));
-	float alloc_factor = 2;
-	int m = 4;
-	int M = 12;
-
-	context_create(context, m, M, dim, 35, alloc_factor, rectangle_a);
-
-	rt_node_t *node = malloc(sizeof(rt_node_t));
-	int level = 0;
-	node_create(node, context, NULL, NULL, 0, context->space, level);
-
-	// Entry setup
-	rt_rect_t *rectangle_b = malloc(sizeof(rt_rect_t));
-
-	struct Point *low_b = malloc(sizeof(struct Point));
-	struct Point *high_b = malloc(sizeof(struct Point));
-	float coords_low_b[] = { 1, 1 };
-	float coords_high_b[] = { 3, 3 };
-
-	point_create(low_b, dim, coords_low_b);
-	point_create(high_b, dim, coords_high_b);
-
-	rectangle_create(rectangle_b, low_b, high_b);
-	
-	
-	// Create Entry
-	rt_entry_t *entry = malloc(sizeof(rt_entry_t));
-	void *tuple = 4;
-
-	entry_create(entry, tuple, rectangle_b);
-
+	rectangle_create(&rectangle_a, low_a, high_a, dim);
+	rectangle_create(&rectangle_b, low_b, high_b, dim);
+	context_create(&context, m, M, dim, buffer_size, alloc_factor, &rectangle_a);
+	node_create(&node, &context, NULL, NULL, 0, context.space, level);
+	entry_create(&entry, &tuple, &rectangle_b);
+		
 	// Test node_add_entry
-	int success = node_add_entry(node, entry);
+	success = node_add_entry(&node, &entry);
 	assert_true(success);
-	assert_ptr_equal(node->entries[0], entry);
+	assert_ptr_equal(node.entries[0], &entry);
 
-	for (int i = 0; i < dim; i++) {
-		assert_ptr_equal(node->MBR->low->coords[i], rectangle_a->low->coords[i]);
-		assert_ptr_equal(node->MBR->high->coords[i], rectangle_b->high->coords[i]);
+	for (index = 0; index < dim; index++) {
+		assert_true(node.MBR->low[index] == low_a[index]);
+		assert_true(node.MBR->high[index] == high_b[index]);
 	}
 
 	// Test memory realocation
-	for (int i = 0; i < node->capacity; i++) {
-		if (i < M - 1) {
-			assert_true(node_add_entry(node, entry));
-			assert_ptr_equal(node->entries[i], entry);
+	for (index = 0; index < node.capacity; index++) {
+		if (index < M - 1) {
+			assert_true(node_add_entry(&node, &entry));
+			assert_ptr_equal(node.entries[index], &entry);
 		}
 		else {
-			assert_false(node_add_entry(node, entry));
+			assert_false(node_add_entry(&node, &entry));
 		}		
 	}
-
-	free(low_a);
-	free(high_a);
-	free(rectangle_a);
-
-	free(low_b);
-	free(high_b);
-	free(rectangle_b);
-
-	free(entry);
-	free(context);
 }
 
 void _test_node_delete_entry() {
-	int dim = 2;
+	uint8_t index, dim = 2, m = 4, M = 12, level = 0;
+	size_t buffer_size = 35;
+	float alloc_factor = 2.0f;
+	float low_a[] = { 0.0f, 0.0f };
+	float high_a[] = { 2.0f, 2.0f };
+	float low_b[] = { 1.0f, 1.0f };
+	float high_b[] = { 3.0f, 3.0f };
+	uint8_t tuples[] = { 1, 2, 3, 4 };
+	rt_entry_t entries[4];
+	rt_rect_t rectangle_a, rectangle_b;
+	rt_ctx_t context;
+	rt_node_t node;
 
-	// Node setup
-	rt_rect_t *rectangle_a = malloc(sizeof(rt_rect_t));
-
-	struct Point *low_a = malloc(sizeof(struct Point));
-	struct Point *high_a = malloc(sizeof(struct Point));
-	float coords_low_a[] = { 0, 0 };
-	float coords_high_a[] = { 2, 2 };
-
-	point_create(low_a, dim, coords_low_a);
-	point_create(high_a, dim, coords_high_a);
-
-	rectangle_create(rectangle_a, low_a, high_a);
-
-	rt_ctx_t *context = malloc(sizeof(rt_ctx_t));
-	float alloc_factor = 2;
-	int m = 4;
-	int M = 12;
-
-	context_create(context, m, M, dim, 35, alloc_factor, rectangle_a);
-
-	rt_node_t *node = malloc(sizeof(rt_node_t));
-	int level = 0;
-	node_create(node, context, NULL, NULL, 0, context->space, level);
-
+	rectangle_create(&rectangle_a, low_a, high_a, dim);
+	rectangle_create(&rectangle_b, low_b, high_b, dim);
+	context_create(&context, m, M, dim, buffer_size, alloc_factor, &rectangle_a);
+	node_create(&node, &context, NULL, NULL, 0, context.space, level);
+		
 	// Entry setup
-	rt_rect_t *rectangle_b = malloc(sizeof(rt_rect_t));
-
-	struct Point *low_b = malloc(sizeof(struct Point));
-	struct Point *high_b = malloc(sizeof(struct Point));
-	float coords_low_b[] = { 1, 1 };
-	float coords_high_b[] = { 3, 3 };
-
-	point_create(low_b, dim, coords_low_b);
-	point_create(high_b, dim, coords_high_b);
-
-	rectangle_create(rectangle_b, low_b, high_b);
-
-
-	// Create Entries
-	rt_entry_t *entry_1 = malloc(sizeof(rt_entry_t));
-	rt_entry_t *entry_2 = malloc(sizeof(rt_entry_t));
-	rt_entry_t *entry_3 = malloc(sizeof(rt_entry_t));
-	rt_entry_t *entry_4 = malloc(sizeof(rt_entry_t));
-	void *tuple_1 = 1;
-	void *tuple_2 = 2;
-	void *tuple_3 = 3;
-	void *tuple_4 = 4;
-
-	entry_create(entry_1, tuple_1, rectangle_b);
-	entry_create(entry_2, tuple_2, rectangle_b);
-	entry_create(entry_3, tuple_3, rectangle_b);
-	entry_create(entry_4, tuple_4, rectangle_b);
-
-	node_add_entry(node, entry_1);
-	node_add_entry(node, entry_2);
-	node_add_entry(node, entry_3);
-	node_add_entry(node, entry_4);
+	for (index = 0; index < 4; index++) {
+		entry_create(&entries[index], &tuples[index], &rectangle_b);
+		node_add_entry(&node, &entries[index]);
+	}	
 
 	// Test node_delete_entry
 
 	// Removed entry_2, sequence should be 1, 3, 4
-	node_delete_entry(node, entry_2);
-	assert_ptr_equal(node->entries[0], entry_1);
-	assert_ptr_equal(node->entries[1], entry_3);
-	assert_ptr_equal(node->entries[2], entry_4);
-	assert_int_equal(node->count, 3);
+	node_delete_entry(&node, &entries[1]);
+	assert_ptr_equal(node.entries[0], &entries[0]);
+	assert_ptr_equal(node.entries[1], &entries[2]);
+	assert_ptr_equal(node.entries[2], &entries[3]);
+	assert_int_equal(node.count, 3);
 
 	// Removed entry_1, sequence should be 3, 4
-	node_delete_entry(node, entry_1);
-	assert_ptr_equal(node->entries[0], entry_3);
-	assert_ptr_equal(node->entries[1], entry_4);
-	assert_int_equal(node->count, 2);
+	node_delete_entry(&node, &entries[0]);
+	assert_ptr_equal(node.entries[0], &entries[2]);
+	assert_ptr_equal(node.entries[1], &entries[3]);
+	assert_int_equal(node.count, 2);
 
 	// Removed entry_4, sequence should be 3
-	node_delete_entry(node, entry_4);
-	assert_ptr_equal(node->entries[0], entry_3);
-	assert_int_equal(node->count, 1);
+	node_delete_entry(&node, &entries[3]);
+	assert_ptr_equal(node.entries[0], &entries[2]);
+	assert_int_equal(node.count, 1);
 
 	// Removed entry_3, there should be 0 entries
-	node_delete_entry(node, entry_3);	
-	assert_int_equal(node->count, 0);
-
-	free(low_a);
-	free(high_a);
-	free(rectangle_a);
-
-	free(low_b);
-	free(high_b);
-	free(rectangle_b);
-
-	free(entry_1);
-	free(entry_2);
-	free(entry_3);
-	free(entry_4);
-	free(context);
+	node_delete_entry(&node, &entries[2]);
+	assert_int_equal(node.count, 0);
 }
 
 void _test_node_adjust_MBR() {
-	int dim = 2;
+	uint8_t index, dim = 2, tuple = 4, m = 4, M = 12, level = 0;
+	size_t buffer_size = 35;
+	float alloc_factor = 4.0f;
+	float low_a[] = { 0.0f, 0.0f };
+	float high_a[] = { 2.0f, 2.0f };
+	float low_b[] = { 1.0f, 1.0f };
+	float high_b[] = { 3.0f, 3.0f };
+	rt_rect_t rectangle_a, rectangle_b;
+	rt_ctx_t context;
+	rt_node_t node;
+	rt_entry_t entry;
 
-	// Node setup
-	rt_rect_t *rectangle_a = malloc(sizeof(rt_rect_t));
-
-	struct Point *low_a = malloc(sizeof(struct Point));
-	struct Point *high_a = malloc(sizeof(struct Point));
-	float coords_low_a[] = { 0, 0 };
-	float coords_high_a[] = { 2, 2 };
-
-	point_create(low_a, dim, coords_low_a);
-	point_create(high_a, dim, coords_high_a);
-
-	rectangle_create(rectangle_a, low_a, high_a);
+	rectangle_create(&rectangle_a, low_a, high_a, dim);
+	rectangle_create(&rectangle_b, low_b, high_b, dim);
+	context_create(&context, m, M, dim, buffer_size, alloc_factor, &rectangle_a);
+	node_create(&node, &context, NULL, NULL, 0, context.space, level);
+	entry_create(&entry, &tuple, &rectangle_b);
 		
-	rt_ctx_t *context = malloc(sizeof(rt_ctx_t));
-	float alloc_factor = 4;
-	int m = 4;
-	int M = 12;
-
-	context_create(context, m, M, dim, 35, alloc_factor, rectangle_a);
-		
-	rt_node_t *node = malloc(sizeof(rt_node_t));
-	int level = 0;
-	node_create(node, context, NULL, NULL, 0, context->space, level);
-
-	// Entry setup
-	rt_rect_t *rectangle_b = malloc(sizeof(rt_rect_t));
-		
-	struct Point *low_b = malloc(sizeof(struct Point));
-	struct Point *high_b = malloc(sizeof(struct Point));
-	float coords_low_b[] = { 1, 1 };
-	float coords_high_b[] = { 3, 3 };
-
-	point_create(low_b, dim, coords_low_b);
-	point_create(high_b, dim, coords_high_b);
-
-	rectangle_create(rectangle_b, low_b, high_b);
-	// Create Entry
-	rt_entry_t *entry = malloc(sizeof(rt_entry_t));
-	void *tuple = 4;
-
-	entry_create(entry, tuple, rectangle_b);
-
 	// Test node_adjust_MBR
-	node_adjust_MBR(node, entry);
-	for (int i = 0; i < dim; i++) {
-		assert_ptr_equal(node->MBR->low->coords[i], rectangle_a->low->coords[i]);
-		assert_ptr_equal(node->MBR->high->coords[i], rectangle_b->high->coords[i]);
-	}	
-
-	free(low_a);
-	free(high_a);
-	free(rectangle_a);
-
-	free(low_b);
-	free(high_b);
-	free(rectangle_b);
-	
-	free(context);
-	free(node);
-	free(entry);
+	node_adjust_MBR(&node, &entry);
+	for (index = 0; index < dim; index++) {
+		assert_true(node.MBR->low[index] == low_a[index]);
+		assert_true(node.MBR->high[index] == high_b[index]);
+	}
 }
 
 void _test_node_choose_optimal_entry() {
-	float low[] = { 0, 0 };
-	float high[] = { 2, 2 };
-	rt_node_t *node = create_2d_node(2, 4, 4, low, high, 1);
+	uint8_t dim = 2, tuple = 1, m = 4, M = 12, leaf_level = 0, root_level = 1;
+	size_t buffer_size = 35;
+	float alloc_factor = 4.0f;
 
-	float low_1[] = { 3, -1 };
-	float high_1[] = { 5, 1 };
-	rt_node_t *node_1 = create_2d_node(2, 4, 4, low_1, high_1, 0);
+	float low[] = { 0.0f, 0.0f };
+	float high[] = { 2.0f, 2.0f };
 
-	float low_2[] = { -1, -1 };
-	float high_2[] = { 1, 1 };
-	rt_node_t *node_2 = create_2d_node(2, 4, 4, low_2, high_2, 0);
+	float low_1[] = { 3.0f, -1.0f };
+	float high_1[] = { 5.0f, 1.0f };
 
+	float low_2[] = { -1.0f, -1.0f };
+	float high_2[] = { 1.0f, 1.0f };
 
-	float low_3[] = { -1, 5 };
-	float high_3[] = { 2, 7 };
-	rt_node_t *node_3 = create_2d_node(2, 4, 4, low_3, high_3, 0);
+	float low_3[] = { -1.0f, 5.0f };
+	float high_3[] = { 2.0f, 7.0f };
 
-	float low_4[] = { -3, 0 };
-	float high_4[] = { -2, 1 };
-	int tuple = 1;
-	rt_entry_t *entry = create_2d_entry(&tuple, low_4, high_4);
+	float low_4[] = { -3.0f, 0.0f };
+	float high_4[] = { -2.0f, 1.0f };
 
+	rt_ctx_t context;
+	rt_entry_t entry;
 
-	node_add_entry(node, node_1);
-	node_add_entry(node, node_2);
-	node_add_entry(node, node_3);
-	assert_ptr_equal(node_choose_optimal_entry(node, entry), node_2);
+	rt_node_t node;	
+	rt_node_t node_1;	
+	rt_node_t node_2;	
+	rt_node_t node_3;
 
-	node_destroy(node);
+	rt_rect_t rectangle;
+	rt_rect_t rectangle_1;
+	rt_rect_t rectangle_2;
+	rt_rect_t rectangle_3;
+	rt_rect_t rectangle_4;
+
+	// Create root node
+	rectangle_create(&rectangle, low, high, dim);
+	context_create(&context, m, M, dim, buffer_size, alloc_factor, &rectangle);
+	node_create(&node, &context, NULL, NULL, 0, context.space, root_level);
+
+	// Create leaf nodes
+	rectangle_create(&rectangle_1, low_1, high_1, dim);
+	node_create(&node_1, &context, NULL, NULL, 0, &rectangle_1, leaf_level);
+
+	rectangle_create(&rectangle_2, low_2, high_2, dim);
+	node_create(&node_2, &context, NULL, NULL, 0, &rectangle_2, leaf_level);
+
+	rectangle_create(&rectangle_3, low_3, high_1, dim);
+	node_create(&node_3, &context, NULL, NULL, 0, &rectangle_3, leaf_level);
+
+	// Create entry
+	rectangle_create(&rectangle_4, low_4, high_4, dim);
+	entry_create(&entry, &tuple, &rectangle_4);
+
+	// Add leaf nodes to root
+	node_add_entry(&node, &node_1);
+	node_add_entry(&node, &node_2);
+	node_add_entry(&node, &node_3);
+
+	// Test node_choose_optimal_entry
+	assert_ptr_equal(node_choose_optimal_entry(&node, &entry), &node_2);
 }
 
-void _test_entry_compare() {
-	float low_1[] = { 1, 1 };
-	float high_1[] = { 3, 3 };
-	int tuple_1 = 1;
-	rt_entry_t *entry_1 = create_2d_entry(tuple_1, low_1, high_1);
+void _test_entry_compare() {	
+	uint8_t dim = 2, dim_1 = 0, dim_2 = 1;
+	float low_1[] = { 1.0f, 1.0f };
+	float high_1[] = { 3.0f, 3.0f };	
 
-	float low_2[] = { 0, 2 };
-	float high_2[] = { 4, 2 };
-	int tuple_2 = 2;
-	rt_entry_t *entry_2 = create_2d_entry(tuple_2, low_2, high_2);
+	float low_2[] = { 0.0f, 2.0f };
+	float high_2[] = { 4.0f, 2.0f };
+	
+	uint8_t tuples[] = { 1, 2 };
 
-	uint8_t dim_1 = 0;
-	uint8_t dim_2 = 1;
+	rt_entry_t entry_1;
+	rt_entry_t entry_2;
+	rt_entry_t *entry_ptr_1 = &entry_1;
+	rt_entry_t *entry_ptr_2 = &entry_2;
 
-	assert_true(entry_1->tuple == 1);
-	assert_true(entry_2->tuple == 2);
+	rt_rect_t rectangle_1, rectangle_2;
 
-	assert_true(entry_compare(&dim_1, entry_1, entry_2) > 0);
-	assert_true(entry_compare(&dim_2, entry_1, entry_2) < 0);
-	assert_true(entry_compare(&dim_1, entry_2, entry_1) < 0);
-	assert_true(entry_compare(&dim_2, entry_2, entry_1) > 0);
-	assert_true(entry_compare(&dim_1, entry_2, entry_2) == 0);
-	assert_true(entry_compare(&dim_2, entry_2, entry_2) == 0);
+	rectangle_create(&rectangle_1, low_1, high_1, dim);
+	rectangle_create(&rectangle_2, low_2, high_2, dim);
 
-	destroy_entry(entry_1);
-	destroy_entry(entry_2);
+	entry_create(&entry_1, &tuples[0], &rectangle_1);
+	entry_create(&entry_2, &tuples[1], &rectangle_2);	
+	
+	assert_true(entry_compare(&dim_1, &entry_ptr_1, &entry_ptr_2) > 0);
+	assert_true(entry_compare(&dim_2, &entry_ptr_1, &entry_ptr_2) < 0);
+	assert_true(entry_compare(&dim_1, &entry_ptr_2, &entry_ptr_1) < 0);
+	assert_true(entry_compare(&dim_2, &entry_ptr_2, &entry_ptr_1) > 0);
+	assert_true(entry_compare(&dim_1, &entry_ptr_2, &entry_ptr_2) == 0);
+	assert_true(entry_compare(&dim_2, &entry_ptr_2, &entry_ptr_2) == 0);
 }
 
 // For leaf node
 void _test_node_calculate_MBR_1() {
-	float low[] = { 0, 0 };
-	float high[] = { 2, 2 };
-	rt_node_t *node = create_2d_node(2, 4, 4, low, high, 0);
+	uint8_t dim = 2, tuple = 1, m = 2, M = 4, level = 0;
+	size_t buffer_size = 35;
+	float alloc_factor = 4.0f;
 
-	float low_1[] = { 3, -1 };
-	float high_1[] = { 5, 1 };
-	int tuple_1 = 1;
-	rt_entry_t *entry_1 = create_2d_entry(&tuple_1, low_1, high_1);
+	float low[] = { 0.0f, 0.0f };
+	float high[] = { 2.0f, 2.0f };
 
-	float low_2[] = { -1, -1 };
-	float high_2[] = { 1, 1 };
-	int tuple_2 = 2;
-	rt_entry_t *entry_2 = create_2d_entry(&tuple_2, low_2, high_2);
+	float low_1[] = { 3.0f, -1.0f };
+	float high_1[] = { 5.0f, 1.0f };
 
-	float low_3[] = { -1, 5 };
-	float high_3[] = { 2, 7 };
-	int tuple_3 = 3;
-	rt_entry_t *entry_3 = create_2d_entry(&tuple_3, low_3, high_3);
+	float low_2[] = { -1.0f, -1.0f };
+	float high_2[] = { 1.0f, 1.0f };
+
+	float low_3[] = { -1.0f, 5.0f };
+	float high_3[] = { 2.0f, 7.0f };
+
+	rt_rect_t rectangle;
+	rt_rect_t rectangle_1;
+	rt_rect_t rectangle_2;
+	rt_rect_t rectangle_3;
 	
-	node_add_entry(node, entry_1);
-	node_calculate_MBR(node->MBR, node);
-	assert_true(node->MBR->low->coords[0] == 0);
-	assert_true(node->MBR->low->coords[1] == -1);
-	assert_true(node->MBR->high->coords[0] == 5);
-	assert_true(node->MBR->high->coords[1] == 2);
+	rt_ctx_t context;
+	rt_node_t node;
+	rt_entry_t entry_1;
+	rt_entry_t entry_2;
+	rt_entry_t entry_3;
+	
+	// Create root node
+	rectangle_create(&rectangle, low, high, dim);
+	context_create(&context, m, M, dim, buffer_size, alloc_factor, &rectangle);
+	node_create(&node, &context, NULL, NULL, 0, context.space, level);
 
-	node_add_entry(node, entry_2);
-	node_calculate_MBR(node->MBR, node);
-	assert_true(node->MBR->low->coords[0] == -1);
-	assert_true(node->MBR->low->coords[1] == -1);
-	assert_true(node->MBR->high->coords[0] == 5);
-	assert_true(node->MBR->high->coords[1] == 2);
+	// Create entries
+	rectangle_create(&rectangle_1, low_1, high_1, dim);
+	entry_create(&entry_1, &tuple, &rectangle_1);
 
-	node_add_entry(node, entry_3);
-	node_calculate_MBR(node->MBR, node);
-	assert_true(node->MBR->low->coords[0] == -1);
-	assert_true(node->MBR->low->coords[1] == -1);
-	assert_true(node->MBR->high->coords[0] == 5);
-	assert_true(node->MBR->high->coords[1] == 7);
+	rectangle_create(&rectangle_2, low_2, high_2, dim);
+	entry_create(&entry_2, &tuple, &rectangle_2);
 
-	node_destroy(node);
+	rectangle_create(&rectangle_3, low_3, high_3, dim);
+	entry_create(&entry_3, &tuple, &rectangle_3);
+	
+	// Test node_calculate_MBR
+	node_add_entry(&node, &entry_1);
+	node_calculate_MBR(node.MBR, &node);
+	assert_true(node.MBR->low[0] == 0);
+	assert_true(node.MBR->low[1] == -1);
+	assert_true(node.MBR->high[0] == 5);
+	assert_true(node.MBR->high[1] == 2);
+
+	node_add_entry(&node, &entry_2);
+	node_calculate_MBR(node.MBR, &node);
+	assert_true(node.MBR->low[0] == -1);
+	assert_true(node.MBR->low[1] == -1);
+	assert_true(node.MBR->high[0] == 5);
+	assert_true(node.MBR->high[1] == 2);
+
+	node_add_entry(&node, &entry_3);
+	node_calculate_MBR(node.MBR, &node);
+	assert_true(node.MBR->low[0] == -1);
+	assert_true(node.MBR->low[1] == -1);
+	assert_true(node.MBR->high[0] == 5);
+	assert_true(node.MBR->high[1] == 7);
 }
 
 // For non-leaf node
 void _test_node_calculate_MBR_2() {
-	float low[] = { 0, 0 };
-	float high[] = { 2, 2 };
-	rt_node_t *node = create_2d_node(2, 4, 4, low, high, 1);
+	uint8_t dim = 2, tuple = 1, m = 1, M = 2, leaf_level = 0, root_level = 1;
+	size_t buffer_size = 35;
+	float alloc_factor = 4.0f;
 
-	float low_1[] = { 3, -1 };
-	float high_1[] = { 5, 1 };
-	rt_node_t *node_1 = create_2d_node(2, 4, 4, low_1, high_1, 0);
+	float low[] = { 0.0f, 0.0f };
+	float high[] = { 2.0f, 2.0f };
 
-	float low_2[] = { -1, -1 };
-	float high_2[] = { 1, 1 };
-	rt_node_t *node_2 = create_2d_node(2, 4, 4, low_2, high_2, 0);
-	
+	float low_1[] = { 3.0f, -1.0f };
+	float high_1[] = { 5.0f, 1.0f };
 
-	float low_3[] = { -1, 5 };
-	float high_3[] = { 2, 7 };
-	rt_node_t *node_3 = create_2d_node(2, 4, 4, low_3, high_3, 0);
-	
+	float low_2[] = { -1.0f, -1.0f };
+	float high_2[] = { 1.0f, 1.0f };
 
-	node_add_entry(node, node_1);
-	node_calculate_MBR(node->MBR, node);
-	assert_true(node->MBR->low->coords[0] == 0);
-	assert_true(node->MBR->low->coords[1] == -1);
-	assert_true(node->MBR->high->coords[0] == 5);
-	assert_true(node->MBR->high->coords[1] == 2);
+	float low_3[] = { -1.0f, 5.0f };
+	float high_3[] = { 2.0f, 7.0f };
 
-	node_add_entry(node, node_2);
-	node_calculate_MBR(node->MBR, node);
-	assert_true(node->MBR->low->coords[0] == -1);
-	assert_true(node->MBR->low->coords[1] == -1);
-	assert_true(node->MBR->high->coords[0] == 5);
-	assert_true(node->MBR->high->coords[1] == 2);
+	rt_rect_t rectangle;
+	rt_rect_t rectangle_1;
+	rt_rect_t rectangle_2;
+	rt_rect_t rectangle_3;
 
-	node_add_entry(node, node_3);
-	node_calculate_MBR(node->MBR, node);
-	assert_true(node->MBR->low->coords[0] == -1);
-	assert_true(node->MBR->low->coords[1] == -1);
-	assert_true(node->MBR->high->coords[0] == 5);
-	assert_true(node->MBR->high->coords[1] == 7);
+	rt_ctx_t context;
+	rt_node_t node;
+	rt_node_t node_1;
+	rt_node_t node_2;
+	rt_node_t node_3;
 
-	node_destroy(node);
+	rt_entry_t entry_1;
+	rt_entry_t entry_2;
+	rt_entry_t entry_3;
+
+	rt_entry_t *entry_ptr_1 = &entry_1;
+	rt_entry_t *entry_ptr_2 = &entry_2;
+	rt_entry_t *entry_ptr_3 = &entry_3;
+
+	// Create root node
+	rectangle_create(&rectangle, low, high, dim);
+	context_create(&context, m, M, dim, buffer_size, alloc_factor, &rectangle);
+	node_create(&node, &context, NULL, NULL, 0, context.space, root_level);
+
+	// Create entry nodes
+	rectangle_create(&rectangle_1, low_1, high_1, dim);
+	rectangle_create(&rectangle_2, low_2, high_2, dim);
+	rectangle_create(&rectangle_3, low_3, high_3, dim);
+	entry_create(entry_ptr_1, &tuple, &rectangle_1);
+	entry_create(entry_ptr_2, &tuple, &rectangle_2);
+	entry_create(entry_ptr_3, &tuple, &rectangle_3);
+		
+	node_create(&node_1, &context, &node, &entry_ptr_1, 1, &rectangle_1, leaf_level);
+	node_create(&node_2, &context, &node, &entry_ptr_2, 1, &rectangle_2, leaf_level);
+	node_create(&node_3, &context, &node, &entry_ptr_3, 1, &rectangle_3, leaf_level);
+
+	// Test node_calculate_MBR
+	node_add_entry(&node, &node_1);
+	node_calculate_MBR(node.MBR, &node);
+	assert_true(node.MBR->low[0] == 0);
+	assert_true(node.MBR->low[1] == -1);
+	assert_true(node.MBR->high[0] == 5);
+	assert_true(node.MBR->high[1] == 2);
+
+	node_add_entry(&node, &node_2);
+	node_calculate_MBR(node.MBR, &node);
+	assert_true(node.MBR->low[0] == -1);
+	assert_true(node.MBR->low[1] == -1);
+	assert_true(node.MBR->high[0] == 5);
+	assert_true(node.MBR->high[1] == 2);
+
+	node_add_entry(&node, &node_3);
+	node_calculate_MBR(node.MBR, &node);
+	assert_true(node.MBR->low[0] == -1);
+	assert_true(node.MBR->low[1] == -1);
+	assert_true(node.MBR->high[0] == 5);
+	assert_true(node.MBR->high[1] == 7);
 }
-
-void _test_node_split_node() {
-
-}*/
+//
+//void _test_node_split_node() {
+//
+//}
 
 int test_node(void) {
 	const struct CMUnitTest tests[] = {
 		cmocka_unit_test(_test_context_create),
-		/*cmocka_unit_test(_test_entry_create),
+		cmocka_unit_test(_test_entry_create),
 		cmocka_unit_test(_test_node_create),
 		cmocka_unit_test(_test_node_is_leaf),
 		cmocka_unit_test(_test_node_is_root),
 		cmocka_unit_test(_test_node_adjust_MBR),
 		cmocka_unit_test(_test_node_add_entry),
 		cmocka_unit_test(_test_node_delete_entry),
-		//cmocka_unit_test(_test_entry_compare),
+		cmocka_unit_test(_test_entry_compare),
 		cmocka_unit_test(_test_node_calculate_MBR_1),
 		cmocka_unit_test(_test_node_calculate_MBR_2),
-		cmocka_unit_test(_test_node_choose_optimal_entry)*/
+		cmocka_unit_test(_test_node_choose_optimal_entry)
 	};
 	return cmocka_run_group_tests(tests, NULL, NULL);
 }
