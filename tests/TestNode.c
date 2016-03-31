@@ -419,13 +419,9 @@ void _test_node_calculate_MBR_2() {
 	rt_node_t node_2;
 	rt_node_t node_3;
 
-	rt_entry_t entry_1;
-	rt_entry_t entry_2;
-	rt_entry_t entry_3;
-
-	rt_entry_t *entry_ptr_1 = &entry_1;
-	rt_entry_t *entry_ptr_2 = &entry_2;
-	rt_entry_t *entry_ptr_3 = &entry_3;
+	rt_entry_t *entry_1 = malloc(sizeof(rt_entry_t));
+	rt_entry_t *entry_2 = malloc(sizeof(rt_entry_t));
+	rt_entry_t *entry_3 = malloc(sizeof(rt_entry_t));	
 
 	// Create root node
 	rectangle_create(&rectangle, low, high, dim);
@@ -436,13 +432,13 @@ void _test_node_calculate_MBR_2() {
 	rectangle_create(&rectangle_1, low_1, high_1, dim);
 	rectangle_create(&rectangle_2, low_2, high_2, dim);
 	rectangle_create(&rectangle_3, low_3, high_3, dim);
-	entry_create(entry_ptr_1, &tuple, &rectangle_1);
-	entry_create(entry_ptr_2, &tuple, &rectangle_2);
-	entry_create(entry_ptr_3, &tuple, &rectangle_3);
+	entry_create(entry_1, &tuple, &rectangle_1);
+	entry_create(entry_2, &tuple, &rectangle_2);
+	entry_create(entry_3, &tuple, &rectangle_3);
 		
-	node_create(&node_1, &context, &node, &entry_ptr_1, 1, &rectangle_1, leaf_level);
-	node_create(&node_2, &context, &node, &entry_ptr_2, 1, &rectangle_2, leaf_level);
-	node_create(&node_3, &context, &node, &entry_ptr_3, 1, &rectangle_3, leaf_level);
+	node_create(&node_1, &context, &node, &entry_1, 1, &rectangle_1, leaf_level);
+	node_create(&node_2, &context, &node, &entry_2, 1, &rectangle_2, leaf_level);
+	node_create(&node_3, &context, &node, &entry_3, 1, &rectangle_3, leaf_level);
 
 	// Test node_calculate_MBR
 	node_add_entry(&node, &node_1);
