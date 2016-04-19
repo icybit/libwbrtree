@@ -2,7 +2,7 @@
 
 CC := gcc
 DEBUG := -g
-CFLAGS := -Wall -Werror -pedantic $(DEBUG)
+CFLAGS := -Wall -Werror -pedantic $(DEBUG) -fvisibility=hidden
 LFLAGS := -Wall $(DEBUG)
 SRCEXT := c
 

@@ -12,13 +12,13 @@ void _test_context_create() {
 	rt_ctx_t context;
 	rt_rect_t rectangle;
 	uint8_t m = 4, M = 12, dimension = 2;
-	size_t buffer_size = 35;
+	size_t entry_size = 35;
 	float alloc_factor = 4.0f;
 	float low[] = { 0.0f, 0.0f };
 	float high[] = { 2.0f, 2.0f };
 
 	rectangle_create(&rectangle, low, high, dimension);
-	context_create(&context, m, M, dimension, buffer_size, alloc_factor, &rectangle);
+	context_create(&context, m, M, dimension, entry_size, alloc_factor, &rectangle);
 
 	assert_int_equal(context.m, m);
 	assert_int_equal(context.M, M);
@@ -67,7 +67,7 @@ void _test_node_create() {
 
 void _test_node_is_leaf() {
 	uint8_t m = 4, M = 12, level = 0, dim = 2;
-	size_t buffer_size = 35;
+	size_t entry_size = 35;
 	float alloc_factor = 4.0f;
 	float low[] = { 0.0f, 0.0f };
 	float high[] = { 2.0f, 2.0f };
@@ -76,7 +76,7 @@ void _test_node_is_leaf() {
 	rt_node_t node;
 
 	rectangle_create(&rectangle, low, high, dim);
-	context_create(&context, m, M, dim, buffer_size, alloc_factor, &rectangle);
+	context_create(&context, m, M, dim, entry_size, alloc_factor, &rectangle);
 	
 	node_create(&node, &context, NULL, NULL, 0, context.space, level);
 
@@ -91,7 +91,7 @@ void _test_node_is_leaf() {
 
 void _test_node_is_root() {	
 	uint8_t m = 4, M = 12, level = 0, dim = 2;
-	size_t buffer_size = 35;
+	size_t entry_size = 35;
 	float alloc_factor = 4.0f;
 	float low[] = { 0.0f, 0.0f };
 	float high[] = { 2.0f, 2.0f };
@@ -100,7 +100,7 @@ void _test_node_is_root() {
 	rt_node_t node;
 
 	rectangle_create(&rectangle, low, high, dim);
-	context_create(&context, m, M, dim, buffer_size, alloc_factor, &rectangle);
+	context_create(&context, m, M, dim, entry_size, alloc_factor, &rectangle);
 
 	node_create(&node, &context, NULL, NULL, 0, context.space, level);
 
@@ -113,7 +113,7 @@ void _test_node_is_root() {
 
 void _test_node_add_entry() {
 	uint8_t index, success = 0, dim = 2, tuple = 4, m = 4, M = 12, level = 0;
-	size_t buffer_size = 35;
+	size_t entry_size = 35;
 	float alloc_factor = 2.0f;
 	float low_a[] = { 0.0f, 0.0f };
 	float high_a[] = { 2.0f, 2.0f };
@@ -126,7 +126,7 @@ void _test_node_add_entry() {
 
 	rectangle_create(&rectangle_a, low_a, high_a, dim);
 	rectangle_create(&rectangle_b, low_b, high_b, dim);
-	context_create(&context, m, M, dim, buffer_size, alloc_factor, &rectangle_a);
+	context_create(&context, m, M, dim, entry_size, alloc_factor, &rectangle_a);
 	node_create(&node, &context, NULL, NULL, 0, context.space, level);
 	entry_create(&entry, &tuple, &rectangle_b);
 		
@@ -154,7 +154,7 @@ void _test_node_add_entry() {
 
 void _test_node_delete_entry() {
 	uint8_t index, dim = 2, m = 4, M = 12, level = 0;
-	size_t buffer_size = 35;
+	size_t entry_size = 35;
 	float alloc_factor = 2.0f;
 	float low_a[] = { 0.0f, 0.0f };
 	float high_a[] = { 2.0f, 2.0f };
@@ -168,7 +168,7 @@ void _test_node_delete_entry() {
 
 	rectangle_create(&rectangle_a, low_a, high_a, dim);
 	rectangle_create(&rectangle_b, low_b, high_b, dim);
-	context_create(&context, m, M, dim, buffer_size, alloc_factor, &rectangle_a);
+	context_create(&context, m, M, dim, entry_size, alloc_factor, &rectangle_a);
 	node_create(&node, &context, NULL, NULL, 0, context.space, level);
 		
 	// Entry setup
@@ -204,7 +204,7 @@ void _test_node_delete_entry() {
 
 void _test_node_adjust_MBR() {
 	uint8_t index, dim = 2, tuple = 4, m = 4, M = 12, level = 0;
-	size_t buffer_size = 35;
+	size_t entry_size = 35;
 	float alloc_factor = 4.0f;
 	float low_a[] = { 0.0f, 0.0f };
 	float high_a[] = { 2.0f, 2.0f };
@@ -217,7 +217,7 @@ void _test_node_adjust_MBR() {
 
 	rectangle_create(&rectangle_a, low_a, high_a, dim);
 	rectangle_create(&rectangle_b, low_b, high_b, dim);
-	context_create(&context, m, M, dim, buffer_size, alloc_factor, &rectangle_a);
+	context_create(&context, m, M, dim, entry_size, alloc_factor, &rectangle_a);
 	node_create(&node, &context, NULL, NULL, 0, context.space, level);
 	entry_create(&entry, &tuple, &rectangle_b);
 		
@@ -231,7 +231,7 @@ void _test_node_adjust_MBR() {
 
 void _test_node_choose_optimal_entry() {
 	uint8_t dim = 2, tuple = 1, m = 4, M = 12, leaf_level = 0, root_level = 1;
-	size_t buffer_size = 35;
+	size_t entry_size = 35;
 	float alloc_factor = 4.0f;
 
 	float low[] = { 0.0f, 0.0f };
@@ -265,7 +265,7 @@ void _test_node_choose_optimal_entry() {
 
 	// Create root node
 	rectangle_create(&rectangle, low, high, dim);
-	context_create(&context, m, M, dim, buffer_size, alloc_factor, &rectangle);
+	context_create(&context, m, M, dim, entry_size, alloc_factor, &rectangle);
 	node_create(&node, &context, NULL, NULL, 0, context.space, root_level);
 
 	// Create leaf nodes
@@ -325,7 +325,7 @@ void _test_entry_compare() {
 // For leaf node
 void _test_node_calculate_MBR_1() {
 	uint8_t dim = 2, tuple = 1, m = 2, M = 4, level = 0;
-	size_t buffer_size = 35;
+	size_t entry_size = 35;
 	float alloc_factor = 4.0f;
 
 	float low[] = { 0.0f, 0.0f };
@@ -353,7 +353,7 @@ void _test_node_calculate_MBR_1() {
 	
 	// Create root node
 	rectangle_create(&rectangle, low, high, dim);
-	context_create(&context, m, M, dim, buffer_size, alloc_factor, &rectangle);
+	context_create(&context, m, M, dim, entry_size, alloc_factor, &rectangle);
 	node_create(&node, &context, NULL, NULL, 0, context.space, level);
 
 	// Create entries
@@ -396,7 +396,7 @@ void _test_node_calculate_MBR_2() {
 	rt_entry_t entry_1, entry_2, entry_3, **entries_1, **entries_2, **entries_3;
 	rt_node_t node, node_1, node_2, node_3;
 	uint8_t dim = 2, tuple = 1, m = 1, M = 2, leaf_level = 0, root_level = 1;
-	size_t buffer_size = 35;
+	size_t entry_size = 35;
 	float alloc_factor = 4.0f;
 	float low[] = { 0.0f, 0.0f }, high[] = { 2.0f, 2.0f }, low_1[] = { 3.0f, -1.0f }, high_1[] = { 5.0f, 1.0f }, 
 		low_2[] = { -1.0f, -1.0f }, high_2[] = { 1.0f, 1.0f }, low_3[] = { -1.0f, 5.0f }, high_3[] = { 2.0f, 7.0f };
@@ -407,7 +407,7 @@ void _test_node_calculate_MBR_2() {
 
 	// Create root node
 	rectangle_create(&rectangle, low, high, dim);
-	context_create(&context, m, M, dim, buffer_size, alloc_factor, &rectangle);
+	context_create(&context, m, M, dim, entry_size, alloc_factor, &rectangle);
 	node_create(&node, &context, NULL, NULL, 0, context.space, root_level);
 
 	// Create entry nodes

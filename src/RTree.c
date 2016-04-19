@@ -7,9 +7,25 @@
 #include <string.h>
 #include "hashset.h"
 #include "hashset_itr.h"
-#include "Rectangle.h"
+#include "Context.h"
+#include "Entry.h"
 #include "Node.h"
+#include "Rectangle.h"
 #include "RTree.h"
+
+static void _rtree_adjust_tree(rt_rtree_t *rtree, rt_node_t *node, rt_node_t *nnode);
+static void _rtree_adjust_tree_recursive(rt_rtree_t *rtree, rt_node_t *node, rt_node_t *nnode, int level);
+static rt_node_t * _rtree_choose_leaf(rt_node_t *node, rt_entry_t *entry);
+static rt_node_t * _rtree_choose_leaf_recursive(rt_node_t *node, rt_entry_t *entry);
+static void _rtree_condense_tree(rt_rtree_t *rtree, rt_node_t *node);
+static void _rtree_condense_tree_recursive(rt_rtree_t *rtree, rt_node_t *node, struct hashset_st *condensed_nodes);
+static rt_node_t * _rtree_find_leaf(rt_node_t *node, rt_entry_t *entry);
+static rt_node_t * _rtree_find_leaf_recursive(rt_node_t *node, rt_entry_t *entry);
+static void _rtree_search_recursive(rt_node_t *node, rt_rect_t *search_rectangle, struct hashset_st *results);
+static void _rtree_serialize_recursive(rt_node_t *node, unsigned char *buffer, size_t *index);
+#ifdef DEBUG
+static void _rtree_visualize_recursive(rt_node_t *node, uint16_t max_level);
+#endif
 
 void rtree_insert(rt_rtree_t *rtree, rt_entry_t *entry) 
 {
@@ -65,12 +81,12 @@ void rtree_destroy(rt_rtree_t *rtree)
 	node_destroy(rtree->root);
 }
 
-void _rtree_adjust_tree(rt_rtree_t *rtree, rt_node_t *node, rt_node_t *nnode)
+static void _rtree_adjust_tree(rt_rtree_t *rtree, rt_node_t *node, rt_node_t *nnode)
 {
 	_rtree_adjust_tree_recursive(rtree, node, nnode, 0);
 }
 
-void _rtree_adjust_tree_recursive(rt_rtree_t *rtree, rt_node_t *node, rt_node_t *nnode, int level)
+static void _rtree_adjust_tree_recursive(rt_rtree_t *rtree, rt_node_t *node, rt_node_t *nnode, int level)
 {
 	if (rtree->root == node)
 	{
@@ -112,12 +128,12 @@ void _rtree_adjust_tree_recursive(rt_rtree_t *rtree, rt_node_t *node, rt_node_t 
 	}
 }
 
-rt_node_t * _rtree_choose_leaf(rt_node_t *node, rt_entry_t *entry)
+static rt_node_t * _rtree_choose_leaf(rt_node_t *node, rt_entry_t *entry)
 {
 	return _rtree_choose_leaf_recursive(node, entry);
 }
 
-rt_node_t * _rtree_choose_leaf_recursive(rt_node_t *node, rt_entry_t *entry)
+static rt_node_t * _rtree_choose_leaf_recursive(rt_node_t *node, rt_entry_t *entry)
 {
 	if (node_is_leaf(node))
 	{
@@ -127,14 +143,14 @@ rt_node_t * _rtree_choose_leaf_recursive(rt_node_t *node, rt_entry_t *entry)
 	return _rtree_choose_leaf_recursive(node_choose_optimal_entry(node, entry), entry);
 }
 
-void _rtree_condense_tree(rt_rtree_t *rtree, rt_node_t *node)
+static void _rtree_condense_tree(rt_rtree_t *rtree, rt_node_t *node)
 {
 	hashset_t condensed_nodes = hashset_create();
 	_rtree_condense_tree_recursive(rtree, node, condensed_nodes);
 	hashset_destroy(condensed_nodes);
 }
 
-void _rtree_condense_tree_recursive(rt_rtree_t *rtree, rt_node_t *node, struct hashset_st *condensed_nodes)
+static void _rtree_condense_tree_recursive(rt_rtree_t *rtree, rt_node_t *node, struct hashset_st *condensed_nodes)
 {
 	if (node_is_root(node))
 	{
@@ -178,12 +194,12 @@ void _rtree_condense_tree_recursive(rt_rtree_t *rtree, rt_node_t *node, struct h
 	}
 }
 
-rt_node_t * _rtree_find_leaf(rt_node_t *node, rt_entry_t *entry)
+static rt_node_t * _rtree_find_leaf(rt_node_t *node, rt_entry_t *entry)
 {
 	return _rtree_find_leaf_recursive(node, entry);
 }
 
-rt_node_t * _rtree_find_leaf_recursive(rt_node_t *node, rt_entry_t *entry)
+static rt_node_t * _rtree_find_leaf_recursive(rt_node_t *node, rt_entry_t *entry)
 {
 	uint8_t i;
 
@@ -223,7 +239,7 @@ void rtree_search(rt_rtree_t *rtree, rt_rect_t *search_rectangle, struct hashset
 	_rtree_search_recursive(rtree->root, search_rectangle, results);
 }
 
-void _rtree_search_recursive(rt_node_t *node, rt_rect_t *search_rectangle, struct hashset_st *results)
+static void _rtree_search_recursive(rt_node_t *node, rt_rect_t *search_rectangle, struct hashset_st *results)
 {
 	if (node_is_leaf(node))
 	{
@@ -251,27 +267,32 @@ void _rtree_search_recursive(rt_node_t *node, rt_rect_t *search_rectangle, struc
 	}
 }
 
-void rtree_serialize(rt_rtree_t *rtree, unsigned char *buffer)
+size_t rtree_serialize(rt_rtree_t *rtree, uint8_t *buffer)
 {
-	size_t buffer_index = 0;
+	size_t bytes_written = 0;
 
-	_rtree_serialize_recursive(rtree->root, buffer, &buffer_index);
+	_rtree_serialize_recursive(rtree->root, buffer, &bytes_written);
+	assert(bytes_written == sizeof(*buffer));
+
+	return bytes_written;
 }
 
-void _rtree_serialize_recursive(rt_node_t *node, unsigned char *buffer, size_t *index)
+static void _rtree_serialize_recursive(rt_node_t *node, unsigned char *buffer, size_t *index)
 {
 	if (node_is_leaf(node))
 	{
-		uint8_t i;
-		unsigned char * entry_buffer = malloc(node->context->buffer_size);
+		uint8_t i, *entry_buffer;
+		size_t entry_buffer_size = entry_calculate_buffer_size(node->context);
+		
+		entry_buffer = malloc(entry_buffer_size);
 		
 		for (i = 0; i < node->count; i++)
 		{
 			rt_entry_t *entry = (rt_entry_t *)node->entries[i];
-			size_t buffer_size = entry_serialize(entry, entry_buffer);
-			assert(node->context->buffer_size == buffer_size);
-			memmove(&buffer[*index], entry_buffer, buffer_size);
-			*index += buffer_size;
+			size_t bytes_written = entry_serialize(entry, entry_buffer, node->context->entry_size);
+			assert(entry_buffer_size == bytes_written);
+			memmove(&buffer[*index], entry_buffer, entry_buffer_size);
+			*index += entry_buffer_size;
 		}
 		free(entry_buffer);
 	}
@@ -289,11 +310,11 @@ void _rtree_serialize_recursive(rt_node_t *node, unsigned char *buffer, size_t *
 #ifdef DEBUG
 void rtree_visualize(rt_rtree_t *rtree)
 {
-	printf("RTREE: CONTEXT(m = %u, M = %u, dim = %u, buffer_size = %zu, alloc_factor = %3.2f, space = ", 
+	printf("RTREE: CONTEXT(m = %u, M = %u, dim = %u, entry_size = %zu, alloc_factor = %3.2f, space = ", 
 		rtree->context->m, 
 		rtree->context->M,
 		rtree->context->dim,
-		rtree->context->buffer_size,
+		rtree->context->entry_size,
 		rtree->context->alloc_factor);
 
 	rectangle_print(rtree->context->space);
@@ -301,7 +322,7 @@ void rtree_visualize(rt_rtree_t *rtree)
 
 	_rtree_visualize_recursive(rtree->root, rtree->root->level);
 }
-void _rtree_visualize_recursive(rt_node_t *node, uint16_t max_level) 
+static void _rtree_visualize_recursive(rt_node_t *node, uint16_t max_level) 
 {
 	uint16_t level_pad = max_level - node->level;
 	char *padding = malloc(level_pad * sizeof(char));

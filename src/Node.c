@@ -1,3 +1,5 @@
+#define _GNU_SOURCE
+
 #include <assert.h>
 #include <float.h>
 #include <math.h>
@@ -8,65 +10,17 @@
 #include <stdlib.h>
 #include <string.h>
 #include "hashset.h"
-#include "Common.h"
+#include "Context.h"
+#include "Entry.h"
 #include "Rectangle.h"
 #include "Node.h"
 
-void context_create(rt_ctx_t *dest, uint8_t m, uint8_t M, uint8_t dim, size_t buffer_size, float alloc_factor, rt_rect_t *space_MBR)
-{
-	assert(space_MBR != NULL);
-
-	dest->m = (m <= M/2 ? m : 2);
-	dest->M = (M > 2 ? M : 3);
-	dest->dim = dim;
-	dest->buffer_size = buffer_size;
-	dest->alloc_factor = (alloc_factor > 1.0f ? alloc_factor : 2.0f);
-	dest->space = space_MBR;
-}
-
-#ifdef _QSORT_LINUX
-int entry_compare(const void *entry, const void *other, void *dimension)
-{
-	return rectangle_compare((*((rt_entry_t **)entry))->MBR, (*((rt_entry_t **)other))->MBR, dimension);
-}
-#endif
-
-#ifdef _QSORT_WINDOWS
-int entry_compare(void *dimension, const void *entry, const void *other)
-{
-	return rectangle_compare((*((rt_entry_t **)entry))->MBR, (*((rt_entry_t **)other))->MBR, dimension);
-}
-#endif
-
-void entry_create(rt_entry_t *dest, void *tuple, rt_rect_t *MBR)
-{
-	assert(MBR != NULL);
-
-	dest->tuple = tuple;
-	dest->MBR = MBR;
-}
-
-#ifdef DEBUG
-void entry_print(rt_entry_t *entry)
-{
-	printf("ENTRY: [VALUE: %p,", entry->tuple);
-	rectangle_print(entry->MBR);
-	puts("]\n");
-}
-#endif
-
-size_t entry_serialize(rt_entry_t *entry, unsigned char *buffer)
-{
-	size_t index = 0;
-	memcpy(&buffer[index], &entry, sizeof(rt_entry_t *));
-	index += sizeof(rt_entry_t *);
-	memcpy(&buffer[index], entry->tuple, sizeof(entry->tuple));
-	index += sizeof(entry->tuple);
-	memcpy(&buffer[index], entry->MBR->low, entry->MBR->dim * sizeof(float));
-	index += entry->MBR->dim * sizeof(float);
-
-	return index;
-}
+static void _node_calculate_node_MBR(rt_rect_t *MBR, rt_node_t *node);
+static void _node_calculate_leaf_MBR(rt_rect_t *MBR, rt_node_t *leaf);
+static uint8_t _node_choose_split_axis(rt_node_t *node, void ***sorted_entries, rt_rect_t *MBR_one, rt_rect_t *MBR_two);
+static uint8_t _node_choose_split_index(uint8_t dimension, rt_node_t *node, void ***sorted_entries, rt_rect_t *MBR_one, rt_rect_t *MBR_two);
+static double _node_evaluate_distribution(uint8_t k, void ***sorted_entries, uint8_t dimension, rt_node_t *node, rt_rect_t *MBR_one, rt_rect_t *MBR_two, double(*evaluator)(rt_rect_t *MBR_one, rt_rect_t *MBR_two));
+static rt_rect_t * _node_get_entry_MBR(rt_node_t *node, void *entry);
 
 int node_add_entry(rt_node_t *node, void *entry)
 {
@@ -216,19 +170,10 @@ uint8_t _node_choose_split_index(uint8_t dimension, rt_node_t *node, void ***sor
 	return optimal_distribution_index;
 }
 
-#ifdef _QSORT_LINUX
 int node_compare(const void *entry, const void *other, void *dimension)
 {
 	return rectangle_compare((*((rt_node_t **)entry))->MBR, (*((rt_node_t **)other))->MBR, dimension);
 }
-#endif
-
-#ifdef _QSORT_WINDOWS
-int node_compare(void *dimension, const void *entry, const void *other)
-{
-	return rectangle_compare((*((rt_node_t **)entry))->MBR, (*((rt_node_t **)other))->MBR, dimension);
-}
-#endif
 
 void node_copy(rt_node_t *dest, const rt_node_t *source)
 {
@@ -413,6 +358,7 @@ rt_node_t * node_split(rt_node_t *node, void *entry)
 	void ***sorted_entries = malloc(node->context->dim * sizeof(void **));
 	void **nentries;
 	rt_rect_t MBR_one, *MBR_two;
+	int(*comparator)(const void *, const void *, void *) = (node_is_leaf(node) ? entry_compare : node_compare);
 
 	MBR_one.low = malloc(node->MBR->dim * sizeof(float));
 	MBR_one.high = malloc(node->MBR->dim * sizeof(float));
@@ -423,24 +369,12 @@ rt_node_t * node_split(rt_node_t *node, void *entry)
 	rectangle_copy(&MBR_one, node->MBR);
 	rectangle_copy(MBR_two, node->MBR);
 
-#ifdef _QSORT_LINUX
-	int(*comparator)(const void *, const void *, void *) = (node_is_leaf(node) ? entry_compare : node_compare);
-#endif
-#ifdef _QSORT_WINDOWS
-	int(*comparator)(void *, const void *, const void *) = (node_is_leaf(node) ? entry_compare : node_compare);
-#endif
-
 	for (dim = 0; dim < node->context->dim; dim++)
 	{
 		sorted_entries[dim] = malloc((node->context->M + 1) * sizeof(void *));
 		memcpy(sorted_entries[dim], node->entries, node->count * sizeof(void *));
 		sorted_entries[dim][node->context->M] = entry;
-#ifdef _QSORT_LINUX
 		qsort_r(sorted_entries[dim], node->context->M + 1, sizeof(void *), comparator, &dim);
-#endif
-#ifdef _QSORT_WINDOWS
-		qsort_s(sorted_entries[dim], node->context->M + 1, sizeof(void *), comparator, &dim);
-#endif
 	}
 
 	split_axis = _node_choose_split_axis(node, sorted_entries, &MBR_one, MBR_two);
