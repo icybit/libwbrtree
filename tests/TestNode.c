@@ -3,9 +3,11 @@
 #include <stdlib.h>
 #include <setjmp.h>
 #include <cmocka.h>
-#include "Common.h"
-#include "Rectangle.h"
-#include "Node.h"
+#include "../include/Common.h"
+#include "../include/Context.h"
+#include "../include/Entry.h"
+#include "../include/Node.h"
+#include "../include/Rectangle.h"
 #include "TestNode.h"
 
 void _test_context_create() {
@@ -26,8 +28,6 @@ void _test_context_create() {
 	assert_ptr_equal(context.space, &rectangle);
 }
 
-/* TODO: The following tests should be refactored to remove superfluous heap allocations and to comply with -Pedantic rules */
-
 void _test_entry_create() {	
 	uint8_t tuple = 4, dim = 2;
 	float low[] = { 0.0f, 0.0f };
@@ -37,19 +37,16 @@ void _test_entry_create() {
 	
 	rectangle_create(&rectangle, low, high, dim);	
 
-	// Test entry_create
 	entry_create(&entry, &tuple, &rectangle);
 
 	assert_ptr_equal(entry.tuple, &tuple);
 	assert_ptr_equal(entry.MBR, &rectangle);	
 }
 
-//TODO: Cover node create with more tests
+/* TODO: Cover node create with more tests */
 void _test_node_create() {
-	uint8_t tuple = 4, dim = 2, m = 4, M = 12, level = 0;	
+	uint8_t dim = 2, m = 4, M = 12, level = 0;	
 	float alloc_factor = 4;
-	float low[] = { 0.0f, 0.0f };
-	float high[] = { 2.0f, 2.0f };
 	rt_rect_t rectangle;	
 	rt_ctx_t context;	
 	rt_node_t node;
@@ -80,12 +77,10 @@ void _test_node_is_leaf() {
 	
 	node_create(&node, &context, NULL, NULL, 0, context.space, level);
 
-	// node_is_leaf - Should return 1
 	assert_true(node_is_leaf(&node));
 
 	node.level = 1;
 
-	// node_is_leaf - Should return 0
 	assert_false(node_is_leaf(&node));
 }
 
@@ -130,7 +125,6 @@ void _test_node_add_entry() {
 	node_create(&node, &context, NULL, NULL, 0, context.space, level);
 	entry_create(&entry, &tuple, &rectangle_b);
 		
-	// Test node_add_entry
 	success = node_add_entry(&node, &entry);
 	assert_true(success);
 	assert_ptr_equal(node.entries[0], &entry);
@@ -140,7 +134,6 @@ void _test_node_add_entry() {
 		assert_true(node.MBR->high[index] == high_b[index]);
 	}
 
-	// Test memory realocation
 	for (index = 0; index < node.capacity; index++) {
 		if (index < M - 1) {
 			assert_true(node_add_entry(&node, &entry));
@@ -171,33 +164,29 @@ void _test_node_delete_entry() {
 	context_create(&context, m, M, dim, entry_size, alloc_factor, &rectangle_a);
 	node_create(&node, &context, NULL, NULL, 0, context.space, level);
 		
-	// Entry setup
 	for (index = 0; index < 4; index++) {
 		entry_create(&entries[index], &tuples[index], &rectangle_b);
 		node_add_entry(&node, &entries[index]);
 	}	
 
-	// Test node_delete_entry
-
-	// Removed entry_2, sequence should be 1, 3, 4
 	node_delete_entry(&node, &entries[1]);
 	assert_ptr_equal(node.entries[0], &entries[0]);
 	assert_ptr_equal(node.entries[1], &entries[2]);
 	assert_ptr_equal(node.entries[2], &entries[3]);
 	assert_int_equal(node.count, 3);
 
-	// Removed entry_1, sequence should be 3, 4
+	/* Removed entry_1, sequence should be 3, 4 */
 	node_delete_entry(&node, &entries[0]);
 	assert_ptr_equal(node.entries[0], &entries[2]);
 	assert_ptr_equal(node.entries[1], &entries[3]);
 	assert_int_equal(node.count, 2);
 
-	// Removed entry_4, sequence should be 3
+	/* Removed entry_4, sequence should be 3 */
 	node_delete_entry(&node, &entries[3]);
 	assert_ptr_equal(node.entries[0], &entries[2]);
 	assert_int_equal(node.count, 1);
 
-	// Removed entry_3, there should be 0 entries
+	/* Removed entry_3, there should be 0 entries */
 	node_delete_entry(&node, &entries[2]);
 	assert_int_equal(node.count, 0);
 }
@@ -221,7 +210,6 @@ void _test_node_adjust_MBR() {
 	node_create(&node, &context, NULL, NULL, 0, context.space, level);
 	entry_create(&entry, &tuple, &rectangle_b);
 		
-	// Test node_adjust_MBR
 	node_adjust_MBR(&node, &entry);
 	for (index = 0; index < dim; index++) {
 		assert_true(node.MBR->low[index] == low_a[index]);
@@ -263,31 +251,26 @@ void _test_node_choose_optimal_entry() {
 	rt_rect_t rectangle_3;
 	rt_rect_t rectangle_4;
 
-	// Create root node
 	rectangle_create(&rectangle, low, high, dim);
 	context_create(&context, m, M, dim, entry_size, alloc_factor, &rectangle);
 	node_create(&node, &context, NULL, NULL, 0, context.space, root_level);
 
-	// Create leaf nodes
 	rectangle_create(&rectangle_1, low_1, high_1, dim);
 	node_create(&node_1, &context, NULL, NULL, 0, &rectangle_1, leaf_level);
 
 	rectangle_create(&rectangle_2, low_2, high_2, dim);
 	node_create(&node_2, &context, NULL, NULL, 0, &rectangle_2, leaf_level);
 
-	rectangle_create(&rectangle_3, low_3, high_1, dim);
+	rectangle_create(&rectangle_3, low_3, high_3, dim);
 	node_create(&node_3, &context, NULL, NULL, 0, &rectangle_3, leaf_level);
 
-	// Create entry
 	rectangle_create(&rectangle_4, low_4, high_4, dim);
 	entry_create(&entry, &tuple, &rectangle_4);
 
-	// Add leaf nodes to root
 	node_add_entry(&node, &node_1);
 	node_add_entry(&node, &node_2);
 	node_add_entry(&node, &node_3);
 
-	// Test node_choose_optimal_entry
 	assert_ptr_equal(node_choose_optimal_entry(&node, &entry), &node_2);
 }
 
@@ -322,8 +305,7 @@ void _test_entry_compare() {
 	assert_true(entry_compare(&dim_2, &entry_ptr_2, &entry_ptr_2) == 0);
 }
 
-// For leaf node
-void _test_node_calculate_MBR_1() {
+void _test_node_calculate_MBR_Leaf() {
 	uint8_t dim = 2, tuple = 1, m = 2, M = 4, level = 0;
 	size_t entry_size = 35;
 	float alloc_factor = 4.0f;
@@ -351,12 +333,10 @@ void _test_node_calculate_MBR_1() {
 	rt_entry_t entry_2;
 	rt_entry_t entry_3;
 	
-	// Create root node
 	rectangle_create(&rectangle, low, high, dim);
 	context_create(&context, m, M, dim, entry_size, alloc_factor, &rectangle);
 	node_create(&node, &context, NULL, NULL, 0, context.space, level);
 
-	// Create entries
 	rectangle_create(&rectangle_1, low_1, high_1, dim);
 	entry_create(&entry_1, &tuple, &rectangle_1);
 
@@ -366,7 +346,6 @@ void _test_node_calculate_MBR_1() {
 	rectangle_create(&rectangle_3, low_3, high_3, dim);
 	entry_create(&entry_3, &tuple, &rectangle_3);
 	
-	// Test node_calculate_MBR
 	node_add_entry(&node, &entry_1);
 	node_calculate_MBR(node.MBR, &node);
 	assert_true(node.MBR->low[0] == 0);
@@ -389,8 +368,7 @@ void _test_node_calculate_MBR_1() {
 	assert_true(node.MBR->high[1] == 7);
 }
 
-// For non-leaf node
-void _test_node_calculate_MBR_2() {
+void _test_node_calculate_MBR_Non_Leaf() {
 	rt_ctx_t context;
 	rt_rect_t rectangle, rectangle_1, rectangle_2, rectangle_3;
 	rt_entry_t entry_1, entry_2, entry_3, **entries_1, **entries_2, **entries_3;
@@ -405,28 +383,25 @@ void _test_node_calculate_MBR_2() {
 	entries_2 = malloc(sizeof(void *));
 	entries_3 = malloc(sizeof(void *));
 
-	// Create root node
 	rectangle_create(&rectangle, low, high, dim);
 	context_create(&context, m, M, dim, entry_size, alloc_factor, &rectangle);
 	node_create(&node, &context, NULL, NULL, 0, context.space, root_level);
 
-	// Create entry nodes
 	rectangle_create(&rectangle_1, low_1, high_1, dim);
 	entry_create(&entry_1, &tuple, &rectangle_1);
 	entries_1[0] = &entry_1;
-	node_create(&node_1, &context, &node, entries_1, 1, &rectangle_1, leaf_level);
+	node_create(&node_1, &context, &node, (void **)entries_1, 1, &rectangle_1, leaf_level);
 
 	rectangle_create(&rectangle_2, low_2, high_2, dim);
 	entry_create(&entry_2, &tuple, &rectangle_2);
 	entries_2[0] = &entry_2;
-	node_create(&node_2, &context, &node, entries_2, 1, &rectangle_2, leaf_level);
+	node_create(&node_2, &context, &node, (void **)entries_2, 1, &rectangle_2, leaf_level);
 
 	rectangle_create(&rectangle_3, low_3, high_3, dim);
 	entry_create(&entry_3, &tuple, &rectangle_3);
 	entries_3[0] = &entry_3;
-	node_create(&node_3, &context, &node, entries_3, 1, &rectangle_3, leaf_level);
+	node_create(&node_3, &context, &node, (void **)entries_3, 1, &rectangle_3, leaf_level);
 
-	// Test node_calculate_MBR
 	node_add_entry(&node, &node_1);
 	node_calculate_MBR(node.MBR, &node);
 	assert_true(node.MBR->low[0] == 0);
@@ -448,10 +423,6 @@ void _test_node_calculate_MBR_2() {
 	assert_true(node.MBR->high[0] == 5);
 	assert_true(node.MBR->high[1] == 7);
 }
-//
-//void _test_node_split_node() {
-//
-//}
 
 int test_node(void) {
 	const struct CMUnitTest tests[] = {
@@ -464,8 +435,8 @@ int test_node(void) {
 		cmocka_unit_test(_test_node_add_entry),
 		cmocka_unit_test(_test_node_delete_entry),
 		cmocka_unit_test(_test_entry_compare),
-		cmocka_unit_test(_test_node_calculate_MBR_1),
-		cmocka_unit_test(_test_node_calculate_MBR_2),
+		cmocka_unit_test(_test_node_calculate_MBR_Leaf),
+		cmocka_unit_test(_test_node_calculate_MBR_Non_Leaf),
 		cmocka_unit_test(_test_node_choose_optimal_entry)
 	};
 	return cmocka_run_group_tests(tests, NULL, NULL);

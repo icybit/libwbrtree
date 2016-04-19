@@ -3,9 +3,11 @@
 #include <stdlib.h>
 #include <setjmp.h>
 #include <cmocka.h>
-#include "Node.h"
-#include "Rectangle.h"
-#include "RTree.h"
+#include "../include/Context.h"
+#include "../include/Entry.h"
+#include "../include/Node.h"
+#include "../include/Rectangle.h"
+#include "../include/RTree.h"
 #include "TestRTree.h"
 
 void _test_rtree_create() {
@@ -86,8 +88,6 @@ void _test_rtree_insert() {
 	}
 	assert_true(node_is_leaf(rtree.root));
 	assert_true(node_is_root(rtree.root));
-
-	// Node should split to 2 nodes. New root node should be created.
 
 	rectangle_create(&MBR_5, low_5, high_5, dimension);
 	entry_create(&entry_5, &tuples[4], &MBR_5);

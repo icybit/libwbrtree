@@ -21,9 +21,9 @@ void _test_node_choose_optimal_entry();
 
 void _test_entry_compare();
 
-void _test_node_calculate_MBR_1();
+void _test_node_calculate_MBR_Leaf();
 
-void _test_node_calculate_MBR_2();
+void _test_node_calculate_MBR_Non_Leaf();
 
 void _test_node_split_node();
 

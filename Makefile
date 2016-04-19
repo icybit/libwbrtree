@@ -3,7 +3,7 @@
 CC := gcc
 DEBUG := -g
 CFLAGS := -Wall -Werror -pedantic $(DEBUG) -fvisibility=hidden
-LFLAGS := -Wall $(DEBUG)
+LDFLAGS := -Wall $(DEBUG)
 SRCEXT := c
 
 LIBNAME := librtree
@@ -12,6 +12,7 @@ INCPATH := include
 SRCPATH := src
 OBJPATH := obj
 LIBPATH := lib
+TESTPATH := tests
 OUTPATH := $(LIBPATH)
 
 SOURCES := $(shell find $(SRCPATH) -type f -name *.$(SRCEXT))
@@ -22,7 +23,7 @@ INCLUDE := -I $(INCPATH)
 $(OUTPATH)/$(LIBNAME).so: $(OBJECTS)
 	@echo "Creating shared library..."
 	@mkdir -p $(LIBPATH)
-	$(CC) $(LFLAGS) -shared -o $@ $^
+	$(CC) $(LDFLAGS) -shared -o $@ $^
 
 $(OBJPATH)/%.o: $(SRCPATH)/%.$(SRCEXT)
 	@echo "Compiling..."
@@ -32,5 +33,9 @@ $(OBJPATH)/%.o: $(SRCPATH)/%.$(SRCEXT)
 clean:
 	@echo "Cleaning..."
 	$(RM) -r $(OBJPATH) $(OUTPATH)
+
+test: $(OUTPATH)/$(LIBNAME).so
+	@echo "Making tests..."
+	cd $(TESTPATH) && $(MAKE)
 	
 .PHONY: clean

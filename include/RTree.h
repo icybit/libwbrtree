@@ -2,6 +2,7 @@
 #define _RTREE_RTREE_H_
 
 #include "Common.h"
+#include "hashset.h"
 
 struct RTree {
 	rt_node_t *root;

@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <setjmp.h>
 #include <cmocka.h>
-#include "Rectangle.h"
+#include "../include/Rectangle.h"
 #include "TestRectangle.h"
 
 void _test_rectangle_area() {
@@ -49,7 +49,6 @@ void _test_rectangle_combine_1() {
 	rectangle_create(&rectangle_a, low_a, high_a, dim);
 	rectangle_create(&rectangle_b, low_b, high_b, dim);
 		
-//	Test rectangle_combine
 	rectangle_combine(&rectangle_a, &rectangle_b);
 	
 	assert_int_equal(rectangle_a.dim, dim);
@@ -73,7 +72,6 @@ void _test_rectangle_combine_2() {
 	rectangle_create(&rectangle_a, low_a, high_a, dim);
 	rectangle_create(&rectangle_b, low_b, high_b, dim);
 	
-	// Test rectangle_combine
 	rectangle_combine(&rectangle_a, &rectangle_b);
 	assert_int_equal(rectangle_a.dim, dim);
 	for (index = 0; index < dim; index++) {
@@ -113,7 +111,6 @@ void _test_rectangle_min_distance() {
 	rectangle_create(&rectangle_a, low_a, high_a, dim);
 	rectangle_create(&rectangle_b, low_b, high_b, dim);
 	
-	// Test rectangle_min_distance
 	assert_int_equal(rectangle_min_distance(&rectangle_a, &rectangle_b), 5);
 	assert_int_equal(rectangle_min_distance(&rectangle_b, &rectangle_a), 5);
 }
@@ -137,27 +134,20 @@ void _test_rectangle_overlaps() {
 	rectangle_create(&rectangle_b, low_b, high_b, dim);
 	rectangle_create(&rectangle_c, low_c, high_c, dim);
 
-	// Test rectangle_overlap
 	assert_true(rectangle_overlaps(&rectangle_a, &rectangle_b));
 	assert_false(rectangle_overlaps(&rectangle_a, &rectangle_c));
 }
 
 void _test_rectangle_compare() {
-	uint8_t dimensions = 2;
-
-	rt_rect_t rectangle_a;
+	uint8_t dimensions = 2, dim[] = { 0, 1 };
+	rt_rect_t rectangle_a, rectangle_b;
 	float low_a[] = { 1.0f, 2.0f };
 	float high_a[] = { 3.0f, 4.0f };
-
-	rt_rect_t rectangle_b;
 	float low_b[] = { 2.0f, 1.0f };
 	float high_b[] = { 4.0f, 3.0f };
 
 	rectangle_create(&rectangle_a, low_a, high_a, dimensions);
 	rectangle_create(&rectangle_b, low_b, high_b, dimensions);
-	
-	// Test rectangle_compare
-	uint8_t dim[] = { 0, 1 };
 	
 	assert_true(rectangle_compare(&rectangle_a, &rectangle_b, &dim[0]) < 0);
 	assert_true(rectangle_compare(&rectangle_a, &rectangle_b, &dim[1]) > 0);
@@ -181,7 +171,6 @@ void _test_rectangle_intersection_area() {
 	rectangle_create(&rectangle_a, low_a, high_a, dim);
 	rectangle_create(&rectangle_b, low_b, high_b, dim);	
 
-	// Test rectangle_intersection_area	
 	assert_int_equal(rectangle_intersection_area(&rectangle_a, &rectangle_b), 1);
 	assert_int_equal(rectangle_intersection_area(&rectangle_b, &rectangle_a), 1);
 }
@@ -211,7 +200,6 @@ void _test_rectangle_margin_value() {
 	rectangle_create(&rectangle_a, low_a, high_a, dim);
 	rectangle_create(&rectangle_b, low_b, high_b, dim);
 		
-	// Test rectangle_margin_value
 	assert_int_equal(rectangle_margin_value(&rectangle_a, &rectangle_b), 20);
 	assert_int_equal(rectangle_margin_value(&rectangle_b, &rectangle_a), 20);
 }
@@ -230,7 +218,6 @@ void _test_rectangle_copy() {
 	rectangle_create(&rectangle_a, low_a, high_a, dim);
 	rectangle_create(&rectangle_b, low_b, high_b, dim);
 
-	// Test rectangle_copy
 	rectangle_copy(&rectangle_b, &rectangle_a);
 	for (index = 0; index < dim; index++) {
 		assert_true(rectangle_a.low[index] == rectangle_b.low[index]);

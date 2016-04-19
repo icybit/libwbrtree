@@ -3,7 +3,7 @@
 #include "TestNode.h"
 #include "TestRTree.h"
 
-void main(int argc, char *argv[])
+int main(int argc, char *argv[])
 {
 	puts("Running Rectangle Tests...\n");	
 	test_rectangle();
@@ -11,4 +11,6 @@ void main(int argc, char *argv[])
 	test_node();
 	puts("Running RTree Tests...\n");	
 	test_rtree();
+
+	return 0;
 }
