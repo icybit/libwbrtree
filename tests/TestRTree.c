@@ -3,10 +3,9 @@
 #include <stdlib.h>
 #include <setjmp.h>
 #include <cmocka.h>
-#include "../include/Node.h"
-#include "../include/Rectangle.h"
-#include "../include/RTree.h"
-#include "Helpers.h"
+#include "Node.h"
+#include "Rectangle.h"
+#include "RTree.h"
 #include "TestRTree.h"
 
 void _test_rtree_create() {
@@ -41,7 +40,7 @@ void _test_rtree_insert() {
 	rtree_create(&rtree, &context);
 	
 	rectangle_create(&MBR_1, low_1, high_1, dimension);
-	entry_create(&entry_1, tuples[0], &MBR_1);
+	entry_create(&entry_1, &tuples[0], &MBR_1);
 	
 	rtree_insert(&rtree, &entry_1);
 	for (index = 0; index < dimension; index++)
@@ -53,7 +52,7 @@ void _test_rtree_insert() {
 	assert_true(node_is_root(rtree.root));
 
 	rectangle_create(&MBR_2, low_2, high_2, dimension);
-	entry_create(&entry_2, tuples[1], &MBR_2);
+	entry_create(&entry_2, &tuples[1], &MBR_2);
 
 	rtree_insert(&rtree, &entry_2);
 	for (index = 0; index < dimension; index++)
@@ -65,7 +64,7 @@ void _test_rtree_insert() {
 	assert_true(node_is_root(rtree.root));
 
 	rectangle_create(&MBR_3, low_3, high_3, dimension);
-	entry_create(&entry_3, tuples[2], &MBR_3);
+	entry_create(&entry_3, &tuples[2], &MBR_3);
 
 	rtree_insert(&rtree, &entry_3);
 	for (index = 0; index < dimension; index++)
@@ -77,7 +76,7 @@ void _test_rtree_insert() {
 	assert_true(node_is_root(rtree.root));
 
 	rectangle_create(&MBR_4, low_4, high_4, dimension);
-	entry_create(&entry_4, tuples[3], &MBR_4);
+	entry_create(&entry_4, &tuples[3], &MBR_4);
 
 	rtree_insert(&rtree, &entry_4);
 	for (index = 0; index < dimension; index++)
@@ -91,7 +90,7 @@ void _test_rtree_insert() {
 	// Node should split to 2 nodes. New root node should be created.
 
 	rectangle_create(&MBR_5, low_5, high_5, dimension);
-	entry_create(&entry_5, tuples[4], &MBR_5);
+	entry_create(&entry_5, &tuples[4], &MBR_5);
 
 	rtree_insert(&rtree, &entry_5);
 

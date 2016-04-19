@@ -5,8 +5,7 @@
 #include <stdlib.h>
 #include <setjmp.h>
 #include <cmocka.h>
-#include "../include/Rectangle.h"
-#include "Helpers.h"
+#include "Rectangle.h"
 #include "TestRectangle.h"
 
 void _test_rectangle_area() {

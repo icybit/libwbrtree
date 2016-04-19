@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include "TestRectangle.h"
 #include "TestNode.h"
 #include "TestRTree.h"

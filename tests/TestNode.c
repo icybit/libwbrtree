@@ -3,10 +3,9 @@
 #include <stdlib.h>
 #include <setjmp.h>
 #include <cmocka.h>
-#include "../include/Common.h"
-#include "../include/Rectangle.h"
-#include "../include/Node.h"
-#include "Helpers.h"
+#include "Common.h"
+#include "Rectangle.h"
+#include "Node.h"
 #include "TestNode.h"
 
 void _test_context_create() {
