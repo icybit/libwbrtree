@@ -275,20 +275,13 @@ void _test_node_choose_optimal_entry() {
 }
 
 void _test_entry_compare() {	
-	uint8_t dim = 2, dim_1 = 0, dim_2 = 1;
+	uint8_t dim = 2, dim_1 = 0, dim_2 = 1, tuples[] = { 1, 2 };
 	float low_1[] = { 1.0f, 1.0f };
 	float high_1[] = { 3.0f, 3.0f };	
-
 	float low_2[] = { 0.0f, 2.0f };
 	float high_2[] = { 4.0f, 2.0f };
-	
-	uint8_t tuples[] = { 1, 2 };
-
-	rt_entry_t entry_1;
-	rt_entry_t entry_2;
-	rt_entry_t *entry_ptr_1 = &entry_1;
-	rt_entry_t *entry_ptr_2 = &entry_2;
-
+	rt_entry_t entry_1, entry_2;
+	rt_entry_t *entry_ptr_1 = &entry_1, *entry_ptr_2 = &entry_2;
 	rt_rect_t rectangle_1, rectangle_2;
 
 	rectangle_create(&rectangle_1, low_1, high_1, dim);
@@ -297,12 +290,12 @@ void _test_entry_compare() {
 	entry_create(&entry_1, &tuples[0], &rectangle_1);
 	entry_create(&entry_2, &tuples[1], &rectangle_2);	
 	
-	assert_true(entry_compare(&dim_1, &entry_ptr_1, &entry_ptr_2) > 0);
-	assert_true(entry_compare(&dim_2, &entry_ptr_1, &entry_ptr_2) < 0);
-	assert_true(entry_compare(&dim_1, &entry_ptr_2, &entry_ptr_1) < 0);
-	assert_true(entry_compare(&dim_2, &entry_ptr_2, &entry_ptr_1) > 0);
-	assert_true(entry_compare(&dim_1, &entry_ptr_2, &entry_ptr_2) == 0);
-	assert_true(entry_compare(&dim_2, &entry_ptr_2, &entry_ptr_2) == 0);
+	assert_true(entry_compare(&entry_ptr_1, &entry_ptr_2, &dim_1) > 0);
+	assert_true(entry_compare(&entry_ptr_1, &entry_ptr_2, &dim_2) < 0);
+	assert_true(entry_compare(&entry_ptr_2, &entry_ptr_1, &dim_1) < 0);
+	assert_true(entry_compare(&entry_ptr_2, &entry_ptr_1, &dim_2) > 0);
+	assert_true(entry_compare(&entry_ptr_2, &entry_ptr_2, &dim_1) == 0);
+	assert_true(entry_compare(&entry_ptr_2, &entry_ptr_2, &dim_2) == 0);
 }
 
 void _test_node_calculate_MBR_Leaf() {

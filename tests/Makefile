@@ -3,7 +3,7 @@
 CC := gcc
 DEBUG := -g
 CFLAGS := -Wall -Werror -pedantic $(DEBUG)
-LDFLAGS := -Wall $(DEBUG)
+LDFLAGS :=
 SRCEXT := c
 
 OUTNAME := librtree-test
@@ -15,7 +15,7 @@ OUTPATH := ../build
 
 SOURCES := $(shell find $(SRCPATH) -type f -name '*.$(SRCEXT)')
 OBJECTS := $(patsubst $(SRCPATH)/%, $(OBJPATH)/%, $(SOURCES:.$(SRCEXT)=.o))
-LIBS := -lcmocka
+LIBS := -lm -lcmocka
 INCLUDE := -I $(INCPATH)
 
 #http://stackoverflow.com/questions/14806206/what-do-the-makefile-symbols-mean
@@ -23,7 +23,7 @@ run: $(OUTPATH)/$(OUTNAME)
 	@echo "Running tests..."
 	./$<
 
-$(OUTPATH)/$(OUTNAME): $(OBJECTS)
+$(OUTPATH)/$(OUTNAME): $(OBJECTS) $(shell find $(OBJPATH) -type f -name '*.o')
 	@echo "Linking..."
 	@mkdir -p $(OUTPATH)
 	$(CC) $(LFLAGS) $^ $(LIBS) -o $@
