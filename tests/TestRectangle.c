@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <setjmp.h>
 #include <cmocka.h>
-#include "../include/Rectangle.h"
+#include "../src/Rectangle.h"
 #include "TestRectangle.h"
 
 void _test_rectangle_area() {
@@ -14,7 +14,7 @@ void _test_rectangle_area() {
 	float low[] = { 0.0f, 0.0f };
 	float high[] = { 2.0f, 2.0f };
 
-	rectangle_create(&rectangle, low, high, dimension);
+	rtree_rectangle_create(&rectangle, low, high, dimension);
 
 	assert_true(fabs(rectangle_area(&rectangle) - 4.0) < DBL_EPSILON);
 }
@@ -25,7 +25,7 @@ void _test_rectangle_create() {
 	float low[] = {0.0f, 0.0f};
 	float high[] = {2.0f, 2.0f};
 
-	rectangle_create(&rectangle, low, high, dimension);
+	rtree_rectangle_create(&rectangle, low, high, dimension);
 
 	for (index = 0; index < dimension; index++)
 	{
@@ -46,8 +46,8 @@ void _test_rectangle_combine_1() {
 	float low_b[] = { 1.0f, 1.0f };
 	float high_b[] = { 3.0f, 3.0f };
 
-	rectangle_create(&rectangle_a, low_a, high_a, dim);
-	rectangle_create(&rectangle_b, low_b, high_b, dim);
+	rtree_rectangle_create(&rectangle_a, low_a, high_a, dim);
+	rtree_rectangle_create(&rectangle_b, low_b, high_b, dim);
 		
 	rectangle_combine(&rectangle_a, &rectangle_b);
 	
@@ -69,8 +69,8 @@ void _test_rectangle_combine_2() {
 	float low_b[] = { 1.0f, 0.0f };
 	float high_b[] = { 4.0f, 4.0f };
 
-	rectangle_create(&rectangle_a, low_a, high_a, dim);
-	rectangle_create(&rectangle_b, low_b, high_b, dim);
+	rtree_rectangle_create(&rectangle_a, low_a, high_a, dim);
+	rtree_rectangle_create(&rectangle_b, low_b, high_b, dim);
 	
 	rectangle_combine(&rectangle_a, &rectangle_b);
 	assert_int_equal(rectangle_a.dim, dim);
@@ -86,7 +86,7 @@ void _test_rectangle_extend_infinitely() {
 	float low[] = { 0.0f, 0.0f };
 	float high[] = { 2.0f, 2.0f };
 
-	rectangle_create(&rectangle, low, high, dim);	
+	rtree_rectangle_create(&rectangle, low, high, dim);	
 
 	rectangle_extend_infinitely(&rectangle);
 	assert_int_equal(rectangle.dim, dim);
@@ -108,8 +108,8 @@ void _test_rectangle_min_distance() {
 	float low_b[] = { 5.0f, 6.0f };
 	float high_b[] = { 8.0f, 8.0f };
 
-	rectangle_create(&rectangle_a, low_a, high_a, dim);
-	rectangle_create(&rectangle_b, low_b, high_b, dim);
+	rtree_rectangle_create(&rectangle_a, low_a, high_a, dim);
+	rtree_rectangle_create(&rectangle_b, low_b, high_b, dim);
 	
 	assert_int_equal(rectangle_min_distance(&rectangle_a, &rectangle_b), 5);
 	assert_int_equal(rectangle_min_distance(&rectangle_b, &rectangle_a), 5);
@@ -130,9 +130,9 @@ void _test_rectangle_overlaps() {
 	float low_c[] = { 3.0f, 3.0f };
 	float high_c[] = { 5.0f, 5.0f };
 
-	rectangle_create(&rectangle_a, low_a, high_a, dim);
-	rectangle_create(&rectangle_b, low_b, high_b, dim);
-	rectangle_create(&rectangle_c, low_c, high_c, dim);
+	rtree_rectangle_create(&rectangle_a, low_a, high_a, dim);
+	rtree_rectangle_create(&rectangle_b, low_b, high_b, dim);
+	rtree_rectangle_create(&rectangle_c, low_c, high_c, dim);
 
 	assert_true(rectangle_overlaps(&rectangle_a, &rectangle_b));
 	assert_false(rectangle_overlaps(&rectangle_a, &rectangle_c));
@@ -146,8 +146,8 @@ void _test_rectangle_compare() {
 	float low_b[] = { 2.0f, 1.0f };
 	float high_b[] = { 4.0f, 3.0f };
 
-	rectangle_create(&rectangle_a, low_a, high_a, dimensions);
-	rectangle_create(&rectangle_b, low_b, high_b, dimensions);
+	rtree_rectangle_create(&rectangle_a, low_a, high_a, dimensions);
+	rtree_rectangle_create(&rectangle_b, low_b, high_b, dimensions);
 	
 	assert_true(rectangle_compare(&rectangle_a, &rectangle_b, &dim[0]) < 0);
 	assert_true(rectangle_compare(&rectangle_a, &rectangle_b, &dim[1]) > 0);
@@ -168,8 +168,8 @@ void _test_rectangle_intersection_area() {
 	float low_b[] = { 1.0f, 1.0f };
 	float high_b[] = { 3.0f, 3.0f };
 
-	rectangle_create(&rectangle_a, low_a, high_a, dim);
-	rectangle_create(&rectangle_b, low_b, high_b, dim);	
+	rtree_rectangle_create(&rectangle_a, low_a, high_a, dim);
+	rtree_rectangle_create(&rectangle_b, low_b, high_b, dim);	
 
 	assert_int_equal(rectangle_intersection_area(&rectangle_a, &rectangle_b), 1);
 	assert_int_equal(rectangle_intersection_area(&rectangle_b, &rectangle_a), 1);
@@ -181,7 +181,7 @@ void _test_rectangle_margin() {
 	float low[] = { 0.0f, 0.0f };
 	float high[] = { 2.0f, 3.0f };
 
-	rectangle_create(&rectangle, low, high, dim);
+	rtree_rectangle_create(&rectangle, low, high, dim);
 	
 	assert_int_equal(rectangle_margin(&rectangle), 10);
 }
@@ -197,8 +197,8 @@ void _test_rectangle_margin_value() {
 	float low_b[] = { 1.0f, 1.0f };
 	float high_b[] = { 5.0f, 3.0f };
 
-	rectangle_create(&rectangle_a, low_a, high_a, dim);
-	rectangle_create(&rectangle_b, low_b, high_b, dim);
+	rtree_rectangle_create(&rectangle_a, low_a, high_a, dim);
+	rtree_rectangle_create(&rectangle_b, low_b, high_b, dim);
 		
 	assert_int_equal(rectangle_margin_value(&rectangle_a, &rectangle_b), 20);
 	assert_int_equal(rectangle_margin_value(&rectangle_b, &rectangle_a), 20);
@@ -215,8 +215,8 @@ void _test_rectangle_copy() {
 	float low_b[] = { 1.0f, 1.0f };
 	float high_b[] = { 5.0f, 3.0f };
 
-	rectangle_create(&rectangle_a, low_a, high_a, dim);
-	rectangle_create(&rectangle_b, low_b, high_b, dim);
+	rtree_rectangle_create(&rectangle_a, low_a, high_a, dim);
+	rtree_rectangle_create(&rectangle_b, low_b, high_b, dim);
 
 	rectangle_copy(&rectangle_b, &rectangle_a);
 	for (index = 0; index < dim; index++) {

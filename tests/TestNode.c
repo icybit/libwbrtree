@@ -3,11 +3,11 @@
 #include <stdlib.h>
 #include <setjmp.h>
 #include <cmocka.h>
-#include "../include/Common.h"
-#include "../include/Context.h"
-#include "../include/Entry.h"
-#include "../include/Node.h"
-#include "../include/Rectangle.h"
+#include "../src/Common.h"
+#include "../src/Context.h"
+#include "../src/Entry.h"
+#include "../src/Node.h"
+#include "../src/Rectangle.h"
 #include "TestNode.h"
 
 void _test_context_create() {
@@ -19,8 +19,8 @@ void _test_context_create() {
 	float low[] = { 0.0f, 0.0f };
 	float high[] = { 2.0f, 2.0f };
 
-	rectangle_create(&rectangle, low, high, dimension);
-	context_create(&context, m, M, dimension, entry_size, alloc_factor, &rectangle);
+	rtree_rectangle_create(&rectangle, low, high, dimension);
+	rtree_context_create(&context, m, M, dimension, entry_size, alloc_factor, &rectangle);
 
 	assert_int_equal(context.m, m);
 	assert_int_equal(context.M, M);
@@ -35,9 +35,9 @@ void _test_entry_create() {
 	rt_rect_t rectangle;
 	rt_entry_t entry;	
 	
-	rectangle_create(&rectangle, low, high, dim);	
+	rtree_rectangle_create(&rectangle, low, high, dim);	
 
-	entry_create(&entry, &tuple, &rectangle);
+	rtree_entry_create(&entry, &tuple, &rectangle);
 
 	assert_ptr_equal(entry.tuple, &tuple);
 	assert_ptr_equal(entry.MBR, &rectangle);	
@@ -51,7 +51,7 @@ void _test_node_create() {
 	rt_ctx_t context;	
 	rt_node_t node;
 
-	context_create(&context, m, M, dim, 35, alloc_factor, &rectangle);
+	rtree_context_create(&context, m, M, dim, 35, alloc_factor, &rectangle);
 	node_create(&node, &context, NULL, NULL, 0, context.space, level);
 		
 	assert_ptr_equal(node.context, &context);
@@ -72,8 +72,8 @@ void _test_node_is_leaf() {
 	rt_ctx_t context;
 	rt_node_t node;
 
-	rectangle_create(&rectangle, low, high, dim);
-	context_create(&context, m, M, dim, entry_size, alloc_factor, &rectangle);
+	rtree_rectangle_create(&rectangle, low, high, dim);
+	rtree_context_create(&context, m, M, dim, entry_size, alloc_factor, &rectangle);
 	
 	node_create(&node, &context, NULL, NULL, 0, context.space, level);
 
@@ -94,8 +94,8 @@ void _test_node_is_root() {
 	rt_ctx_t context;
 	rt_node_t node;
 
-	rectangle_create(&rectangle, low, high, dim);
-	context_create(&context, m, M, dim, entry_size, alloc_factor, &rectangle);
+	rtree_rectangle_create(&rectangle, low, high, dim);
+	rtree_context_create(&context, m, M, dim, entry_size, alloc_factor, &rectangle);
 
 	node_create(&node, &context, NULL, NULL, 0, context.space, level);
 
@@ -119,11 +119,11 @@ void _test_node_add_entry() {
 	rt_node_t node;
 	rt_entry_t entry;
 
-	rectangle_create(&rectangle_a, low_a, high_a, dim);
-	rectangle_create(&rectangle_b, low_b, high_b, dim);
-	context_create(&context, m, M, dim, entry_size, alloc_factor, &rectangle_a);
+	rtree_rectangle_create(&rectangle_a, low_a, high_a, dim);
+	rtree_rectangle_create(&rectangle_b, low_b, high_b, dim);
+	rtree_context_create(&context, m, M, dim, entry_size, alloc_factor, &rectangle_a);
 	node_create(&node, &context, NULL, NULL, 0, context.space, level);
-	entry_create(&entry, &tuple, &rectangle_b);
+	rtree_entry_create(&entry, &tuple, &rectangle_b);
 		
 	success = node_add_entry(&node, &entry);
 	assert_true(success);
@@ -159,13 +159,13 @@ void _test_node_delete_entry() {
 	rt_ctx_t context;
 	rt_node_t node;
 
-	rectangle_create(&rectangle_a, low_a, high_a, dim);
-	rectangle_create(&rectangle_b, low_b, high_b, dim);
-	context_create(&context, m, M, dim, entry_size, alloc_factor, &rectangle_a);
+	rtree_rectangle_create(&rectangle_a, low_a, high_a, dim);
+	rtree_rectangle_create(&rectangle_b, low_b, high_b, dim);
+	rtree_context_create(&context, m, M, dim, entry_size, alloc_factor, &rectangle_a);
 	node_create(&node, &context, NULL, NULL, 0, context.space, level);
 		
 	for (index = 0; index < 4; index++) {
-		entry_create(&entries[index], &tuples[index], &rectangle_b);
+		rtree_entry_create(&entries[index], &tuples[index], &rectangle_b);
 		node_add_entry(&node, &entries[index]);
 	}	
 
@@ -204,11 +204,11 @@ void _test_node_adjust_MBR() {
 	rt_node_t node;
 	rt_entry_t entry;
 
-	rectangle_create(&rectangle_a, low_a, high_a, dim);
-	rectangle_create(&rectangle_b, low_b, high_b, dim);
-	context_create(&context, m, M, dim, entry_size, alloc_factor, &rectangle_a);
+	rtree_rectangle_create(&rectangle_a, low_a, high_a, dim);
+	rtree_rectangle_create(&rectangle_b, low_b, high_b, dim);
+	rtree_context_create(&context, m, M, dim, entry_size, alloc_factor, &rectangle_a);
 	node_create(&node, &context, NULL, NULL, 0, context.space, level);
-	entry_create(&entry, &tuple, &rectangle_b);
+	rtree_entry_create(&entry, &tuple, &rectangle_b);
 		
 	node_adjust_MBR(&node, &entry);
 	for (index = 0; index < dim; index++) {
@@ -251,21 +251,21 @@ void _test_node_choose_optimal_entry() {
 	rt_rect_t rectangle_3;
 	rt_rect_t rectangle_4;
 
-	rectangle_create(&rectangle, low, high, dim);
-	context_create(&context, m, M, dim, entry_size, alloc_factor, &rectangle);
+	rtree_rectangle_create(&rectangle, low, high, dim);
+	rtree_context_create(&context, m, M, dim, entry_size, alloc_factor, &rectangle);
 	node_create(&node, &context, NULL, NULL, 0, context.space, root_level);
 
-	rectangle_create(&rectangle_1, low_1, high_1, dim);
+	rtree_rectangle_create(&rectangle_1, low_1, high_1, dim);
 	node_create(&node_1, &context, NULL, NULL, 0, &rectangle_1, leaf_level);
 
-	rectangle_create(&rectangle_2, low_2, high_2, dim);
+	rtree_rectangle_create(&rectangle_2, low_2, high_2, dim);
 	node_create(&node_2, &context, NULL, NULL, 0, &rectangle_2, leaf_level);
 
-	rectangle_create(&rectangle_3, low_3, high_3, dim);
+	rtree_rectangle_create(&rectangle_3, low_3, high_3, dim);
 	node_create(&node_3, &context, NULL, NULL, 0, &rectangle_3, leaf_level);
 
-	rectangle_create(&rectangle_4, low_4, high_4, dim);
-	entry_create(&entry, &tuple, &rectangle_4);
+	rtree_rectangle_create(&rectangle_4, low_4, high_4, dim);
+	rtree_entry_create(&entry, &tuple, &rectangle_4);
 
 	node_add_entry(&node, &node_1);
 	node_add_entry(&node, &node_2);
@@ -284,11 +284,11 @@ void _test_entry_compare() {
 	rt_entry_t *entry_ptr_1 = &entry_1, *entry_ptr_2 = &entry_2;
 	rt_rect_t rectangle_1, rectangle_2;
 
-	rectangle_create(&rectangle_1, low_1, high_1, dim);
-	rectangle_create(&rectangle_2, low_2, high_2, dim);
+	rtree_rectangle_create(&rectangle_1, low_1, high_1, dim);
+	rtree_rectangle_create(&rectangle_2, low_2, high_2, dim);
 
-	entry_create(&entry_1, &tuples[0], &rectangle_1);
-	entry_create(&entry_2, &tuples[1], &rectangle_2);	
+	rtree_entry_create(&entry_1, &tuples[0], &rectangle_1);
+	rtree_entry_create(&entry_2, &tuples[1], &rectangle_2);	
 	
 	assert_true(entry_compare(&entry_ptr_1, &entry_ptr_2, &dim_1) > 0);
 	assert_true(entry_compare(&entry_ptr_1, &entry_ptr_2, &dim_2) < 0);
@@ -326,18 +326,18 @@ void _test_node_calculate_MBR_Leaf() {
 	rt_entry_t entry_2;
 	rt_entry_t entry_3;
 	
-	rectangle_create(&rectangle, low, high, dim);
-	context_create(&context, m, M, dim, entry_size, alloc_factor, &rectangle);
+	rtree_rectangle_create(&rectangle, low, high, dim);
+	rtree_context_create(&context, m, M, dim, entry_size, alloc_factor, &rectangle);
 	node_create(&node, &context, NULL, NULL, 0, context.space, level);
 
-	rectangle_create(&rectangle_1, low_1, high_1, dim);
-	entry_create(&entry_1, &tuple, &rectangle_1);
+	rtree_rectangle_create(&rectangle_1, low_1, high_1, dim);
+	rtree_entry_create(&entry_1, &tuple, &rectangle_1);
 
-	rectangle_create(&rectangle_2, low_2, high_2, dim);
-	entry_create(&entry_2, &tuple, &rectangle_2);
+	rtree_rectangle_create(&rectangle_2, low_2, high_2, dim);
+	rtree_entry_create(&entry_2, &tuple, &rectangle_2);
 
-	rectangle_create(&rectangle_3, low_3, high_3, dim);
-	entry_create(&entry_3, &tuple, &rectangle_3);
+	rtree_rectangle_create(&rectangle_3, low_3, high_3, dim);
+	rtree_entry_create(&entry_3, &tuple, &rectangle_3);
 	
 	node_add_entry(&node, &entry_1);
 	node_calculate_MBR(node.MBR, &node);
@@ -376,22 +376,22 @@ void _test_node_calculate_MBR_Non_Leaf() {
 	entries_2 = malloc(sizeof(void *));
 	entries_3 = malloc(sizeof(void *));
 
-	rectangle_create(&rectangle, low, high, dim);
-	context_create(&context, m, M, dim, entry_size, alloc_factor, &rectangle);
+	rtree_rectangle_create(&rectangle, low, high, dim);
+	rtree_context_create(&context, m, M, dim, entry_size, alloc_factor, &rectangle);
 	node_create(&node, &context, NULL, NULL, 0, context.space, root_level);
 
-	rectangle_create(&rectangle_1, low_1, high_1, dim);
-	entry_create(&entry_1, &tuple, &rectangle_1);
+	rtree_rectangle_create(&rectangle_1, low_1, high_1, dim);
+	rtree_entry_create(&entry_1, &tuple, &rectangle_1);
 	entries_1[0] = &entry_1;
 	node_create(&node_1, &context, &node, (void **)entries_1, 1, &rectangle_1, leaf_level);
 
-	rectangle_create(&rectangle_2, low_2, high_2, dim);
-	entry_create(&entry_2, &tuple, &rectangle_2);
+	rtree_rectangle_create(&rectangle_2, low_2, high_2, dim);
+	rtree_entry_create(&entry_2, &tuple, &rectangle_2);
 	entries_2[0] = &entry_2;
 	node_create(&node_2, &context, &node, (void **)entries_2, 1, &rectangle_2, leaf_level);
 
-	rectangle_create(&rectangle_3, low_3, high_3, dim);
-	entry_create(&entry_3, &tuple, &rectangle_3);
+	rtree_rectangle_create(&rectangle_3, low_3, high_3, dim);
+	rtree_entry_create(&entry_3, &tuple, &rectangle_3);
 	entries_3[0] = &entry_3;
 	node_create(&node_3, &context, &node, (void **)entries_3, 1, &rectangle_3, leaf_level);
 

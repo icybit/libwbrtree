@@ -5,10 +5,11 @@ LIB_VER := 0.1.0
 LIB_VER_MAJOR := $(shell echo $(LIB_VER) | cut -f1 -d.)
 LIB_VER_MINOR := $(shell echo $(LIB_VER) | cut -f2 -d.)
 LIB_PATH := /usr/lib
+LIB_H_PATH := /usr/include
 
 CC := gcc
 DEBUG := -g
-CFLAGS := -Wall -Werror -pedantic $(DEBUG) -fvisibility=hidden
+CFLAGS := -Wall -Werror -pedantic $(DEBUG) -fvisibility=hidden -DWBD_RTREE_COMPILATION=1
 LDFLAGS := -Wl,-soname,$(LIB_NAME).$(LIB_VER_MAJOR).$(LIB_VER_MINOR)
 SRCEXT := c
 
@@ -35,6 +36,7 @@ $(OBJPATH)/%.o: $(SRCPATH)/%.$(SRCEXT)
 
 install: $(OUTPATH)/$(LIB_NAME).$(LIB_VER)
 	@echo "Installing library..."
+	cp -a $(INCPATH)/. $(LIB_H_PATH)/
 	cp -v $< $(LIB_PATH)
 	ldconfig -v -n $(LIB_PATH)
 	ln -v -sf $(LIB_NAME).$(LIB_VER) $(LIB_PATH)/$(LIB_NAME)

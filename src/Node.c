@@ -1,5 +1,6 @@
 #define _GNU_SOURCE
 
+#include "Node.h"
 #include <assert.h>
 #include <float.h>
 #include <math.h>
@@ -13,7 +14,6 @@
 #include "Context.h"
 #include "Entry.h"
 #include "Rectangle.h"
-#include "Node.h"
 
 static void _node_calculate_node_MBR(rt_rect_t *MBR, rt_node_t *node);
 static void _node_calculate_leaf_MBR(rt_rect_t *MBR, rt_node_t *leaf);
@@ -22,7 +22,7 @@ static uint8_t _node_choose_split_index(uint8_t dimension, rt_node_t *node, void
 static double _node_evaluate_distribution(uint8_t k, void ***sorted_entries, uint8_t dimension, rt_node_t *node, rt_rect_t *MBR_one, rt_rect_t *MBR_two, double(*evaluator)(rt_rect_t *MBR_one, rt_rect_t *MBR_two));
 static rt_rect_t * _node_get_entry_MBR(rt_node_t *node, void *entry);
 
-int node_add_entry(rt_node_t *node, void *entry)
+RTREE_LOCAL int node_add_entry(rt_node_t *node, void *entry)
 {
 	if (node->count < node->context->M)
 	{
@@ -38,19 +38,19 @@ int node_add_entry(rt_node_t *node, void *entry)
 	return 0;
 }
 
-void node_adjust_MBR(rt_node_t *node, void *entry)
+RTREE_LOCAL void node_adjust_MBR(rt_node_t *node, void *entry)
 {
 	node_is_leaf(node) ?
 		rectangle_combine(node->MBR, ((rt_entry_t *)entry)->MBR) :
 		rectangle_combine(node->MBR, ((rt_node_t *)entry)->MBR);
 }
 
-void node_calculate_MBR(rt_rect_t *MBR, rt_node_t *node)
+RTREE_LOCAL void node_calculate_MBR(rt_rect_t *MBR, rt_node_t *node)
 {
 	node_is_leaf(node) ? _node_calculate_leaf_MBR(MBR, node) : _node_calculate_node_MBR(MBR, node);
 }
 
-void _node_calculate_node_MBR(rt_rect_t *MBR, rt_node_t *node)
+RTREE_LOCAL void _node_calculate_node_MBR(rt_rect_t *MBR, rt_node_t *node)
 {
 	uint8_t i;
 	for (i = 0; i < node->count; i++)
@@ -59,7 +59,7 @@ void _node_calculate_node_MBR(rt_rect_t *MBR, rt_node_t *node)
 	}
 }
 
-void _node_calculate_leaf_MBR(rt_rect_t *MBR, rt_node_t *leaf)
+RTREE_LOCAL void _node_calculate_leaf_MBR(rt_rect_t *MBR, rt_node_t *leaf)
 {
 	uint8_t i;
 	for (i = 0; i < leaf->count; i++)
@@ -68,7 +68,7 @@ void _node_calculate_leaf_MBR(rt_rect_t *MBR, rt_node_t *leaf)
 	}
 }
 
-rt_node_t * node_choose_optimal_entry(rt_node_t *node, rt_entry_t *entry)
+RTREE_LOCAL rt_node_t * node_choose_optimal_entry(rt_node_t *node, rt_entry_t *entry)
 {
 	rt_node_t *optimal_entry = NULL;
 	double optimal_distance = DBL_MAX;
@@ -94,7 +94,7 @@ rt_node_t * node_choose_optimal_entry(rt_node_t *node, rt_entry_t *entry)
 	return optimal_entry;
 }
 
-uint8_t _node_choose_split_axis(rt_node_t *node, void ***sorted_entries, rt_rect_t *MBR_one, rt_rect_t *MBR_two)
+RTREE_LOCAL uint8_t _node_choose_split_axis(rt_node_t *node, void ***sorted_entries, rt_rect_t *MBR_one, rt_rect_t *MBR_two)
 {
 	uint8_t dim, optimal_axis = 0;
 	double optimal_margin_value = DBL_MAX;
@@ -123,7 +123,7 @@ uint8_t _node_choose_split_axis(rt_node_t *node, void ***sorted_entries, rt_rect
 	return optimal_axis;
 }
 
-uint8_t _node_choose_split_index(uint8_t dimension, rt_node_t *node, void ***sorted_entries, rt_rect_t *MBR_one, rt_rect_t *MBR_two)
+RTREE_LOCAL uint8_t _node_choose_split_index(uint8_t dimension, rt_node_t *node, void ***sorted_entries, rt_rect_t *MBR_one, rt_rect_t *MBR_two)
 {
 	uint8_t k, optimal_distribution_index;
 	double optimal_overlap_value = DBL_MAX, optimal_area_value = DBL_MAX, overlap_value, area_value;
@@ -170,12 +170,12 @@ uint8_t _node_choose_split_index(uint8_t dimension, rt_node_t *node, void ***sor
 	return optimal_distribution_index;
 }
 
-int node_compare(const void *entry, const void *other, void *dimension)
+RTREE_LOCAL int node_compare(const void *entry, const void *other, void *dimension)
 {
 	return rectangle_compare((*((rt_node_t **)entry))->MBR, (*((rt_node_t **)other))->MBR, dimension);
 }
 
-void node_copy(rt_node_t *dest, const rt_node_t *source)
+RTREE_LOCAL void node_copy(rt_node_t *dest, const rt_node_t *source)
 {
 	assert(sizeof(*dest) == sizeof(*source));
 
@@ -188,7 +188,7 @@ void node_copy(rt_node_t *dest, const rt_node_t *source)
 	rectangle_copy(dest->MBR, source->MBR);
 }
 
-void node_create(rt_node_t *dest, rt_ctx_t *context, rt_node_t *parent, void **entries, uint8_t entry_count, rt_rect_t *MBR, uint16_t level)
+RTREE_LOCAL void node_create(rt_node_t *dest, rt_ctx_t *context, rt_node_t *parent, void **entries, uint8_t entry_count, rt_rect_t *MBR, uint16_t level)
 {
 	uint8_t count = (entries != NULL ? entry_count : 0);
 
@@ -213,7 +213,7 @@ void node_create(rt_node_t *dest, rt_ctx_t *context, rt_node_t *parent, void **e
 	node_calculate_MBR(dest->MBR, dest);
 }
 
-void node_delete_entry(rt_node_t *node, void *entry)
+RTREE_LOCAL void node_delete_entry(rt_node_t *node, void *entry)
 {
 	uint8_t i;
 	for (i = 0; i < node->count; i++)
@@ -245,14 +245,14 @@ void node_delete_entry(rt_node_t *node, void *entry)
 	}
 }
 
-void node_destroy(rt_node_t *node)
+RTREE_LOCAL void node_destroy(rt_node_t *node)
 {
 	free(node->entries);
 	free(node->MBR);
 	free(node);
 }
 
-double _node_evaluate_distribution(uint8_t k, void ***sorted_entries, uint8_t dimension, rt_node_t *node, rt_rect_t *MBR_one, rt_rect_t *MBR_two, double (*evaluator)(rt_rect_t *MBR_one, rt_rect_t *MBR_two))
+RTREE_LOCAL double _node_evaluate_distribution(uint8_t k, void ***sorted_entries, uint8_t dimension, rt_node_t *node, rt_rect_t *MBR_one, rt_rect_t *MBR_two, double (*evaluator)(rt_rect_t *MBR_one, rt_rect_t *MBR_two))
 {
 	uint8_t split_index = 0, sub_dim = 0;
 	hashset_t split_group = hashset_create();
@@ -334,24 +334,24 @@ double _node_evaluate_distribution(uint8_t k, void ***sorted_entries, uint8_t di
 	return (*evaluator)(MBR_one, MBR_two);
 }
 
-rt_rect_t * _node_get_entry_MBR(rt_node_t *node, void *entry)
+RTREE_LOCAL rt_rect_t * _node_get_entry_MBR(rt_node_t *node, void *entry)
 {
 	rt_rect_t *MBR = (node_is_leaf(node) ? ((rt_entry_t *)entry)->MBR : ((rt_node_t *)entry)->MBR);
 
 	return MBR;
 }
 
-int node_is_leaf(rt_node_t *node)
+RTREE_LOCAL int node_is_leaf(rt_node_t *node)
 {
 	return (node->level == 0 ? 1 : 0);
 }
 
-int node_is_root(rt_node_t *node)
+RTREE_LOCAL int node_is_root(rt_node_t *node)
 {
 	return (node->parent == NULL ? 1 : 0);
 }
 
-rt_node_t * node_split(rt_node_t *node, void *entry)
+RTREE_LOCAL rt_node_t * node_split(rt_node_t *node, void *entry)
 {
 	uint8_t split_axis, split_index, split_size, dim;
 	rt_node_t *nnode = malloc(sizeof(rt_node_t));

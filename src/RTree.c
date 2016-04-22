@@ -5,13 +5,19 @@
 #endif
 #include <stdlib.h>
 #include <string.h>
+#include "wbdrtree/wbdrtreeapi.h"
 #include "hashset.h"
 #include "hashset_itr.h"
+#include "Common.h"
 #include "Context.h"
 #include "Entry.h"
 #include "Node.h"
 #include "Rectangle.h"
-#include "RTree.h"
+
+struct RTree {
+	rt_node_t *root;
+	rt_ctx_t *context;
+};
 
 static void _rtree_adjust_tree(rt_rtree_t *rtree, rt_node_t *node, rt_node_t *nnode);
 static void _rtree_adjust_tree_recursive(rt_rtree_t *rtree, rt_node_t *node, rt_node_t *nnode, int level);
@@ -22,12 +28,12 @@ static void _rtree_condense_tree_recursive(rt_rtree_t *rtree, rt_node_t *node, s
 static rt_node_t * _rtree_find_leaf(rt_node_t *node, rt_entry_t *entry);
 static rt_node_t * _rtree_find_leaf_recursive(rt_node_t *node, rt_entry_t *entry);
 static void _rtree_search_recursive(rt_node_t *node, rt_rect_t *search_rectangle, struct hashset_st *results);
-static void _rtree_serialize_recursive(rt_node_t *node, unsigned char *buffer, size_t *index);
+static void _rtree_serialize_recursive(rt_node_t *node, uint8_t *buffer, size_t *index);
 #ifdef DEBUG
 static void _rtree_visualize_recursive(rt_node_t *node, uint16_t max_level);
 #endif
 
-void rtree_insert(rt_rtree_t *rtree, rt_entry_t *entry) 
+RTREE_PUBLIC void rtree_insert(rt_rtree_t *rtree, rt_entry_t *entry) 
 {
 	rt_node_t *leaf = _rtree_choose_leaf(rtree->root, entry);
 
@@ -42,7 +48,7 @@ void rtree_insert(rt_rtree_t *rtree, rt_entry_t *entry)
 	}
 }
 
-void rtree_create(rt_rtree_t *dest, rt_ctx_t *context)
+RTREE_PUBLIC void rtree_create(rt_rtree_t *dest, rt_ctx_t *context)
 {
 	rt_node_t *root = malloc(sizeof(rt_node_t));
 	rt_rect_t *MBR = malloc(sizeof(rt_rect_t));
@@ -57,7 +63,7 @@ void rtree_create(rt_rtree_t *dest, rt_ctx_t *context)
 	dest->root = root;
 }
 
-int rtree_delete(rt_rtree_t *rtree, rt_entry_t *entry)
+RTREE_PUBLIC int rtree_delete(rt_rtree_t *rtree, rt_entry_t *entry)
 {
 	rt_node_t *leaf = _rtree_find_leaf(rtree->root, entry);
 
@@ -76,7 +82,7 @@ int rtree_delete(rt_rtree_t *rtree, rt_entry_t *entry)
 	return 0;
 }
 
-void rtree_destroy(rt_rtree_t *rtree)
+RTREE_PUBLIC void rtree_destroy(rt_rtree_t *rtree)
 {
 	node_destroy(rtree->root);
 }
@@ -234,7 +240,7 @@ static rt_node_t * _rtree_find_leaf_recursive(rt_node_t *node, rt_entry_t *entry
 	return NULL;
 }
 
-void rtree_search(rt_rtree_t *rtree, rt_rect_t *search_rectangle, struct hashset_st *results)
+RTREE_PUBLIC void rtree_search(rt_rtree_t *rtree, rt_rect_t *search_rectangle, rt_hset_t *results)
 {
 	_rtree_search_recursive(rtree->root, search_rectangle, results);
 }
@@ -267,7 +273,7 @@ static void _rtree_search_recursive(rt_node_t *node, rt_rect_t *search_rectangle
 	}
 }
 
-size_t rtree_serialize(rt_rtree_t *rtree, uint8_t *buffer)
+RTREE_PUBLIC size_t rtree_serialize(rt_rtree_t *rtree, uint8_t *buffer)
 {
 	size_t bytes_written = 0;
 
@@ -277,7 +283,7 @@ size_t rtree_serialize(rt_rtree_t *rtree, uint8_t *buffer)
 	return bytes_written;
 }
 
-static void _rtree_serialize_recursive(rt_node_t *node, unsigned char *buffer, size_t *index)
+static void _rtree_serialize_recursive(rt_node_t *node, uint8_t *buffer, size_t *index)
 {
 	if (node_is_leaf(node))
 	{
@@ -308,7 +314,7 @@ static void _rtree_serialize_recursive(rt_node_t *node, unsigned char *buffer, s
 }
 
 #ifdef DEBUG
-void rtree_visualize(rt_rtree_t *rtree)
+RTREE_PUBLIC void rtree_visualize(rt_rtree_t *rtree)
 {
 	printf("RTREE: CONTEXT(m = %u, M = %u, dim = %u, entry_size = %zu, alloc_factor = %3.2f, space = ", 
 		rtree->context->m, 

@@ -2,7 +2,7 @@
 
 CC := gcc
 DEBUG := -g
-CFLAGS := -Wall -Werror -pedantic $(DEBUG)
+CFLAGS := -Wall -Werror -pedantic $(DEBUG) -DWBD_RTREE_COMPILATION=1
 LDFLAGS :=
 SRCEXT := c
 
@@ -16,7 +16,7 @@ OUTPATH := ../build
 SOURCES := $(shell find $(SRCPATH) -type f -name '*.$(SRCEXT)')
 OBJECTS := $(patsubst $(SRCPATH)/%, $(OBJPATH)/%, $(SOURCES:.$(SRCEXT)=.o))
 LIBS := -lm -lcmocka
-INCLUDE := -I $(INCPATH)
+INCLUDE := -I $(INCPATH) -I../include
 
 #http://stackoverflow.com/questions/14806206/what-do-the-makefile-symbols-mean
 run: $(OUTPATH)/$(OUTNAME)

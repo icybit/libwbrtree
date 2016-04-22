@@ -1,3 +1,4 @@
+#include "Rectangle.h"
 #include <assert.h>
 #include <float.h>
 #include <math.h>
@@ -6,10 +7,17 @@
 #endif
 #include <stdlib.h>
 #include <string.h>
-#include "Common.h"
-#include "Rectangle.h"
 
-double rectangle_area(rt_rect_t *rectangle)
+RTREE_PUBLIC void rtree_rectangle_create(rt_rect_t *dest, float *low, float *high, uint8_t dimension)
+{
+	assert(low && high);
+
+	dest->dim = dimension;
+	dest->low = low;
+	dest->high = high;
+}
+
+RTREE_LOCAL double rectangle_area(rt_rect_t *rectangle)
 {
 	double area = 1.0;
 	uint8_t dim;
@@ -22,7 +30,7 @@ double rectangle_area(rt_rect_t *rectangle)
 	return area;
 }
 
-void rectangle_combine(rt_rect_t *rectangle, rt_rect_t *other) 
+RTREE_LOCAL void rectangle_combine(rt_rect_t *rectangle, rt_rect_t *other)
 {
 	uint8_t dim;
 
@@ -35,12 +43,12 @@ void rectangle_combine(rt_rect_t *rectangle, rt_rect_t *other)
 	}
 }
 
-int rectangle_compare(const rt_rect_t *rectangle, const rt_rect_t *other, uint8_t *dimension)
+RTREE_LOCAL int rectangle_compare(const rt_rect_t *rectangle, const rt_rect_t *other, uint8_t *dimension)
 {
 	return (int)(rectangle->low[*dimension] - other->low[*dimension]);
 }
 
-void rectangle_copy(rt_rect_t *dest, const rt_rect_t *source)
+RTREE_LOCAL void rectangle_copy(rt_rect_t *dest, const rt_rect_t *source)
 {
 	assert(sizeof(*dest) == sizeof(*source));
 
@@ -49,16 +57,7 @@ void rectangle_copy(rt_rect_t *dest, const rt_rect_t *source)
 	memcpy(dest->high, source->high, source->dim * sizeof(float));
 }
 
-void rectangle_create(rt_rect_t *dest, float *low, float *high, uint8_t dimension)
-{
-	assert(low && high);
-
-	dest->dim = dimension;
-	dest->low = low;
-	dest->high = high;
-}
-
-void rectangle_extend_infinitely(rt_rect_t *dest)
+RTREE_LOCAL void rectangle_extend_infinitely(rt_rect_t *dest)
 {
 	uint8_t dim;
 	for (dim = 0; dim < dest->dim; dim++)
@@ -68,7 +67,7 @@ void rectangle_extend_infinitely(rt_rect_t *dest)
 	}
 }
 
-double rectangle_intersection_area(rt_rect_t *rectangle, rt_rect_t *other)
+RTREE_LOCAL double rectangle_intersection_area(rt_rect_t *rectangle, rt_rect_t *other)
 {
 	double area = 1.0;
 	float f0, f1;
@@ -89,7 +88,7 @@ double rectangle_intersection_area(rt_rect_t *rectangle, rt_rect_t *other)
 	return area;
 }
 
-double rectangle_margin(rt_rect_t *rectangle)
+RTREE_LOCAL double rectangle_margin(rt_rect_t *rectangle)
 {
 	uint8_t dim;
 	double multiplicity = pow(2.0, (double)(rectangle->dim - 1));
@@ -103,12 +102,12 @@ double rectangle_margin(rt_rect_t *rectangle)
 	return margin;
 }
 
-double rectangle_margin_value(rt_rect_t *rectangle, rt_rect_t *other)
+RTREE_LOCAL double rectangle_margin_value(rt_rect_t *rectangle, rt_rect_t *other)
 {
 	return (rectangle_margin(rectangle) + rectangle_margin(other));
 }
 
-double rectangle_min_distance(rt_rect_t *rectangle, rt_rect_t *other)
+RTREE_LOCAL double rectangle_min_distance(rt_rect_t *rectangle, rt_rect_t *other)
 {
 	double result = 0.0;
 	uint8_t dim;
@@ -130,7 +129,7 @@ double rectangle_min_distance(rt_rect_t *rectangle, rt_rect_t *other)
 	return sqrt(result);
 }
 
-int rectangle_overlaps(rt_rect_t *rectangle, rt_rect_t *other) 
+RTREE_LOCAL int rectangle_overlaps(rt_rect_t *rectangle, rt_rect_t *other)
 {
 	uint8_t dim;
 
@@ -149,7 +148,7 @@ int rectangle_overlaps(rt_rect_t *rectangle, rt_rect_t *other)
 }
 
 #ifdef DEBUG
-void rectangle_print(rt_rect_t *rectangle)
+RTREE_LOCAL void rectangle_print(rt_rect_t *rectangle)
 {
 	uint8_t dim;
 	puts("MBR: LOW(");
