@@ -1,15 +1,39 @@
 #include "Entry.h"
 #include <assert.h>
 #include <string.h>
+#include <stdlib.h>
 #include "Context.h"
 #include "Rectangle.h"
 
-RTREE_PUBLIC void rtree_entry_create(rt_entry_t *dest, void *tuple, rt_rect_t *MBR)
+RTREE_PUBLIC rt_entry_t * rtree_entry_create(void *tuple, rt_rect_t *MBR)
 {
-	assert(MBR != NULL);
+	rt_entry_t *entry;
 
-	dest->tuple = tuple;
-	dest->MBR = MBR;
+	assert(tuple && MBR);
+
+	entry = malloc(sizeof(entry));
+
+	entry->tuple = tuple;
+	entry->MBR = MBR;
+
+	return entry;
+}
+
+RTREE_PUBLIC void * rtree_entry_get_tuple(rt_entry_t *entry)
+{
+	assert(entry);
+
+	return entry->tuple;
+}
+
+RTREE_PUBLIC void rtree_entry_destroy(rt_entry_t *entry)
+{
+	assert(entry);
+
+	rtree_rectangle_destroy(entry->MBR);
+	free(entry->tuple);
+	free(entry);
+	entry = NULL;
 }
 
 RTREE_LOCAL size_t entry_calculate_buffer_size(rt_ctx_t *context)

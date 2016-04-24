@@ -19,6 +19,7 @@ struct RTree {
 	rt_ctx_t *context;
 };
 
+static void _rtree_destroy_recursive(rt_node_t *node);
 static void _rtree_adjust_tree(rt_rtree_t *rtree, rt_node_t *node, rt_node_t *nnode);
 static void _rtree_adjust_tree_recursive(rt_rtree_t *rtree, rt_node_t *node, rt_node_t *nnode, int level);
 static rt_node_t * _rtree_choose_leaf(rt_node_t *node, rt_entry_t *entry);
@@ -48,19 +49,27 @@ RTREE_PUBLIC void rtree_insert(rt_rtree_t *rtree, rt_entry_t *entry)
 	}
 }
 
-RTREE_PUBLIC void rtree_create(rt_rtree_t *dest, rt_ctx_t *context)
+RTREE_PUBLIC rt_rtree_t * rtree_create(rt_ctx_t *context)
 {
-	rt_node_t *root = malloc(sizeof(rt_node_t));
-	rt_rect_t *MBR = malloc(sizeof(rt_rect_t));
+	rt_rtree_t *rtree;
+	rt_node_t *root;
+	rt_rect_t *MBR;
+	float *low, *high;
 
-	MBR->low = malloc(context->dim * sizeof(float));
-	MBR->high = malloc(context->dim * sizeof(float));
-	MBR->dim = context->dim;
+	assert(context);
+
+	low = malloc(context->dim * sizeof(float));
+	high = malloc(context->dim * sizeof(float));
+	MBR = rtree_rectangle_create(low, high, context->dim);
 	rectangle_extend_infinitely(MBR);
 
-	node_create(root, context, NULL, NULL, 0, MBR, 0);
-	dest->context = context;
-	dest->root = root;
+	root = node_create(context, NULL, NULL, 0, MBR, 0);
+
+	rtree = malloc(sizeof(rt_rtree_t));
+	rtree->context = context;
+	rtree->root = root;
+
+	return rtree;
 }
 
 RTREE_PUBLIC int rtree_delete(rt_rtree_t *rtree, rt_entry_t *entry)
@@ -84,7 +93,25 @@ RTREE_PUBLIC int rtree_delete(rt_rtree_t *rtree, rt_entry_t *entry)
 
 RTREE_PUBLIC void rtree_destroy(rt_rtree_t *rtree)
 {
-	node_destroy(rtree->root);
+	assert(rtree);
+
+	_rtree_destroy_recursive(rtree->root);
+	rtree_context_destroy(rtree->context);
+	free(rtree);
+	rtree = NULL;
+}
+
+static void _rtree_destroy_recursive(rt_node_t *node)
+{
+	if (!node_is_leaf(node))
+	{
+		uint8_t i;
+		for (i = 0; i < node->count; i++)
+		{
+			_rtree_destroy_recursive((rt_node_t *)node->entries[i]);
+		}
+	}
+	node_destroy(node);
 }
 
 static void _rtree_adjust_tree(rt_rtree_t *rtree, rt_node_t *node, rt_node_t *nnode)
@@ -98,17 +125,19 @@ static void _rtree_adjust_tree_recursive(rt_rtree_t *rtree, rt_node_t *node, rt_
 	{
 		if (nnode != NULL)
 		{
-			rt_node_t *root = malloc(sizeof(rt_node_t));
+			rt_node_t *root;
+			rt_rect_t *MBR;
+			float *low, *high;
 			void **entries = malloc(2 * sizeof(rt_node_t *));
 			entries[0] = node;
 			entries[1] = nnode;
 
-			root->MBR = malloc(sizeof(rt_rect_t));
-			root->MBR->low = malloc(node->MBR->dim * sizeof(float));
-			root->MBR->high = malloc(node->MBR->dim * sizeof(float));
-			rectangle_copy(root->MBR, node->MBR);
+			low = malloc(node->MBR->dim * sizeof(float));
+			high = malloc(node->MBR->dim * sizeof(float));
+			MBR = rtree_rectangle_create(low, high, node->MBR->dim);
+			rectangle_copy(MBR, node->MBR);
 
-			node_create(root, rtree->context, NULL, entries, 2, root->MBR, level + 1);
+			root = node_create(rtree->context, NULL, entries, 2, MBR, level + 1);
 			rtree->root = node->parent = nnode->parent = root;
 		}
 		return;

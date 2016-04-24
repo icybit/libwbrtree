@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include "TestRectangle.h"
 #include "TestNode.h"
-#include "TestRTree.h"
+/*#include "TestRTree.h"*/
 
 int main(int argc, char *argv[])
 {
@@ -9,8 +9,8 @@ int main(int argc, char *argv[])
 	test_rectangle();
 	puts("Running Node Tests...\n");	
 	test_node();
-	puts("Running RTree Tests...\n");	
-	test_rtree();
+	/*puts("Running RTree Tests...\n");	
+	test_rtree();*/
 
 	return 0;
 }

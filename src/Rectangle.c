@@ -8,13 +8,29 @@
 #include <stdlib.h>
 #include <string.h>
 
-RTREE_PUBLIC void rtree_rectangle_create(rt_rect_t *dest, float *low, float *high, uint8_t dimension)
+RTREE_PUBLIC rt_rect_t * rtree_rectangle_create(float *low, float *high, uint8_t dimension)
 {
+	rt_rect_t *rectangle;
+
 	assert(low && high);
 
-	dest->dim = dimension;
-	dest->low = low;
-	dest->high = high;
+	rectangle = malloc(sizeof(rt_rect_t));
+
+	rectangle->dim = dimension;
+	rectangle->low = low;
+	rectangle->high = high;
+
+	return rectangle;
+}
+
+RTREE_PUBLIC void rtree_rectangle_destroy(rt_rect_t * rectangle)
+{
+	assert(rectangle);
+
+	free(rectangle->low);
+	free(rectangle->high);
+	free(rectangle);
+	rectangle = NULL;
 }
 
 RTREE_LOCAL double rectangle_area(rt_rect_t *rectangle)

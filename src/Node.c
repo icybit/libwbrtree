@@ -188,29 +188,38 @@ RTREE_LOCAL void node_copy(rt_node_t *dest, const rt_node_t *source)
 	rectangle_copy(dest->MBR, source->MBR);
 }
 
-RTREE_LOCAL void node_create(rt_node_t *dest, rt_ctx_t *context, rt_node_t *parent, void **entries, uint8_t entry_count, rt_rect_t *MBR, uint16_t level)
+RTREE_LOCAL rt_node_t * node_create(rt_ctx_t *context, rt_node_t *parent, void **entries, uint8_t entry_count, rt_rect_t *MBR, uint16_t level)
 {
-	uint8_t count = (entries != NULL ? entry_count : 0);
+	rt_node_t *node;
+	uint8_t count;
+
+	assert(context && MBR);
+
+	node = malloc(sizeof(rt_node_t));
+
+	count = (entries != NULL ? entry_count : 0);
 
 	if ((count < context->m && parent != NULL) || count > context->M)
 	{
-		return;
+		return NULL;
 	}
 
-	dest->count = count;
-	dest->capacity = MAX(count, NALLOC(context->m, context->M, context->alloc_factor));
-	dest->context = context;
-	dest->parent = parent;
-	dest->entries = entries;
-	dest->level = level;
+	node->count = count;
+	node->capacity = MAX(count, NALLOC(context->m, context->M, context->alloc_factor));
+	node->context = context;
+	node->parent = parent;
+	node->entries = entries;
+	node->level = level;
 
-	if (dest->capacity > dest->count)
+	if (node->capacity > node->count)
 	{
-		dest->entries = realloc(dest->entries, dest->capacity * sizeof(void *));
+		node->entries = realloc(node->entries, node->capacity * sizeof(void *));
 	}
 	
-	dest->MBR = MBR;
-	node_calculate_MBR(dest->MBR, dest);
+	node->MBR = MBR;
+	node_calculate_MBR(node->MBR, node);
+
+	return node;
 }
 
 RTREE_LOCAL void node_delete_entry(rt_node_t *node, void *entry)
@@ -247,8 +256,10 @@ RTREE_LOCAL void node_delete_entry(rt_node_t *node, void *entry)
 
 RTREE_LOCAL void node_destroy(rt_node_t *node)
 {
+	assert(node);
+
+	rtree_rectangle_destroy(node->MBR);
 	free(node->entries);
-	free(node->MBR);
 	free(node);
 }
 
@@ -389,7 +400,7 @@ RTREE_LOCAL rt_node_t * node_split(rt_node_t *node, void *entry)
 	split_size = node->context->M + 1 - split_index;
 	nentries = malloc(split_size * sizeof(void *));
 	memmove(nentries, sorted_entries[split_axis] + split_index, split_size * sizeof(void *));
-	node_create(nnode, node->context, node->parent, nentries, split_size, MBR_two, node->level);
+	nnode = node_create(node->context, node->parent, nentries, split_size, MBR_two, node->level);
 
 	free(MBR_one.low);
 	free(MBR_one.high);
