@@ -42,6 +42,12 @@ void rtree_insert(rt_rtree_t *rtree, rt_entry_t *entry)
 	}
 }
 
+rt_node_t * rtree_try_insert(rt_rtree_t *rtree, rt_entry_t *entry) {
+	rt_node_t *leaf = _rtree_choose_leaf(rtree->root, entry);
+
+	return leaf;
+}
+
 void rtree_create(rt_rtree_t *dest, rt_ctx_t *context)
 {
 	rt_node_t *root = malloc(sizeof(rt_node_t));
@@ -310,46 +316,47 @@ static void _rtree_serialize_recursive(rt_node_t *node, unsigned char *buffer, s
 #ifdef DEBUG
 void rtree_visualize(rt_rtree_t *rtree)
 {
-	printf("RTREE: CONTEXT(m = %u, M = %u, dim = %u, entry_size = %zu, alloc_factor = %3.2f, space = ", 
+	printf("RTREE: CONTEXT(m = %u, M = %u, dim = %u, entry_size = %lu, alloc_factor = %3.2f, space = ", 
 		rtree->context->m, 
 		rtree->context->M,
 		rtree->context->dim,
-		rtree->context->entry_size,
+		(unsigned long) rtree->context->entry_size,
 		rtree->context->alloc_factor);
 
 	rectangle_print(rtree->context->space);
-	puts(")\n");
+	puts(")");
 
 	_rtree_visualize_recursive(rtree->root, rtree->root->level);
 }
 static void _rtree_visualize_recursive(rt_node_t *node, uint16_t max_level) 
 {
+	uint8_t i;
 	uint16_t level_pad = max_level - node->level;
 	char *padding = malloc(level_pad * sizeof(char));
 
 	memset(padding, ' ', level_pad);
 	padding[level_pad] = '\0';
-	puts(padding);
-	free(padding);
+	
+	printf("%s", padding);
+	rectangle_print(node->MBR);
+	printf("\n");
 
 	if (node_is_leaf(node))
 	{
-		uint8_t i;
 		for (i = 0; i < node->count; i++)
 		{
+			printf("%s", padding);
+			printf("%s", padding);
 			entry_print((rt_entry_t *)node->entries[i]);
 		}
 	}
 	else
 	{
-		uint8_t i;
-
-		rectangle_print(node->MBR);
-		
 		for (i = 0; i < node->count; i++)
 		{
 			_rtree_visualize_recursive((rt_node_t *)node->entries[i], max_level);
 		}
 	}
+	free(padding);
 }
 #endif

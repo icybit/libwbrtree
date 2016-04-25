@@ -10,6 +10,7 @@ struct RTree {
 };
 
 RTREE_PUBLIC void rtree_insert(rt_rtree_t *rtree, rt_entry_t *entry);
+RTREE_PUBLIC rt_node_t * rtree_try_insert(rt_rtree_t *rtree, rt_entry_t *entry);
 RTREE_PUBLIC void rtree_create(rt_rtree_t *dest, rt_ctx_t *context);
 RTREE_PUBLIC int rtree_delete(rt_rtree_t *rtree, rt_entry_t *entry);
 RTREE_PUBLIC void rtree_destroy(rt_rtree_t *rtree);

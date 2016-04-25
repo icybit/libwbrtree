@@ -1,5 +1,8 @@
 #include <assert.h>
 #include <stdint.h>
+#ifdef DEBUG
+#include <stdio.h>
+#endif
 #include <string.h>
 #include "Context.h"
 #include "Rectangle.h"
@@ -30,7 +33,7 @@ void entry_print(rt_entry_t *entry)
 {
 	printf("ENTRY: [VALUE: %p,", entry->tuple);
 	rectangle_print(entry->MBR);
-	puts("]\n");
+	puts("]");
 }
 #endif
 

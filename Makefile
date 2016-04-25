@@ -8,7 +8,7 @@ LIB_PATH := /usr/lib
 
 CC := gcc
 DEBUG := -g
-CFLAGS := -Wall -Werror -pedantic $(DEBUG) -fvisibility=hidden
+CFLAGS := -Wall -Werror -pedantic $(DEBUG) -fvisibility=hidden -DDEBUG=1
 LDFLAGS := -Wl,-soname,$(LIB_NAME).$(LIB_VER_MAJOR).$(LIB_VER_MINOR)
 SRCEXT := c
 

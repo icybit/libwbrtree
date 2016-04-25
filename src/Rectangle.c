@@ -152,24 +152,24 @@ int rectangle_overlaps(rt_rect_t *rectangle, rt_rect_t *other)
 void rectangle_print(rt_rect_t *rectangle)
 {
 	uint8_t dim;
-	puts("MBR: LOW(");
+	printf("MBR: LOW(");
 	for (dim = 0; dim < rectangle->dim; dim++)
 	{
 		printf("%g", rectangle->low[dim]);
 		if (dim < rectangle->dim - 1)
 		{
-			puts(",");
+			printf(",");
 		}
 	}
-	puts("), HIGH(");
+	printf("), HIGH(");
 	for (dim = 0; dim < rectangle->dim; dim++)
 	{
 		printf("%g", rectangle->high[dim]);
 		if (dim < rectangle->dim - 1)
 		{
-			puts(",");
+			printf(",");
 		}
 	}
-	puts(")\n");
+	printf(")");
 }
 #endif

@@ -5,6 +5,8 @@ void _test_rtree_create();
 
 void _test_rtree_insert();
 
+void _test_rtree_try_insert();
+
 void _test_rtree_delete();
 
 void _test_rtree_destroy();
