@@ -17,7 +17,7 @@ struct Node {
 RTREE_LOCAL int node_add_entry(rt_node_t *node, void *entry);
 RTREE_LOCAL void node_adjust_MBR(rt_node_t *node, void *entry);
 RTREE_LOCAL void node_calculate_MBR(rt_rect_t *MBR, rt_node_t *node);
-RTREE_LOCAL rt_node_t * node_choose_optimal_entry(rt_node_t *node, rt_entry_t *entry);
+RTREE_LOCAL void * node_choose_optimal_entry(rt_node_t *node, rt_entry_t *entry);
 RTREE_LOCAL int node_compare(const void *entry, const void *other, void *dimension);
 RTREE_LOCAL void node_copy(rt_node_t *dest, const rt_node_t *source);
 RTREE_LOCAL void node_create(rt_node_t *dest, rt_ctx_t *context, rt_node_t *parent, void **entries, uint8_t entry_count, rt_rect_t *MBR, uint16_t level);

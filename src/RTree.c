@@ -42,10 +42,11 @@ void rtree_insert(rt_rtree_t *rtree, rt_entry_t *entry)
 	}
 }
 
-rt_node_t * rtree_try_insert(rt_rtree_t *rtree, rt_entry_t *entry) {
+rt_entry_t * rtree_try_insert(rt_rtree_t *rtree, rt_entry_t *entry) {
 	rt_node_t *leaf = _rtree_choose_leaf(rtree->root, entry);
+	rt_entry_t *optimal_entry = (rt_entry_t *) node_choose_optimal_entry(leaf, entry);
 
-	return leaf;
+	return optimal_entry;
 }
 
 void rtree_create(rt_rtree_t *dest, rt_ctx_t *context)
@@ -146,7 +147,7 @@ static rt_node_t * _rtree_choose_leaf_recursive(rt_node_t *node, rt_entry_t *ent
 		return node;
 	}
 
-	return _rtree_choose_leaf_recursive(node_choose_optimal_entry(node, entry), entry);
+	return _rtree_choose_leaf_recursive((rt_node_t *) node_choose_optimal_entry(node, entry), entry);
 }
 
 static void _rtree_condense_tree(rt_rtree_t *rtree, rt_node_t *node)

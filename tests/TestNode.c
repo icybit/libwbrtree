@@ -271,7 +271,7 @@ void _test_node_choose_optimal_entry() {
 	node_add_entry(&node, &node_2);
 	node_add_entry(&node, &node_3);
 
-	assert_ptr_equal(node_choose_optimal_entry(&node, &entry), &node_2);
+	assert_ptr_equal((rt_node_t *) node_choose_optimal_entry(&node, &entry), &node_2);
 }
 
 void _test_entry_compare() {	

@@ -68,26 +68,32 @@ void _node_calculate_leaf_MBR(rt_rect_t *MBR, rt_node_t *leaf)
 	}
 }
 
-rt_node_t * node_choose_optimal_entry(rt_node_t *node, rt_entry_t *entry)
+void * node_choose_optimal_entry(rt_node_t *node, rt_entry_t *entry)
 {
-	rt_node_t *optimal_entry = NULL;
+	void *optimal_entry = NULL;
+	rt_rect_t *optimal_entry_MBR = NULL;
 	double optimal_distance = DBL_MAX;
 	uint8_t i;
 
 	for (i = 0; i < node->count; i++)
 	{
-		rt_node_t *current_entry = (rt_node_t *)node->entries[i];
-		double distance = rectangle_min_distance(current_entry->MBR, entry->MBR);
+		void *current_entry = node->entries[i];
+		rt_rect_t *current_entry_MBR = _node_get_entry_MBR(node, current_entry);
+
+		double distance = rectangle_min_distance(current_entry_MBR, entry->MBR);
+		
 		if (distance < optimal_distance)
 		{
 			optimal_distance = distance;
 			optimal_entry = current_entry;
+			optimal_entry_MBR = _node_get_entry_MBR(node, optimal_entry);
 		}
 		else if (fabs(distance - optimal_distance) < DBL_EPSILON)
 		{
-			optimal_entry = (rectangle_area(current_entry->MBR) < rectangle_area(optimal_entry->MBR) ? 
+			optimal_entry = (rectangle_area(current_entry_MBR) < rectangle_area(optimal_entry_MBR) ? 
 				current_entry : 
 				optimal_entry);
+			optimal_entry_MBR = _node_get_entry_MBR(node, optimal_entry);
 		}
 	}
 
