@@ -177,22 +177,23 @@ void _test_rtree_try_insert_2() {
 	/*hashset_st *results_1, *results_2, *results_3;*/
 	rt_ctx_t context;
 	/*rt_node_t * node_1;*/
-	rt_rect_t space, MBR_1, MBR_2, MBR_3, MBR_4, MBR_5, MBR_6, MBR_7, MBR_8, MBR_9 /*MBR_10*//* MBR_11*/;
-	rt_entry_t entry_1, entry_2, entry_3, entry_4, entry_5, entry_6, entry_7, entry_8, entry_9 /*entry_10*//* entry_11*/;
+	rt_rect_t space, MBR_1, MBR_2, MBR_3, MBR_4, MBR_5, MBR_6, MBR_7, MBR_8, MBR_9, MBR_10, MBR_11, MBR_12;
+	rt_entry_t entry_1, entry_2, entry_3, entry_4, entry_5, entry_6, entry_7, entry_8, entry_9, entry_10, entry_11, entry_12;
 	uint8_t dimension = 2;
-	int /*index,*/ tuples[] = { 1, 2, 3, 4, 5, 6, 7, 8, 9/*, 10*/ /*11*/ };
-	float low[] = { 0, 0 }, high[] = { 0, 0 }, 
-		  low_1[] = { 0, 8 }, high_1[] = { 3, 11 },
-		  low_2[] = { 6, 8 }, high_2[] = { 9, 11 },
-		  low_3[] = { 0, 4 }, high_3[] = { 3, 7 },
-		  low_4[] = { 6, 4 }, high_4[] = { 9, 7 }, 
-		  low_5[] = { 0, 0 }, high_5[] = { 3, 3 },
-		  low_6[] = { 6, 0 }, high_6[] = { 9, 3 },		  
-		  low_7[] = { 11, 8 }, high_7[] = { 14, 11 },		  
-		  low_8[] = { 11, 4 }, high_8[] = { 14, 7 },		  
-		  low_9[] = { 11, 0 }, high_9[] = { 14, 3 };	  
-		  /*low_10[] = { 17, 0 }, high_10[] = { 20, 3 };	 */ 
-		  /*low_11[] = { 17, 3 }, high_11[] = { 20, 7 };*/	  
+	int /*index,*/ tuples[] = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 };
+	float low[] = { 0, 0 }, high[] = { 20, 11 },
+		low_1[] = { 0, 8 }, high_1[] = { 3, 11 },
+		low_2[] = { 6, 8 }, high_2[] = { 9, 11 },
+		low_3[] = { 0, 4 }, high_3[] = { 3, 7 },
+		low_4[] = { 6, 4 }, high_4[] = { 9, 7 },
+		low_5[] = { 0, 0 }, high_5[] = { 3, 3 },
+		low_6[] = { 6, 0 }, high_6[] = { 9, 3 },
+		low_7[] = { 11, 8 }, high_7[] = { 14, 11 },
+		low_8[] = { 11, 4 }, high_8[] = { 14, 7 },
+		low_9[] = { 11, 0 }, high_9[] = { 14, 3 },
+		low_10[] = { 17, 0 }, high_10[] = { 20, 3 },
+		low_11[] = { 17, 4 }, high_11[] = { 20, 7 },
+		low_12[] = { 17, 8 }, high_12[] = { 20, 11 };
 
 	rectangle_create(&space, low, high, dimension);
 	context_create(&context, 2, 4, dimension, 35, 4, &space);
@@ -234,18 +235,20 @@ void _test_rtree_try_insert_2() {
 	entry_create(&entry_9, &tuples[8], &MBR_9);
 	rtree_insert(&rtree, &entry_9);
 
-	/*rectangle_create(&MBR_10, low_10, high_10, dimension);
+	rectangle_create(&MBR_10, low_10, high_10, dimension);
 	entry_create(&entry_10, &tuples[9], &MBR_10);
-	rtree_insert(&rtree, &entry_10);*/
-
-	rtree_visualize(&rtree);	
-/*
-	
+	rtree_insert(&rtree, &entry_10);
 
 	rectangle_create(&MBR_11, low_11, high_11, dimension);
 	entry_create(&entry_11, &tuples[10], &MBR_11);
-	node_1 = rtree_try_insert(&rtree, &entry_11);
+	rtree_insert(&rtree, &entry_11);
 
+	rectangle_create(&MBR_12, low_12, high_12, dimension);
+	entry_create(&entry_12, &tuples[11], &MBR_12);
+	rtree_insert(&rtree, &entry_12);
+
+	rtree_visualize(&rtree);	
+/*
 	for (index = 0; index < dimension; index++)
 	{
 		assert_true(node_1->MBR->low[index] == entry_9.MBR->low[index]);

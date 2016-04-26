@@ -276,7 +276,8 @@ double _node_evaluate_distribution(uint8_t k, void ***sorted_entries, uint8_t di
 
 	while (sub_dim < node->context->dim)
 	{
-		int j = 0, match = 0;
+		int j = 0;
+		int first_served = 0, second_served = 0;
 
 		if (sub_dim == dimension)
 		{
@@ -284,45 +285,46 @@ double _node_evaluate_distribution(uint8_t k, void ***sorted_entries, uint8_t di
 			continue;
 		}
 
-		while ((j < node->context->M + 1) && (match < 2))
+		while ((j < node->context->M + 1) && !(first_served && second_served))
 		{
 			if (hashset_is_member(split_group, sorted_entries[sub_dim][j]))
 			{
-				if (MBR_one->low[sub_dim] == 0.0f)
+				if (!first_served)
 				{
 					MBR_one->low[sub_dim] = _node_get_entry_MBR(node, sorted_entries[sub_dim][j])->low[sub_dim];
-					match++;
+					first_served = 1;
 				}
 			}
 			else
 			{
-				if (MBR_two->low[sub_dim] == 0.0f)
+				if (!second_served)
 				{
 					MBR_two->low[sub_dim] = _node_get_entry_MBR(node, sorted_entries[sub_dim][j])->low[sub_dim];
-					match++;
+					second_served = 1;
 				}
 			}
 			j++;
 		}
 
-		match = 0;
+		first_served = 0; 
+		second_served = 0;
 		j = node->context->M;
-		while (j >= 0 && match < 2)
+		while (j >= 0 && !(first_served && second_served))
 		{
 			if (hashset_is_member(split_group, sorted_entries[sub_dim][j]))
 			{
-				if (MBR_one->high[sub_dim] == 0.0f)
+				if (!first_served)
 				{
 					MBR_one->high[sub_dim] = _node_get_entry_MBR(node, sorted_entries[sub_dim][j])->high[sub_dim];
-					match++;
+					first_served = 1;
 				}
 			}
 			else
 			{
-				if (MBR_two->high[sub_dim] == 0.0f)
+				if (!second_served)
 				{
 					MBR_two->high[sub_dim] = _node_get_entry_MBR(node, sorted_entries[sub_dim][j])->high[sub_dim];
-					match++;
+					second_served = 1;
 				}
 			}
 			j--;
