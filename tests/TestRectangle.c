@@ -138,7 +138,7 @@ void _test_rectangle_overlaps() {
 	assert_false(rectangle_overlaps(&rectangle_a, &rectangle_c));
 }
 
-void _test_rectangle_compare() {
+void _test_rectangle_compare_low() {
 	uint8_t dimensions = 2, dim[] = { 0, 1 };
 	rt_rect_t rectangle_a, rectangle_b;
 	float low_a[] = { 1.0f, 2.0f };
@@ -149,12 +149,31 @@ void _test_rectangle_compare() {
 	rectangle_create(&rectangle_a, low_a, high_a, dimensions);
 	rectangle_create(&rectangle_b, low_b, high_b, dimensions);
 	
-	assert_true(rectangle_compare(&rectangle_a, &rectangle_b, &dim[0]) < 0);
-	assert_true(rectangle_compare(&rectangle_a, &rectangle_b, &dim[1]) > 0);
-	assert_true(rectangle_compare(&rectangle_b, &rectangle_a, &dim[0]) > 0);
-	assert_true(rectangle_compare(&rectangle_b, &rectangle_a, &dim[1]) < 0);
-	assert_true(rectangle_compare(&rectangle_b, &rectangle_b, &dim[0]) == 0);
-	assert_true(rectangle_compare(&rectangle_b, &rectangle_b, &dim[1]) == 0);
+	assert_true(rectangle_compare_low(&rectangle_a, &rectangle_b, &dim[0]) < 0);
+	assert_true(rectangle_compare_low(&rectangle_a, &rectangle_b, &dim[1]) > 0);
+	assert_true(rectangle_compare_low(&rectangle_b, &rectangle_a, &dim[0]) > 0);
+	assert_true(rectangle_compare_low(&rectangle_b, &rectangle_a, &dim[1]) < 0);
+	assert_true(rectangle_compare_low(&rectangle_b, &rectangle_b, &dim[0]) == 0);
+	assert_true(rectangle_compare_low(&rectangle_b, &rectangle_b, &dim[1]) == 0);
+}
+
+void _test_rectangle_compare_high() {
+	uint8_t dimensions = 2, dim[] = { 0, 1 };
+	rt_rect_t rectangle_a, rectangle_b;
+	float low_a[] = { 1.0f, 2.0f };
+	float high_a[] = { 3.0f, 4.0f };
+	float low_b[] = { 2.0f, 1.0f };
+	float high_b[] = { 4.0f, 3.0f };
+
+	rectangle_create(&rectangle_a, low_a, high_a, dimensions);
+	rectangle_create(&rectangle_b, low_b, high_b, dimensions);
+
+	assert_true(rectangle_compare_high(&rectangle_a, &rectangle_b, &dim[0]) < 0);
+	assert_true(rectangle_compare_high(&rectangle_a, &rectangle_b, &dim[1]) > 0);
+	assert_true(rectangle_compare_high(&rectangle_b, &rectangle_a, &dim[0]) > 0);
+	assert_true(rectangle_compare_high(&rectangle_b, &rectangle_a, &dim[1]) < 0);
+	assert_true(rectangle_compare_high(&rectangle_b, &rectangle_b, &dim[0]) == 0);
+	assert_true(rectangle_compare_high(&rectangle_b, &rectangle_b, &dim[1]) == 0);
 }
 
 void _test_rectangle_intersection_area() {
@@ -237,7 +256,8 @@ int test_rectangle(void) {
 		cmocka_unit_test(_test_rectangle_intersection_area),
 		cmocka_unit_test(_test_rectangle_margin),
 		cmocka_unit_test(_test_rectangle_margin_value),
-		cmocka_unit_test(_test_rectangle_compare),
+		cmocka_unit_test(_test_rectangle_compare_low),
+		cmocka_unit_test(_test_rectangle_compare_high),
 		cmocka_unit_test(_test_rectangle_copy)
 	};
 

@@ -8,6 +8,11 @@
 #include "Rectangle.h"
 #include "Entry.h"
 
+typedef struct Comparator_Opts {
+	uint8_t dim;
+	uint8_t low;
+} rt_cmp_opts_t;
+
 size_t entry_calculate_buffer_size(rt_ctx_t *context)
 {
 	return (sizeof(rt_entry_t *) +
@@ -15,9 +20,18 @@ size_t entry_calculate_buffer_size(rt_ctx_t *context)
 		context->dim * sizeof(float));
 }
 
-int entry_compare(const void *entry, const void *other, void *dimension)
+int entry_compare(const void *entry, const void *other, void *cmp_opts)
 {
-	return rectangle_compare((*((rt_entry_t **)entry))->MBR, (*((rt_entry_t **)other))->MBR, dimension);
+	rt_cmp_opts_t *opts = (rt_cmp_opts_t *)cmp_opts;
+
+	if (opts->low)
+	{
+		return rectangle_compare_low((*((rt_entry_t **)entry))->MBR, (*((rt_entry_t **)other))->MBR, &opts->dim);
+	}
+	else
+	{
+		return rectangle_compare_high((*((rt_entry_t **)entry))->MBR, (*((rt_entry_t **)other))->MBR, &opts->dim);
+	}
 }
 
 void entry_create(rt_entry_t *dest, void *tuple, rt_rect_t *MBR)

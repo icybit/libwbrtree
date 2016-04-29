@@ -15,7 +15,9 @@ void _test_rectangle_min_distance();
 
 void _test_rectangle_overlaps();
 
-void _test_rectangle_compare();
+void _test_rectangle_compare_low();
+
+void _test_rectangle_compare_high();
 
 void _test_rectangle_intersection_area();
 

@@ -35,9 +35,14 @@ void rectangle_combine(rt_rect_t *rectangle, rt_rect_t *other)
 	}
 }
 
-int rectangle_compare(const rt_rect_t *rectangle, const rt_rect_t *other, uint8_t *dimension)
+int rectangle_compare_low(const rt_rect_t *rectangle, const rt_rect_t *other, uint8_t *dimension)
 {
 	return (int)(rectangle->low[*dimension] - other->low[*dimension]);
+}
+
+int rectangle_compare_high(const rt_rect_t *rectangle, const rt_rect_t *other, uint8_t *dimension)
+{
+	return (int)(rectangle->high[*dimension] - other->high[*dimension]);
 }
 
 void rectangle_copy(rt_rect_t *dest, const rt_rect_t *source)
