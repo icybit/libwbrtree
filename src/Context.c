@@ -1,6 +1,12 @@
 #include "Context.h"
+#include "Rectangle.h"
 #include <assert.h>
 #include <stdlib.h>
+#include <stdlib.h>
+#ifdef DEBUG
+#include <stdio.h>
+#endif
+
 
 RTREE_PUBLIC rt_ctx_t * rtree_context_create(uint8_t m, uint8_t M, uint8_t dim, size_t entry_size, float alloc_factor, rt_rect_t *space)
 {
@@ -20,6 +26,21 @@ RTREE_PUBLIC rt_ctx_t * rtree_context_create(uint8_t m, uint8_t M, uint8_t dim, 
 
 	return ctx;
 }
+
+ void context_copy(rt_ctx_t *dest, const rt_ctx_t *source)
+ {    
+	dest->dim = source->dim;
+	dest->m = source->m;
+	dest->M = source->M;
+	dest->entry_size = source->entry_size;
+	dest->alloc_factor = source->alloc_factor;
+ 
+    printf("Rect copy");
+    rectangle_copy(dest->space, source->space);
+    printf("Rect copy done");
+}
+
+
 
 RTREE_PUBLIC void rtree_context_destroy(rt_ctx_t *ctx)
 {

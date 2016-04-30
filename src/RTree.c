@@ -349,6 +349,37 @@ static void _rtree_serialize_recursive(rt_node_t *node, uint8_t *buffer, size_t 
 	}
 }
 
+rt_rtree_t * rtree_split(rt_rtree_t *rtree, rt_node_t *root)
+{
+    rt_rtree_t *other;
+    rt_ctx_t *ctx_other; 
+
+    assert(!node_is_leaf(rtree->root) && rtree->root->count >= 2); 
+    printf("Allocating memory");
+
+    ctx_other = malloc(sizeof(rt_ctx_t));
+    ctx_other->space = malloc(sizeof(rt_rect_t));
+    ctx_other->space->low = malloc(rtree->context->space->dim * sizeof(float));
+    ctx_other->space->high = malloc(rtree->context->space->dim * sizeof(float));
+    
+    other = malloc(sizeof(rt_rtree_t));
+    other->root = malloc(sizeof(rt_node_t));
+    other->context = malloc(sizeof(rt_node_t));
+    
+    root = malloc(sizeof(rt_node_t));
+    context_copy(ctx_other, rtree->context);
+    
+    printf("Copied ctx memory");
+    rtree_create(other, ctx_other);
+    printf("Tree created");
+    other->root = rtree->root->entries[1];
+
+    root = rtree->root;
+    rtree->root = rtree->root->entries[0];
+
+    return other;
+}
+
 #ifdef DEBUG
 RTREE_PUBLIC void rtree_visualize(rt_rtree_t *rtree)
 {
