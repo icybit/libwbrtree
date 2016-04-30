@@ -27,7 +27,7 @@ RTREE_PUBLIC rt_ctx_t * rtree_context_create(uint8_t m, uint8_t M, uint8_t dim, 
 	return ctx;
 }
 
- void context_copy(rt_ctx_t *dest, const rt_ctx_t *source)
+RTREE_LOCAL void context_copy(rt_ctx_t *dest, const rt_ctx_t *source)
  {    
 	dest->dim = source->dim;
 	dest->m = source->m;
@@ -35,12 +35,8 @@ RTREE_PUBLIC rt_ctx_t * rtree_context_create(uint8_t m, uint8_t M, uint8_t dim, 
 	dest->entry_size = source->entry_size;
 	dest->alloc_factor = source->alloc_factor;
  
-    printf("Rect copy");
     rectangle_copy(dest->space, source->space);
-    printf("Rect copy done");
 }
-
-
 
 RTREE_PUBLIC void rtree_context_destroy(rt_ctx_t *ctx)
 {

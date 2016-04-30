@@ -13,11 +13,7 @@
 #include "Entry.h"
 #include "Node.h"
 #include "Rectangle.h"
-
-struct RTree {
-	rt_node_t *root;
-	rt_ctx_t *context;
-};
+#include "RTree.h"
 
 static void _rtree_destroy_recursive(rt_node_t *node);
 static void _rtree_adjust_tree(rt_rtree_t *rtree, rt_node_t *node, rt_node_t *nnode);
@@ -349,13 +345,12 @@ static void _rtree_serialize_recursive(rt_node_t *node, uint8_t *buffer, size_t 
 	}
 }
 
-rt_rtree_t * rtree_split(rt_rtree_t *rtree, rt_node_t *root)
+RTREE_PUBLIC rt_rtree_t * rtree_split(rt_rtree_t *rtree, rt_node_t **root)
 {
     rt_rtree_t *other;
     rt_ctx_t *ctx_other; 
 
     assert(!node_is_leaf(rtree->root) && rtree->root->count >= 2); 
-    printf("Allocating memory");
 
     ctx_other = malloc(sizeof(rt_ctx_t));
     ctx_other->space = malloc(sizeof(rt_rect_t));
@@ -366,15 +361,12 @@ rt_rtree_t * rtree_split(rt_rtree_t *rtree, rt_node_t *root)
     other->root = malloc(sizeof(rt_node_t));
     other->context = malloc(sizeof(rt_node_t));
     
-    root = malloc(sizeof(rt_node_t));
     context_copy(ctx_other, rtree->context);
-    
-    printf("Copied ctx memory");
-    rtree_create(other, ctx_other);
-    printf("Tree created");
+
+    other = rtree_create(ctx_other);
     other->root = rtree->root->entries[1];
 
-    root = rtree->root;
+    *root = rtree->root;
     rtree->root = rtree->root->entries[0];
 
     return other;

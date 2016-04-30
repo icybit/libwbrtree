@@ -169,7 +169,7 @@ RTREE_LOCAL int rectangle_overlaps(rt_rect_t *rectangle, rt_rect_t *other)
 }
 
 #ifdef DEBUG
-RTREE_LOCAL void rectangle_print(rt_rect_t *rectangle)
+RTREE_PUBLIC void rectangle_print(rt_rect_t *rectangle)
 {
 	uint8_t dim;
 	printf("MBR: LOW(");
