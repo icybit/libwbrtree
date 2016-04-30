@@ -15,10 +15,16 @@
 #include "Entry.h"
 #include "Rectangle.h"
 
+typedef struct Comparator_Opts {
+	uint8_t dim;
+	uint8_t low;
+} rt_cmp_opts_t;
+
 static void _node_calculate_node_MBR(rt_rect_t *MBR, rt_node_t *node);
 static void _node_calculate_leaf_MBR(rt_rect_t *MBR, rt_node_t *leaf);
 static uint8_t _node_choose_split_axis(rt_node_t *node, void ***sorted_entries, rt_rect_t *MBR_one, rt_rect_t *MBR_two);
 static uint8_t _node_choose_split_index(uint8_t dimension, rt_node_t *node, void ***sorted_entries, rt_rect_t *MBR_one, rt_rect_t *MBR_two);
+static void _node_entry_sort(rt_node_t *node, void *entry, void ***sorted_entries);
 static double _node_evaluate_distribution(uint8_t k, void ***sorted_entries, uint8_t dimension, rt_node_t *node, rt_rect_t *MBR_one, rt_rect_t *MBR_two, double(*evaluator)(rt_rect_t *MBR_one, rt_rect_t *MBR_two));
 static rt_rect_t * _node_get_entry_MBR(rt_node_t *node, void *entry);
 
@@ -68,26 +74,32 @@ RTREE_LOCAL void _node_calculate_leaf_MBR(rt_rect_t *MBR, rt_node_t *leaf)
 	}
 }
 
-RTREE_LOCAL rt_node_t * node_choose_optimal_entry(rt_node_t *node, rt_entry_t *entry)
+RTREE_LOCAL void * node_choose_optimal_entry(rt_node_t *node, rt_entry_t *entry)
 {
-	rt_node_t *optimal_entry = NULL;
+	void *optimal_entry = NULL;
+	rt_rect_t *optimal_entry_MBR = NULL;
 	double optimal_distance = DBL_MAX;
 	uint8_t i;
 
 	for (i = 0; i < node->count; i++)
 	{
-		rt_node_t *current_entry = (rt_node_t *)node->entries[i];
-		double distance = rectangle_min_distance(current_entry->MBR, entry->MBR);
+		void *current_entry = node->entries[i];
+		rt_rect_t *current_entry_MBR = _node_get_entry_MBR(node, current_entry);
+
+		double distance = rectangle_min_distance(current_entry_MBR, entry->MBR);
+		
 		if (distance < optimal_distance)
 		{
 			optimal_distance = distance;
 			optimal_entry = current_entry;
+			optimal_entry_MBR = _node_get_entry_MBR(node, optimal_entry);
 		}
 		else if (fabs(distance - optimal_distance) < DBL_EPSILON)
 		{
-			optimal_entry = (rectangle_area(current_entry->MBR) < rectangle_area(optimal_entry->MBR) ? 
+			optimal_entry = (rectangle_area(current_entry_MBR) < rectangle_area(optimal_entry_MBR) ? 
 				current_entry : 
 				optimal_entry);
+			optimal_entry_MBR = _node_get_entry_MBR(node, optimal_entry);
 		}
 	}
 
@@ -170,9 +182,18 @@ RTREE_LOCAL uint8_t _node_choose_split_index(uint8_t dimension, rt_node_t *node,
 	return optimal_distribution_index;
 }
 
-RTREE_LOCAL int node_compare(const void *entry, const void *other, void *dimension)
+RTREE_LOCAL int node_compare(const void *entry, const void *other, void *cmp_opts)
 {
-	return rectangle_compare((*((rt_node_t **)entry))->MBR, (*((rt_node_t **)other))->MBR, dimension);
+	rt_cmp_opts_t *opts = (rt_cmp_opts_t *)cmp_opts;
+
+	if (opts->low)
+	{
+		return rectangle_compare_low((*((rt_node_t **)entry))->MBR, (*((rt_node_t **)other))->MBR, &opts->dim);
+	}
+	else
+	{
+		return rectangle_compare_high((*((rt_node_t **)entry))->MBR, (*((rt_node_t **)other))->MBR, &opts->dim);
+	}
 }
 
 RTREE_LOCAL void node_copy(rt_node_t *dest, const rt_node_t *source)
@@ -263,77 +284,96 @@ RTREE_LOCAL void node_destroy(rt_node_t *node)
 	free(node);
 }
 
-RTREE_LOCAL double _node_evaluate_distribution(uint8_t k, void ***sorted_entries, uint8_t dimension, rt_node_t *node, rt_rect_t *MBR_one, rt_rect_t *MBR_two, double (*evaluator)(rt_rect_t *MBR_one, rt_rect_t *MBR_two))
+RTREE_LOCAL void _node_entry_sort(rt_node_t *node, void *entry, void ***sorted_entries)
 {
-	uint8_t split_index = 0, sub_dim = 0;
+	uint8_t dim, order_shift = 0;
+	rt_cmp_opts_t opts;
+	int(*comparator)(const void *, const void *, void *) = (node_is_leaf(node) ? entry_compare : node_compare);
+
+	/* Perform ASC sort of MBR low points */
+	opts.low = 1;
+	for (dim = 0; dim < node->context->dim; dim++)
+	{
+		opts.dim = dim;
+		sorted_entries[dim] = malloc((node->context->M + 1) * sizeof(void *));
+		memcpy(sorted_entries[dim], node->entries, node->count * sizeof(void *));
+		sorted_entries[dim][node->context->M] = entry;
+		qsort_r(sorted_entries[dim], node->context->M + 1, sizeof(void *), comparator, &opts);
+	}
+
+	/* Perform ASC sort of MBR high points */
+	opts.low = 0;
+	for (dim = 0; dim < node->context->dim; dim++)
+	{
+		opts.dim = dim;
+		order_shift = dim + node->context->dim;
+		sorted_entries[order_shift] = malloc((node->context->M + 1) * sizeof(void *));
+		memcpy(sorted_entries[order_shift], node->entries, node->count * sizeof(void *));
+		sorted_entries[order_shift][node->context->M] = entry;
+		qsort_r(sorted_entries[order_shift], node->context->M + 1, sizeof(void *), comparator, &opts);
+	}
+}
+
+RTREE_LOCAL double _node_evaluate_distribution(uint8_t k, void ***sorted_entries, uint8_t dimension, rt_node_t *node, rt_rect_t *MBR_one, rt_rect_t *MBR_two, double(*evaluator)(rt_rect_t *MBR_one, rt_rect_t *MBR_two))
+{
+	uint8_t split_index = 0, sub_dim = 0, order_shift = 0;
 	hashset_t split_group = hashset_create();
 
 	memset(MBR_one->low, 0, MBR_one->dim * sizeof(float));
 	memset(MBR_two->low, 0, MBR_two->dim * sizeof(float));
 
-	MBR_one->low[dimension] = _node_get_entry_MBR(node, sorted_entries[dimension][split_index])->low[dimension];
 	while (split_index < (node->context->m - 1 + k))
 	{
 		hashset_add(split_group, sorted_entries[dimension][split_index]);
-		/* TODO: Solve the case when sorted entries have the same lower values */
-		if ((split_index + 1) == (node->context->m - 1 + k))
-		{
-			MBR_one->high[dimension] = _node_get_entry_MBR(node, sorted_entries[dimension][split_index])->high[dimension];
-		}
 		split_index++;
 	}
-	MBR_two->low[dimension] = _node_get_entry_MBR(node, sorted_entries[dimension][split_index])->low[dimension];
-	MBR_two->high[dimension] = _node_get_entry_MBR(node, sorted_entries[dimension][node->context->M])->high[dimension];
 
 	while (sub_dim < node->context->dim)
 	{
-		int j = 0, match = 0;
+		int j = 0;
+		int first_served = 0, second_served = 0;
 
-		if (sub_dim == dimension)
-		{
-			sub_dim++;
-			continue;
-		}
-
-		while ((j < node->context->M + 1) && (match < 2))
+		while ((j < node->context->M + 1) && !(first_served && second_served))
 		{
 			if (hashset_is_member(split_group, sorted_entries[sub_dim][j]))
 			{
-				if (MBR_one->low[sub_dim] == 0.0f)
+				if (!first_served)
 				{
 					MBR_one->low[sub_dim] = _node_get_entry_MBR(node, sorted_entries[sub_dim][j])->low[sub_dim];
-					match++;
+					first_served = 1;
 				}
 			}
 			else
 			{
-				if (MBR_two->low[sub_dim] == 0.0f)
+				if (!second_served)
 				{
 					MBR_two->low[sub_dim] = _node_get_entry_MBR(node, sorted_entries[sub_dim][j])->low[sub_dim];
-					match++;
+					second_served = 1;
 				}
 			}
 			j++;
 		}
 
-		match = 0;
+		first_served = 0; 
+		second_served = 0;
+		order_shift = sub_dim + node->context->dim;
 		j = node->context->M;
-		while (j >= 0 && match < 2)
+		while (j >= 0 && !(first_served && second_served))
 		{
-			if (hashset_is_member(split_group, sorted_entries[sub_dim][j]))
+			if (hashset_is_member(split_group, sorted_entries[order_shift][j]))
 			{
-				if (MBR_one->high[sub_dim] == 0.0f)
+				if (!first_served)
 				{
-					MBR_one->high[sub_dim] = _node_get_entry_MBR(node, sorted_entries[sub_dim][j])->high[sub_dim];
-					match++;
+					MBR_one->high[sub_dim] = _node_get_entry_MBR(node, sorted_entries[order_shift][j])->high[sub_dim];
+					first_served = 1;
 				}
 			}
 			else
 			{
-				if (MBR_two->high[sub_dim] == 0.0f)
+				if (!second_served)
 				{
-					MBR_two->high[sub_dim] = _node_get_entry_MBR(node, sorted_entries[sub_dim][j])->high[sub_dim];
-					match++;
+					MBR_two->high[sub_dim] = _node_get_entry_MBR(node, sorted_entries[order_shift][j])->high[sub_dim];
+					second_served = 1;
 				}
 			}
 			j--;
@@ -366,10 +406,9 @@ RTREE_LOCAL rt_node_t * node_split(rt_node_t *node, void *entry)
 {
 	uint8_t split_axis, split_index, split_size, dim;
 	rt_node_t *nnode = malloc(sizeof(rt_node_t));
-	void ***sorted_entries = malloc(node->context->dim * sizeof(void **));
+	void ***sorted_entries = malloc(node->context->dim * 2 * sizeof(void **));
 	void **nentries;
 	rt_rect_t MBR_one, *MBR_two;
-	int(*comparator)(const void *, const void *, void *) = (node_is_leaf(node) ? entry_compare : node_compare);
 
 	MBR_one.low = malloc(node->MBR->dim * sizeof(float));
 	MBR_one.high = malloc(node->MBR->dim * sizeof(float));
@@ -380,13 +419,7 @@ RTREE_LOCAL rt_node_t * node_split(rt_node_t *node, void *entry)
 	rectangle_copy(&MBR_one, node->MBR);
 	rectangle_copy(MBR_two, node->MBR);
 
-	for (dim = 0; dim < node->context->dim; dim++)
-	{
-		sorted_entries[dim] = malloc((node->context->M + 1) * sizeof(void *));
-		memcpy(sorted_entries[dim], node->entries, node->count * sizeof(void *));
-		sorted_entries[dim][node->context->M] = entry;
-		qsort_r(sorted_entries[dim], node->context->M + 1, sizeof(void *), comparator, &dim);
-	}
+	_node_entry_sort(node, entry, sorted_entries);
 
 	split_axis = _node_choose_split_axis(node, sorted_entries, &MBR_one, MBR_two);
 	split_index = _node_choose_split_index(split_axis, node, sorted_entries, &MBR_one, MBR_two);

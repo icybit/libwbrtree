@@ -37,6 +37,7 @@ extern "C" {
 
 	/* BEGIN RTREE_API */
 	void rtree_insert(rt_rtree_t *rtree, rt_entry_t *entry);
+	rt_entry_t * rtree_try_insert(rt_rtree_t *rtree, rt_entry_t *entry);
 	rt_rtree_t * rtree_create(rt_ctx_t *context);
 	int rtree_delete(rt_rtree_t *rtree, rt_entry_t *entry);
 	void rtree_destroy(rt_rtree_t *rtree);

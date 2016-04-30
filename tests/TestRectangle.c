@@ -140,7 +140,7 @@ void _test_rectangle_overlaps() {
 	rtree_rectangle_destroy(rectangle_c);
 }
 
-void _test_rectangle_compare() {
+void _test_rectangle_compare_low() {
 	rt_rect_t *rectangle_a, *rectangle_b;
 	uint8_t dimensions = 2, dim[] = { 0, 1 };
 	float *low_a = initialize_coordinates(1.0f, 2.0f);
@@ -151,12 +151,34 @@ void _test_rectangle_compare() {
 	rectangle_a = rtree_rectangle_create(low_a, high_a, dimensions);
 	rectangle_b = rtree_rectangle_create(low_b, high_b, dimensions);
 	
-	assert_true(rectangle_compare(rectangle_a, rectangle_b, &dim[0]) < 0);
-	assert_true(rectangle_compare(rectangle_a, rectangle_b, &dim[1]) > 0);
-	assert_true(rectangle_compare(rectangle_b, rectangle_a, &dim[0]) > 0);
-	assert_true(rectangle_compare(rectangle_b, rectangle_a, &dim[1]) < 0);
-	assert_true(rectangle_compare(rectangle_b, rectangle_b, &dim[0]) == 0);
-	assert_true(rectangle_compare(rectangle_b, rectangle_b, &dim[1]) == 0);
+	assert_true(rectangle_compare_low(rectangle_a, rectangle_b, &dim[0]) < 0);
+	assert_true(rectangle_compare_low(rectangle_a, rectangle_b, &dim[1]) > 0);
+	assert_true(rectangle_compare_low(rectangle_b, rectangle_a, &dim[0]) > 0);
+	assert_true(rectangle_compare_low(rectangle_b, rectangle_a, &dim[1]) < 0);
+	assert_true(rectangle_compare_low(rectangle_b, rectangle_b, &dim[0]) == 0);
+	assert_true(rectangle_compare_low(rectangle_b, rectangle_b, &dim[1]) == 0);
+
+	rtree_rectangle_destroy(rectangle_a);
+	rtree_rectangle_destroy(rectangle_b);
+}
+
+void _test_rectangle_compare_high() {
+	rt_rect_t *rectangle_a, *rectangle_b;
+	uint8_t dimensions = 2, dim[] = { 0, 1 };
+	float *low_a = initialize_coordinates(1.0f, 2.0f);
+	float *high_a = initialize_coordinates(3.0f, 4.0f);
+	float *low_b = initialize_coordinates(2.0f, 1.0f);
+	float *high_b = initialize_coordinates(4.0f, 3.0f);
+
+	rectangle_a = rtree_rectangle_create(low_a, high_a, dimensions);
+	rectangle_b = rtree_rectangle_create(low_b, high_b, dimensions);
+
+	assert_true(rectangle_compare_high(rectangle_a, rectangle_b, &dim[0]) < 0);
+	assert_true(rectangle_compare_high(rectangle_a, rectangle_b, &dim[1]) > 0);
+	assert_true(rectangle_compare_high(rectangle_b, rectangle_a, &dim[0]) > 0);
+	assert_true(rectangle_compare_high(rectangle_b, rectangle_a, &dim[1]) < 0);
+	assert_true(rectangle_compare_high(rectangle_b, rectangle_b, &dim[0]) == 0);
+	assert_true(rectangle_compare_high(rectangle_b, rectangle_b, &dim[1]) == 0);
 
 	rtree_rectangle_destroy(rectangle_a);
 	rtree_rectangle_destroy(rectangle_b);
@@ -253,7 +275,8 @@ int test_rectangle(void) {
 		cmocka_unit_test(_test_rectangle_intersection_area),
 		cmocka_unit_test(_test_rectangle_margin),
 		cmocka_unit_test(_test_rectangle_margin_value),
-		cmocka_unit_test(_test_rectangle_compare),
+		cmocka_unit_test(_test_rectangle_compare_low),
+		cmocka_unit_test(_test_rectangle_compare_high),
 		cmocka_unit_test(_test_rectangle_copy)
 	};
 

@@ -59,9 +59,14 @@ RTREE_LOCAL void rectangle_combine(rt_rect_t *rectangle, rt_rect_t *other)
 	}
 }
 
-RTREE_LOCAL int rectangle_compare(const rt_rect_t *rectangle, const rt_rect_t *other, uint8_t *dimension)
+RTREE_LOCAL int rectangle_compare_low(const rt_rect_t *rectangle, const rt_rect_t *other, uint8_t *dimension)
 {
 	return (int)(rectangle->low[*dimension] - other->low[*dimension]);
+}
+
+RTREE_LOCAL int rectangle_compare_high(const rt_rect_t *rectangle, const rt_rect_t *other, uint8_t *dimension)
+{
+	return (int)(rectangle->high[*dimension] - other->high[*dimension]);
 }
 
 RTREE_LOCAL void rectangle_copy(rt_rect_t *dest, const rt_rect_t *source)
@@ -167,24 +172,24 @@ RTREE_LOCAL int rectangle_overlaps(rt_rect_t *rectangle, rt_rect_t *other)
 RTREE_LOCAL void rectangle_print(rt_rect_t *rectangle)
 {
 	uint8_t dim;
-	puts("MBR: LOW(");
+	printf("MBR: LOW(");
 	for (dim = 0; dim < rectangle->dim; dim++)
 	{
 		printf("%g", rectangle->low[dim]);
 		if (dim < rectangle->dim - 1)
 		{
-			puts(",");
+			printf(",");
 		}
 	}
-	puts("), HIGH(");
+	printf("), HIGH(");
 	for (dim = 0; dim < rectangle->dim; dim++)
 	{
 		printf("%g", rectangle->high[dim]);
 		if (dim < rectangle->dim - 1)
 		{
-			puts(",");
+			printf(",");
 		}
 	}
-	puts(")\n");
+	printf(")");
 }
 #endif

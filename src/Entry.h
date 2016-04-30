@@ -12,7 +12,7 @@ struct Entry {
 };
 
 size_t entry_calculate_buffer_size(rt_ctx_t *context);
-int entry_compare(const void *entry, const void *other, void *dimension);
+int entry_compare(const void *entry, const void *other, void *cmp_opts);
 #ifdef DEBUG
 void entry_print(rt_entry_t *entry);
 #endif

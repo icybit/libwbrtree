@@ -23,8 +23,6 @@ void _test_rectangle_margin();
 
 void _test_rectangle_margin_value();
 
-void _test_point_compare();
-
 int test_rectangle(void);
 
 #endif

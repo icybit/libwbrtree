@@ -1,9 +1,17 @@
 #include "Entry.h"
 #include <assert.h>
+#ifdef DEBUG
+#include <stdio.h>
+#endif
 #include <string.h>
 #include <stdlib.h>
 #include "Context.h"
 #include "Rectangle.h"
+
+typedef struct Comparator_Opts {
+	uint8_t dim;
+	uint8_t low;
+} rt_cmp_opts_t;
 
 RTREE_PUBLIC rt_entry_t * rtree_entry_create(void *tuple, rt_rect_t *MBR)
 {
@@ -43,9 +51,18 @@ RTREE_LOCAL size_t entry_calculate_buffer_size(rt_ctx_t *context)
 		context->dim * sizeof(float));
 }
 
-RTREE_LOCAL int entry_compare(const void *entry, const void *other, void *dimension)
+RTREE_LOCAL int entry_compare(const void *entry, const void *other, void *cmp_opts)
 {
-	return rectangle_compare((*((rt_entry_t **)entry))->MBR, (*((rt_entry_t **)other))->MBR, dimension);
+	rt_cmp_opts_t *opts = (rt_cmp_opts_t *)cmp_opts;
+
+	if (opts->low)
+	{
+		return rectangle_compare_low((*((rt_entry_t **)entry))->MBR, (*((rt_entry_t **)other))->MBR, &opts->dim);
+	}
+	else
+	{
+		return rectangle_compare_high((*((rt_entry_t **)entry))->MBR, (*((rt_entry_t **)other))->MBR, &opts->dim);
+	}
 }
 
 #ifdef DEBUG
@@ -53,7 +70,7 @@ RTREE_LOCAL void entry_print(rt_entry_t *entry)
 {
 	printf("ENTRY: [VALUE: %p,", entry->tuple);
 	rectangle_print(entry->MBR);
-	puts("]\n");
+	puts("]");
 }
 #endif
 
