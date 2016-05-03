@@ -2,7 +2,6 @@
 #include "Rectangle.h"
 #include <assert.h>
 #include <stdlib.h>
-#include <stdlib.h>
 #ifdef DEBUG
 #include <stdio.h>
 #endif
