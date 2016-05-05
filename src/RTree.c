@@ -5,7 +5,7 @@
 #endif
 #include <stdlib.h>
 #include <string.h>
-#include "wbdrtree/wbdrtreeapi.h"
+#include "wbrtree/wbrtreeapi.h"
 #include "hashset.h"
 #include "hashset_itr.h"
 #include "Common.h"

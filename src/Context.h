@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 #include <stddef.h>
-#include "wbdrtree/wbdrtreeapi.h"
+#include "wbrtree/wbrtreeapi.h"
 #include "Common.h"
 
 typedef size_t(*serialize_fn)(rt_entry_t *, uint8_t **);

@@ -31,7 +31,7 @@ RTREE_LOCAL void context_copy(rt_ctx_t *dest, const rt_ctx_t *source)
 	dest->dim = source->dim;
 	dest->m = source->m;
 	dest->M = source->M;
-	dest->entry_size = source->entry_size;
+	dest->serializer = source->serializer;
 	dest->alloc_factor = source->alloc_factor;
  
     rectangle_copy(dest->space, source->space);
@@ -50,6 +50,6 @@ RTREE_LOCAL rt_ctx_t * context_duplicate(const rt_ctx_t *source)
  {  
  	assert(source);
 
- 	return rtree_context_create(source->m, source->M, source->dim, source->entry_size, 
+ 	return rtree_context_create(source->m, source->M, source->dim, source->serializer, 
  		source->alloc_factor, rectangle_duplicate(source->space));
 }

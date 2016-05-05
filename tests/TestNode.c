@@ -1,3 +1,4 @@
+#include "TestNode.h"
 #include <stdarg.h>
 #include <stddef.h>
 #include <stdio.h>
@@ -10,11 +11,10 @@
 #include "../src/Entry.h"
 #include "../src/Node.h"
 #include "../src/Rectangle.h"
-#include "TestNode.h"
 
 static rt_rect_t * create_rectangle_2d(float low_x, float low_y, float high_x, float high_y);
 static float * initialize_coordinates(float x, float y);
-size_t serialize(rt_entry_t *entry, uint8_t **buffer);
+static size_t serialize(rt_entry_t *entry, uint8_t **buffer);
 
 void _test_context_create() {
 	rt_ctx_t *context;
@@ -423,7 +423,7 @@ static float * initialize_coordinates(float x, float y)
 	return coords;
 }
 
-size_t serialize(rt_entry_t *entry, uint8_t **buffer)
+static size_t serialize(rt_entry_t *entry, uint8_t **buffer)
 {
 	size_t index = 0;
 	*buffer = malloc(2 * sizeof(float) + sizeof(uint8_t));

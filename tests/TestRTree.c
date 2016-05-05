@@ -1,21 +1,23 @@
+#include "TestRTree.h"
 #include <stdarg.h>
 #include <stddef.h>
-#include <stdlib.h>
-#include <setjmp.h>
-#include <cmocka.h>
 #ifdef DEBUG
 #include <stdio.h>
 #endif
+#include <stdlib.h>
+#include <setjmp.h>
+#include <string.h>
+#include <cmocka.h>
 #include "../src/Context.h"
 #include "../src/Entry.h"
 #include "../src/Node.h"
 #include "../src/Rectangle.h"
 #include "../src/RTree.h"
-#include "../include/wbdrtree/wbdrtreeapi.h"
-#include "TestRTree.h"
+#include "../include/wbrtree/wbrtreeapi.h"
 
 static rt_rect_t * create_rectangle_2d(float low_x, float low_y, float high_x, float high_y);
 static float * initialize_coordinates(float x, float y);
+static size_t serialize(rt_entry_t *entry, uint8_t **buffer);
 
 /* TODO: Reenable tests once decided: RTree currently does not expose its internal structure for use in tests. */
 
@@ -140,11 +142,10 @@ void _test_rtree_try_insert() {
     rt_entry_t *entry_1, *entry_2, *entry_3, *entry_4, *entry_5, *entry_6, *entry_7;
     uint8_t dimension = 2, m = 2, M = 4;
     int index, tuples[] = { 1, 2, 3, 4, 5, 6, 7 };
-    size_t entry_size = 35;
     float alloc_factor = 4.0f;
 
    	space = create_rectangle_2d(0.0f, 0.0f, 20.0f, 11.0f);
-	context = rtree_context_create(m, M, dimension, entry_size, alloc_factor, space);
+	context = rtree_context_create(m, M, dimension, serialize, alloc_factor, space);
 	rtree = rtree_create(context);
 
 	MBR_1 = create_rectangle_2d(0.0f, 8.0f, 3.0f, 11.0f);
@@ -192,11 +193,10 @@ void _test_rtree_split() {
     rt_entry_t *entry_1, *entry_2, *entry_3, *entry_4, *entry_5;
     uint8_t dimension = 2, m = 2, M = 4;
     int index, tuples[] = { 1, 2, 3, 4, 5};
-    size_t entry_size = 35;
     float alloc_factor = 4.0f;
 
     space = create_rectangle_2d(0.0f, 0.0f, 20.0f, 11.0f);
-	context = rtree_context_create(m, M, dimension, entry_size, alloc_factor, space);
+	context = rtree_context_create(m, M, dimension, serialize, alloc_factor, space);
 	rtree = rtree_create(context);
 
 	MBR_1 = create_rectangle_2d(0.0f, 8.0f, 3.0f, 11.0f);
@@ -227,7 +227,7 @@ void _test_rtree_split() {
     assert_true(other->context->m == context->m);
     assert_true(other->context->M == context->M);
     assert_true(other->context->alloc_factor == context->alloc_factor);
-    assert_true(other->context->entry_size == context->entry_size);
+    assert_ptr_equal(other->context->serializer, context->serializer);
 
     for (index = 0; index < dimension; index++)
     {
@@ -266,6 +266,19 @@ static float * initialize_coordinates(float x, float y)
 
  return coords;
 }
+
+static size_t serialize(rt_entry_t *entry, uint8_t **buffer)
+{
+	size_t index = 0;
+	*buffer = malloc(2 * sizeof(float) + sizeof(uint8_t));
+	memmove(&(*buffer[index]), entry->MBR->low, 2 * sizeof(float));
+	index += 2 * sizeof(float);
+	memmove(&(*buffer[index]), &entry->MBR->dim, sizeof(uint8_t));
+	index += sizeof(uint8_t);
+
+	return index;
+}
+
 int test_rtree(void) {
 	const struct CMUnitTest tests[] = {
 		/*cmocka_unit_test(_test_rtree_create),

@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 #include <stddef.h>
-#include "wbdrtree/wbdrtreeapi.h"
+#include "wbrtree/wbrtreeapi.h"
 #include "Common.h"
 
 struct Node {

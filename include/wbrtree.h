@@ -1,7 +1,7 @@
-#ifndef __WBD_RTREE_H__
-#define __WBD_RTREE_H__
+#ifndef __WB_RTREE_H__
+#define __WB_RTREE_H__
 
-#define __WBD_RTREE_H_INSIDE__
+#define __WB_RTREE_H_INSIDE__
 
 #define RTREE_VERSION_MAJOR 0
 #define RTREE_VERSION_MINOR 1
@@ -12,8 +12,8 @@
 #define RTREE_VERSION \
 	RTREE_MAKE_VERSION(RTREE_VERSION_MAJOR, RTREE_VERSION_MINOR, RTREE_VERSION_PATCH)
 
-#include "wbdrtree/wbdrtreeapi.h"
+#include "wbrtree/wbrtreeapi.h"
 
-#undef __WBD_RTREE_H_INSIDE__
+#undef __WB_RTREE_H_INSIDE__
 
-#endif /* __WBD_RTREE_H__ */
+#endif /* __WB_RTREE_H__ */

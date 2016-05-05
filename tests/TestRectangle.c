@@ -1,3 +1,4 @@
+#include "TestRectangle.h"
 #include <float.h>
 #include <math.h>
 #include <stdarg.h>
@@ -6,7 +7,6 @@
 #include <setjmp.h>
 #include <cmocka.h>
 #include "../src/Rectangle.h"
-#include "TestRectangle.h"
 
 static float * initialize_coordinates(float x, float y);
 

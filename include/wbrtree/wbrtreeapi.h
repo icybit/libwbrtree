@@ -1,8 +1,8 @@
-#ifndef __WBD_RTREE_API_H__
-#define __WBD_RTREE_API_H__
+#ifndef __WB_RTREE_API_H__
+#define __WB_RTREE_API_H__
 
-#if !defined (__WBD_RTREE_H_INSIDE__) && !defined (WBD_RTREE_COMPILATION)
-	#error "Only <wbdrtree.h> can be included directly."
+#if !defined (__WB_RTREE_H_INSIDE__) && !defined (WB_RTREE_COMPILATION)
+	#error "Only <wbrtree.h> can be included directly."
 #endif
 
 #ifdef __cplusplus
@@ -55,4 +55,4 @@ extern "C" {
 }
 #endif
 
-#endif /* __WBD_RTREE_API_H__ */
+#endif /* __WB_RTREE_API_H__ */

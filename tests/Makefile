@@ -2,11 +2,11 @@
 
 CC := gcc
 DEBUG := -g
-CFLAGS := -Wall -Werror -pedantic $(DEBUG) -DWBD_RTREE_COMPILATION=1
+CFLAGS := -Wall -Werror -pedantic $(DEBUG) -DWB_RTREE_COMPILATION=1
 LDFLAGS :=
 SRCEXT := c
 
-OUTNAME := librtree-test
+OUTNAME := libwbrtree-test
 
 INCPATH := .
 SRCPATH := .
