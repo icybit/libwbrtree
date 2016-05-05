@@ -17,4 +17,7 @@ struct Context {
 	rt_rect_t *space;
 };
 
+void context_copy(rt_ctx_t *dest, const rt_ctx_t *source);
+rt_ctx_t * context_duplicate(const rt_ctx_t *source);
+
 #endif /* __RTREE_CONTEXT_H__ */

@@ -18,6 +18,7 @@ int rectangle_compare_low(const rt_rect_t *rectangle, const rt_rect_t *other, ui
 int rectangle_compare_high(const rt_rect_t *rectangle, const rt_rect_t *other, uint8_t *dimension);
 int rectangle_compare(const rt_rect_t *rectangle, const rt_rect_t *other, uint8_t *dimension);
 void rectangle_copy(rt_rect_t *dest, const rt_rect_t *source);
+rt_rect_t * rectangle_duplicate(const rt_rect_t *source);
 void rectangle_extend_infinitely(rt_rect_t *dest);
 double rectangle_intersection_area(rt_rect_t *rectangle, rt_rect_t *other);
 double rectangle_margin(rt_rect_t *rectangle);

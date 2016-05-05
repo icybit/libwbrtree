@@ -13,11 +13,7 @@
 #include "Entry.h"
 #include "Node.h"
 #include "Rectangle.h"
-
-struct RTree {
-	rt_node_t *root;
-	rt_ctx_t *context;
-};
+#include "RTree.h"
 
 static void _rtree_destroy_recursive(rt_node_t *node);
 static void _rtree_adjust_tree(rt_rtree_t *rtree, rt_node_t *node, rt_node_t *nnode);
@@ -134,15 +130,11 @@ static void _rtree_adjust_tree_recursive(rt_rtree_t *rtree, rt_node_t *node, rt_
 		{
 			rt_node_t *root;
 			rt_rect_t *MBR;
-			float *low, *high;
 			void **entries = malloc(2 * sizeof(rt_node_t *));
 			entries[0] = node;
 			entries[1] = nnode;
 
-			low = malloc(node->MBR->dim * sizeof(float));
-			high = malloc(node->MBR->dim * sizeof(float));
-			MBR = rtree_rectangle_create(low, high, node->MBR->dim);
-			rectangle_copy(MBR, node->MBR);
+			MBR = rectangle_duplicate(node->MBR);
 
 			root = node_create(rtree->context, NULL, entries, 2, MBR, level + 1);
 			rtree->root = node->parent = nnode->parent = root;
@@ -350,6 +342,25 @@ static void _rtree_serialize_recursive(rt_node_t *node, uint8_t *buffer, size_t 
 			_rtree_serialize_recursive(entry, buffer, buffer_size, index);
 		}
 	}
+}
+
+RTREE_PUBLIC rt_rtree_t * rtree_split(rt_rtree_t *rtree)
+{
+    rt_rtree_t *other;
+    rt_node_t *root = rtree->root; 
+
+    if (node_is_leaf(rtree->root) || rtree->root->count != 2) {
+    	return NULL;
+    }
+
+    other = rtree_create(context_duplicate(rtree->context));
+
+    other->root = rtree->root->entries[1];
+	rtree->root = rtree->root->entries[0];
+
+    node_destroy(root);
+
+    return other;
 }
 
 #ifdef DEBUG

@@ -11,5 +11,9 @@ void _test_rtree_destroy();
 
 void _test_rtree_search();
 
+void _test_rtree_try_insert();
+
+void _test_rtree_split();
+
 int test_rtree(void);
 #endif

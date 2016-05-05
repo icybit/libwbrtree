@@ -39,7 +39,6 @@ RTREE_PUBLIC void rtree_entry_destroy(rt_entry_t *entry)
 	assert(entry);
 
 	rtree_rectangle_destroy(entry->MBR);
-	free(entry->tuple);
 	free(entry);
 	entry = NULL;
 }
