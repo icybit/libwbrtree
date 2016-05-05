@@ -39,7 +39,6 @@ RTREE_PUBLIC void rtree_entry_destroy(rt_entry_t *entry)
 	assert(entry);
 
 	rtree_rectangle_destroy(entry->MBR);
-	free(entry->tuple);
 	free(entry);
 	entry = NULL;
 }
@@ -66,7 +65,7 @@ RTREE_LOCAL int entry_compare(const void *entry, const void *other, void *cmp_op
 }
 
 #ifdef DEBUG
-RTREE_PUBLIC void entry_print(rt_entry_t *entry)
+RTREE_LOCAL void entry_print(rt_entry_t *entry)
 {
 	printf("ENTRY: [VALUE: %p,", entry->tuple);
 	rectangle_print(entry->MBR);

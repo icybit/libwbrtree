@@ -139,7 +139,7 @@ void _test_rtree_try_insert() {
     rt_rect_t *space, *MBR_1, *MBR_2, *MBR_3, *MBR_4, *MBR_5, *MBR_6, *MBR_7;
     rt_entry_t *entry_1, *entry_2, *entry_3, *entry_4, *entry_5, *entry_6, *entry_7;
     uint8_t dimension = 2, m = 2, M = 4;
-    int index, tuples[] = { 1, 2, 3, 4, 5, 6, 7};
+    int index, tuples[] = { 1, 2, 3, 4, 5, 6, 7 };
     size_t entry_size = 35;
     float alloc_factor = 4.0f;
 
@@ -180,11 +180,13 @@ void _test_rtree_try_insert() {
 	   assert_true(optimal_entry->MBR->low[index] == entry_2->MBR->low[index]);
 	   assert_true(optimal_entry->MBR->high[index] == entry_2->MBR->high[index]);
 	}
+
+	rtree_destroy(rtree);
+	rtree_entry_destroy(optimal_entry);
 }
 
 void _test_rtree_split() {
     rt_rtree_t *rtree, *other;
-    rt_node_t *root = NULL;
     rt_ctx_t *context;
  	rt_rect_t *space, *MBR_1, *MBR_2, *MBR_3, *MBR_4, *MBR_5;
     rt_entry_t *entry_1, *entry_2, *entry_3, *entry_4, *entry_5;
@@ -217,7 +219,7 @@ void _test_rtree_split() {
 	entry_5 = rtree_entry_create(&tuples[4], MBR_5);
 	rtree_insert(rtree, entry_5);
 
-	other = rtree_split(rtree, &root);
+	other = rtree_split(rtree);
 
     assert_ptr_equal(context, rtree->context);
 
@@ -243,10 +245,8 @@ void _test_rtree_split() {
     assert_true(other->root->MBR->high[0] == 9);
     assert_true(other->root->MBR->high[1] == 11);
 
-    assert_true(root->MBR->low[0] == 0);
-    assert_true(root->MBR->low[1] == 0);
-    assert_true(root->MBR->high[0] == 9);
-    assert_true(root->MBR->high[1] == 11);
+    rtree_destroy(rtree);
+    rtree_destroy(other);
 }
 
 static rt_rect_t * create_rectangle_2d(float low_x, float low_y, float high_x, float high_y)

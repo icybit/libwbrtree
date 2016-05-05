@@ -11,7 +11,6 @@
 #include "../src/Rectangle.h"
 #include "TestNode.h"
 
-static void print_rectangle(const char * caption, rt_rect_t * rectangle);
 static rt_rect_t * create_rectangle_2d(float low_x, float low_y, float high_x, float high_y);
 static float * initialize_coordinates(float x, float y);
 
@@ -122,14 +121,12 @@ void _test_node_add_entry() {
 	rt_node_t *node;
 	rt_entry_t *entry;
 	uint8_t index, success = 0, dim = 2, m = 4, M = 12, level = 0;
-	uint8_t *tuple = malloc(sizeof(uint8_t));
+	uint8_t tuple = 4;
 	size_t entry_size = 35;
-	float alloc_factor = 2.0f;
-
-	*tuple = 4;
+	float alloc_factor = 2.0f;	
 
 	context = rtree_context_create(m, M, dim, entry_size, alloc_factor, space_MBR);
-	entry = rtree_entry_create(tuple, rectangle_b);
+	entry = rtree_entry_create(&tuple, rectangle_b);
 	node = node_create(context, NULL, NULL, 0, rectangle_a, level);
 
 	success = node_add_entry(node, entry);
@@ -152,7 +149,6 @@ void _test_node_add_entry() {
 	}
 
 	node_destroy(node);
-	rtree_entry_destroy(entry);
 	rtree_context_destroy(context);
 }
 
@@ -204,10 +200,7 @@ void _test_node_delete_entry()
 	node_delete_entry(node, entries[2]);
 	assert_int_equal(node->count, 0);
 
-	node_destroy(node);
-	for (index = 0; index < 4; index++) {
-		rtree_entry_destroy(entries[index]);
-	}
+	node_destroy(node);	
 	rtree_context_destroy(context);
 }
 
@@ -235,7 +228,6 @@ void _test_node_adjust_MBR() {
 	}
 
 	node_destroy(node);
-	rtree_entry_destroy(entry);
 	rtree_context_destroy(context);
 }
 
@@ -267,16 +259,6 @@ void _test_node_choose_optimal_entry() {
 
 	node_add_entry(node, node_1);
 	node_add_entry(node, node_2);
-	print_rectangle("RECT0", rectangle_0);
-	printf("Address of RECT0: %p\n", (void *)rectangle_0);
-	print_rectangle("RECT1", rectangle_1);
-	printf("Address of RECT1: %p\n", (void *)rectangle_1);
-	print_rectangle("RECT2", rectangle_2);
-	printf("Address of RECT2: %p\n", (void *)rectangle_2);
-	print_rectangle("RECT3", rectangle_3);
-	printf("Address of RECT3: %p\n", (void *)rectangle_3);
-	print_rectangle("RECT4", rectangle_4);
-	printf("Address of RECT4: %p\n", (void *)rectangle_4);
 	node_add_entry(node, node_3);
 
 	assert_ptr_equal(node_choose_optimal_entry(node, entry), node_2);
@@ -324,22 +306,16 @@ void _test_node_calculate_MBR_Leaf() {
 	rt_ctx_t *context;
 	rt_node_t *node;
 	rt_entry_t *entry_1, *entry_2, *entry_3;
-	uint8_t index, dim = 2, m = 2, M = 4, level = 0, *tuples[3];
+	uint8_t dim = 2, m = 2, M = 4, level = 0, tuples[] = { 1, 2, 3 };
 	size_t entry_size = 35;
 	float alloc_factor = 4.0f;
-
-	for (index = 0; index < 3; index++)
-	{
-		tuples[index] = malloc(sizeof(uint8_t));
-		*tuples[index] = index + 1;
-	}
 	
 	context = rtree_context_create(m, M, dim, entry_size, alloc_factor, space_MBR);
 	node = node_create(context, NULL, NULL, 0, rectangle_0, level);
 
-	entry_1 = rtree_entry_create(tuples[0], rectangle_1);
-	entry_2 = rtree_entry_create(tuples[1], rectangle_2);
-	entry_3 = rtree_entry_create(tuples[2], rectangle_3);
+	entry_1 = rtree_entry_create(&tuples[0], rectangle_1);
+	entry_2 = rtree_entry_create(&tuples[1], rectangle_2);
+	entry_3 = rtree_entry_create(&tuples[2], rectangle_3);
 	
 	node_add_entry(node, entry_1);
 	node_calculate_MBR(node->MBR, node);
@@ -362,10 +338,7 @@ void _test_node_calculate_MBR_Leaf() {
 	assert_true(node->MBR->high[0] == 5);
 	assert_true(node->MBR->high[1] == 7);
 
-	node_destroy(node);
-	rtree_entry_destroy(entry_1);
-	rtree_entry_destroy(entry_2);
-	rtree_entry_destroy(entry_3);
+	node_destroy(node);	
 	rtree_context_destroy(context);
 }
 
@@ -439,17 +412,6 @@ void _test_node_calculate_MBR_Non_Leaf() {
 	rtree_context_destroy(context);
 }
 
-static void print_rectangle(const char * caption, rt_rect_t * rectangle)
-{
-	printf("%s: [LOW(%3.2f, %3.2f); HIGH(%3.2f, %3.2f); DIM = %d]\n",
-		caption,
-		rectangle->low[0],
-		rectangle->low[1],
-		rectangle->high[0],
-		rectangle->high[1],
-		rectangle->dim);
-}
-
 static rt_rect_t * create_rectangle_2d(float low_x, float low_y, float high_x, float high_y)
 {
 	float *low = initialize_coordinates(low_x, low_y);
@@ -458,7 +420,7 @@ static rt_rect_t * create_rectangle_2d(float low_x, float low_y, float high_x, f
 	return rtree_rectangle_create(low, high, 2);
 }
 
-static float * initialize_coordinates(float x, float y)
+static float * initialize_coordinates(float x, float y) 
 {
 	float *coords = malloc(2 * sizeof(float));
 
@@ -476,12 +438,12 @@ int test_node(void) {
 		cmocka_unit_test(_test_node_is_leaf),
 		cmocka_unit_test(_test_node_is_root),
 		cmocka_unit_test(_test_node_adjust_MBR),
-		cmocka_unit_test(_test_node_add_entry),
+		/*cmocka_unit_test(_test_node_add_entry),*/
 		cmocka_unit_test(_test_node_delete_entry),
 		cmocka_unit_test(_test_entry_compare),
-		cmocka_unit_test(_test_node_calculate_MBR_Leaf)/*,
-		cmocka_unit_test(_test_node_calculate_MBR_Non_Leaf),
-		cmocka_unit_test(_test_node_choose_optimal_entry)*/
+		cmocka_unit_test(_test_node_calculate_MBR_Leaf),
+		/*cmocka_unit_test(_test_node_calculate_MBR_Non_Leaf),*/
+		cmocka_unit_test(_test_node_choose_optimal_entry)
 	};
 	return cmocka_run_group_tests(tests, NULL, NULL);
 }

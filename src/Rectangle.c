@@ -71,11 +71,27 @@ RTREE_LOCAL int rectangle_compare_high(const rt_rect_t *rectangle, const rt_rect
 
 RTREE_LOCAL void rectangle_copy(rt_rect_t *dest, const rt_rect_t *source)
 {
-	assert(sizeof(*dest) == sizeof(*source));
+	assert(dest && source);
+	assert(dest->dim == source->dim);
 
 	dest->dim = source->dim;
 	memcpy(dest->low, source->low, source->dim * sizeof(float));
 	memcpy(dest->high, source->high, source->dim * sizeof(float));
+}
+
+RTREE_LOCAL rt_rect_t * rectangle_duplicate(const rt_rect_t *source)
+{
+	rt_rect_t *dest;
+	float *low, *high;
+
+	assert(source);
+
+	low = malloc(source->dim * sizeof(float));
+	high = malloc(source->dim * sizeof(float));
+	dest = rtree_rectangle_create(low, high, source->dim);
+	rectangle_copy(dest, source);
+	
+	return dest;
 }
 
 RTREE_LOCAL void rectangle_extend_infinitely(rt_rect_t *dest)
@@ -169,7 +185,7 @@ RTREE_LOCAL int rectangle_overlaps(rt_rect_t *rectangle, rt_rect_t *other)
 }
 
 #ifdef DEBUG
-RTREE_PUBLIC void rectangle_print(rt_rect_t *rectangle)
+RTREE_LOCAL void rectangle_print(rt_rect_t *rectangle)
 {
 	uint8_t dim;
 	printf("MBR: LOW(");

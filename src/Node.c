@@ -139,27 +139,22 @@ RTREE_LOCAL uint8_t _node_choose_split_index(uint8_t dimension, rt_node_t *node,
 {
 	uint8_t k, optimal_distribution_index;
 	double optimal_overlap_value = DBL_MAX, optimal_area_value = DBL_MAX, overlap_value, area_value;
-	rt_rect_t MBR_group_one, MBR_group_two;
+	rt_rect_t *MBR_group_one, *MBR_group_two;
 
-	MBR_group_one.low = malloc(MBR_one->dim * sizeof(float));
-	MBR_group_one.high = malloc(MBR_one->dim * sizeof(float));
-	MBR_group_two.low = malloc(MBR_two->dim * sizeof(float));
-	MBR_group_two.high = malloc(MBR_two->dim * sizeof(float));
-
-	rectangle_copy(&MBR_group_one, MBR_one);
-	rectangle_copy(&MBR_group_two, MBR_two);
+	MBR_group_one = rectangle_duplicate(MBR_one);
+	MBR_group_two = rectangle_duplicate(MBR_two);
 
 	for (k = 1; k <= (node->context->M - (2 * node->context->m) + 2); k++)
 	{
-		overlap_value = _node_evaluate_distribution(k, sorted_entries, dimension, node, &MBR_group_one, &MBR_group_two, rectangle_intersection_area);
-		area_value = rectangle_area(&MBR_group_one) + rectangle_area(&MBR_group_two);
+		overlap_value = _node_evaluate_distribution(k, sorted_entries, dimension, node, MBR_group_one, MBR_group_two, rectangle_intersection_area);
+		area_value = rectangle_area(MBR_group_one) + rectangle_area(MBR_group_two);
 		if (overlap_value < optimal_overlap_value)
 		{
 			optimal_overlap_value = overlap_value;
 			optimal_area_value = area_value;
 			optimal_distribution_index = node->context->m - 1 + k;
-			rectangle_copy(MBR_one, &MBR_group_one);
-			rectangle_copy(MBR_two, &MBR_group_two);
+			rectangle_copy(MBR_one, MBR_group_one);
+			rectangle_copy(MBR_two, MBR_group_two);
 		}
 		else if (fabs(overlap_value - optimal_overlap_value) < DBL_EPSILON)
 		{
@@ -168,16 +163,14 @@ RTREE_LOCAL uint8_t _node_choose_split_index(uint8_t dimension, rt_node_t *node,
 				optimal_overlap_value = overlap_value;
 				optimal_area_value = area_value;
 				optimal_distribution_index = node->context->m - 1 + k;
-				rectangle_copy(MBR_one, &MBR_group_one);
-				rectangle_copy(MBR_two, &MBR_group_two);
+				rectangle_copy(MBR_one, MBR_group_one);
+				rectangle_copy(MBR_two, MBR_group_two);
 			}
 		}
 	}
 
-	free(MBR_group_one.low);
-	free(MBR_group_one.high);
-	free(MBR_group_two.low);
-	free(MBR_group_two.high);
+	rtree_rectangle_destroy(MBR_group_one);
+	rtree_rectangle_destroy(MBR_group_two);
 
 	return optimal_distribution_index;
 }
@@ -265,6 +258,8 @@ RTREE_LOCAL void node_delete_entry(rt_node_t *node, void *entry)
 			{
 				memmove(temp, node->entries, (node->count - 1) * sizeof(void *));
 			}
+				
+			rtree_entry_destroy(node->entries[i]);
 
 			free(node->entries);
 			node->entries = temp;
@@ -277,11 +272,23 @@ RTREE_LOCAL void node_delete_entry(rt_node_t *node, void *entry)
 
 RTREE_LOCAL void node_destroy(rt_node_t *node)
 {
+	uint8_t index;
+
 	assert(node);
 
 	rtree_rectangle_destroy(node->MBR);
+	
+	if (node_is_leaf(node)) 
+	{
+		for(index = 0; index < node->count; index++) 
+		{
+			rtree_entry_destroy(node->entries[index]);
+		}
+	}
+
 	free(node->entries);
 	free(node);
+	node = NULL;
 }
 
 RTREE_LOCAL void _node_entry_sort(rt_node_t *node, void *entry, void ***sorted_entries)
@@ -408,35 +415,28 @@ RTREE_LOCAL rt_node_t * node_split(rt_node_t *node, void *entry)
 	rt_node_t *nnode = malloc(sizeof(rt_node_t));
 	void ***sorted_entries = malloc(node->context->dim * 2 * sizeof(void **));
 	void **nentries;
-	rt_rect_t MBR_one, *MBR_two;
+	rt_rect_t *MBR_one, *MBR_two;
 
-	MBR_one.low = malloc(node->MBR->dim * sizeof(float));
-	MBR_one.high = malloc(node->MBR->dim * sizeof(float));
-	MBR_two = malloc(sizeof(rt_rect_t));
-	MBR_two->low = malloc(node->MBR->dim * sizeof(float));
-	MBR_two->high = malloc(node->MBR->dim * sizeof(float));
-
-	rectangle_copy(&MBR_one, node->MBR);
-	rectangle_copy(MBR_two, node->MBR);
+	MBR_one = rectangle_duplicate(node->MBR);
+	MBR_two = rectangle_duplicate(node->MBR);
 
 	_node_entry_sort(node, entry, sorted_entries);
 
-	split_axis = _node_choose_split_axis(node, sorted_entries, &MBR_one, MBR_two);
-	split_index = _node_choose_split_index(split_axis, node, sorted_entries, &MBR_one, MBR_two);
+	split_axis = _node_choose_split_axis(node, sorted_entries, MBR_one, MBR_two);
+	split_index = _node_choose_split_index(split_axis, node, sorted_entries, MBR_one, MBR_two);
 
 	split_size = split_index;
 	node->entries = realloc(node->entries, split_size * sizeof(void *));
 	memmove(node->entries, sorted_entries[split_axis], split_size * sizeof(void *));
 	node->capacity = node->count = split_size;
-	rectangle_copy(node->MBR, &MBR_one);
+	rectangle_copy(node->MBR, MBR_one);
 
 	split_size = node->context->M + 1 - split_index;
 	nentries = malloc(split_size * sizeof(void *));
 	memmove(nentries, sorted_entries[split_axis] + split_index, split_size * sizeof(void *));
 	nnode = node_create(node->context, node->parent, nentries, split_size, MBR_two, node->level);
 
-	free(MBR_one.low);
-	free(MBR_one.high);
+	rtree_rectangle_destroy(MBR_one);
 
 	for (dim = 0; dim < node->context->dim; dim++)
 	{

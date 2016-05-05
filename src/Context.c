@@ -45,3 +45,11 @@ RTREE_PUBLIC void rtree_context_destroy(rt_ctx_t *ctx)
 	free(ctx);
 	ctx = NULL;
 }
+
+RTREE_LOCAL rt_ctx_t * context_duplicate(const rt_ctx_t *source)
+ {  
+ 	assert(source);
+
+ 	return rtree_context_create(source->m, source->M, source->dim, source->entry_size, 
+ 		source->alloc_factor, rectangle_duplicate(source->space));
+}

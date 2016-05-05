@@ -130,15 +130,11 @@ static void _rtree_adjust_tree_recursive(rt_rtree_t *rtree, rt_node_t *node, rt_
 		{
 			rt_node_t *root;
 			rt_rect_t *MBR;
-			float *low, *high;
 			void **entries = malloc(2 * sizeof(rt_node_t *));
 			entries[0] = node;
 			entries[1] = nnode;
 
-			low = malloc(node->MBR->dim * sizeof(float));
-			high = malloc(node->MBR->dim * sizeof(float));
-			MBR = rtree_rectangle_create(low, high, node->MBR->dim);
-			rectangle_copy(MBR, node->MBR);
+			MBR = rectangle_duplicate(node->MBR);
 
 			root = node_create(rtree->context, NULL, entries, 2, MBR, level + 1);
 			rtree->root = node->parent = nnode->parent = root;
@@ -345,29 +341,24 @@ static void _rtree_serialize_recursive(rt_node_t *node, uint8_t *buffer, size_t 
 	}
 }
 
-RTREE_PUBLIC rt_rtree_t * rtree_split(rt_rtree_t *rtree, rt_node_t **root)
+RTREE_PUBLIC rt_rtree_t * rtree_split(rt_rtree_t *rtree)
 {
     rt_rtree_t *other;
-    rt_ctx_t *ctx_other; 
+    rt_ctx_t *ctx_other;
+    rt_node_t *root; 
 
-    assert(!node_is_leaf(rtree->root) && rtree->root->count >= 2); 
+    if (node_is_leaf(rtree->root) || rtree->root->count != 2) {
+    	return NULL;
+    }
 
-    ctx_other = malloc(sizeof(rt_ctx_t));
-    ctx_other->space = malloc(sizeof(rt_rect_t));
-    ctx_other->space->low = malloc(rtree->context->space->dim * sizeof(float));
-    ctx_other->space->high = malloc(rtree->context->space->dim * sizeof(float));
-    
-    other = malloc(sizeof(rt_rtree_t));
-    other->root = malloc(sizeof(rt_node_t));
-    other->context = malloc(sizeof(rt_node_t));
-    
-    context_copy(ctx_other, rtree->context);
+    ctx_other = context_duplicate(rtree->context);
 
     other = rtree_create(ctx_other);
     other->root = rtree->root->entries[1];
 
-    *root = rtree->root;
+    root = rtree->root;
     rtree->root = rtree->root->entries[0];
+    node_destroy(root);
 
     return other;
 }
