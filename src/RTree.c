@@ -344,20 +344,17 @@ static void _rtree_serialize_recursive(rt_node_t *node, uint8_t *buffer, size_t 
 RTREE_PUBLIC rt_rtree_t * rtree_split(rt_rtree_t *rtree)
 {
     rt_rtree_t *other;
-    rt_ctx_t *ctx_other;
-    rt_node_t *root; 
+    rt_node_t *root = rtree->root; 
 
     if (node_is_leaf(rtree->root) || rtree->root->count != 2) {
     	return NULL;
     }
 
-    ctx_other = context_duplicate(rtree->context);
+    other = rtree_create(context_duplicate(rtree->context));
 
-    other = rtree_create(ctx_other);
     other->root = rtree->root->entries[1];
+	rtree->root = rtree->root->entries[0];
 
-    root = rtree->root;
-    rtree->root = rtree->root->entries[0];
     node_destroy(root);
 
     return other;
