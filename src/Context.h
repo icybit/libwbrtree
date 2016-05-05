@@ -6,11 +6,13 @@
 #include "wbdrtree/wbdrtreeapi.h"
 #include "Common.h"
 
+typedef size_t(*serialize_fn)(rt_entry_t *, uint8_t **);
+
 struct Context {
 	uint8_t m;
 	uint8_t M;
 	uint8_t dim;
-	size_t entry_size;
+	serialize_fn serializer;
 	float alloc_factor;
 	rt_rect_t *space;
 };

@@ -9,6 +9,7 @@
 extern "C" {
 #endif
 
+#include <stddef.h>
 #include <stdint.h>
 
 	typedef struct Context rt_ctx_t;
@@ -20,7 +21,7 @@ extern "C" {
 	typedef struct hashset_st rt_hset_t;
 
 	/* BEGIN RTREE_CONTEXT_API */
-	rt_ctx_t * rtree_context_create(uint8_t m, uint8_t M, uint8_t dim, size_t entry_size, float alloc_factor, rt_rect_t *MBR);
+	rt_ctx_t * rtree_context_create(uint8_t m, uint8_t M, uint8_t dim, size_t(*serialize_fn)(rt_entry_t *, uint8_t **), float alloc_factor, rt_rect_t *space);
 	void rtree_context_destroy(rt_ctx_t *ctx);
 	/* END RTREE_CONTEXT_API */
 
@@ -42,7 +43,7 @@ extern "C" {
 	int rtree_delete(rt_rtree_t *rtree, rt_entry_t *entry);
 	void rtree_destroy(rt_rtree_t *rtree);
 	void rtree_search(rt_rtree_t *rtree, rt_rect_t *search_rectangle, rt_hset_t *results);
-	size_t rtree_serialize(rt_rtree_t *rtree, uint8_t *buffer);
+	size_t rtree_serialize(rt_rtree_t *rtree, uint8_t **buffer);
 	rt_rtree_t * rtree_split(rt_rtree_t *rtree);
 
 #ifdef DEBUG

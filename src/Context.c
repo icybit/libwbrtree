@@ -7,7 +7,7 @@
 #endif
 
 
-RTREE_PUBLIC rt_ctx_t * rtree_context_create(uint8_t m, uint8_t M, uint8_t dim, size_t entry_size, float alloc_factor, rt_rect_t *space)
+RTREE_PUBLIC rt_ctx_t * rtree_context_create(uint8_t m, uint8_t M, uint8_t dim, size_t(*serialize_fn)(rt_entry_t *, uint8_t **), float alloc_factor, rt_rect_t *space)
 {
 	rt_ctx_t *ctx;
 
@@ -19,7 +19,7 @@ RTREE_PUBLIC rt_ctx_t * rtree_context_create(uint8_t m, uint8_t M, uint8_t dim, 
 	ctx->m = m;
 	ctx->M = M;
 	ctx->dim = dim;
-	ctx->entry_size = entry_size;
+	ctx->serializer = serialize_fn;
 	ctx->alloc_factor = (alloc_factor > 1.0f ? alloc_factor : 2.0f);
 	ctx->space = space;
 

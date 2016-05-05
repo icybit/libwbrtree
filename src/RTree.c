@@ -25,7 +25,7 @@ static void _rtree_condense_tree_recursive(rt_rtree_t *rtree, rt_node_t *node, s
 static rt_node_t * _rtree_find_leaf(rt_node_t *node, rt_entry_t *entry);
 static rt_node_t * _rtree_find_leaf_recursive(rt_node_t *node, rt_entry_t *entry);
 static void _rtree_search_recursive(rt_node_t *node, rt_rect_t *search_rectangle, struct hashset_st *results);
-static void _rtree_serialize_recursive(rt_node_t *node, uint8_t *buffer, size_t *index);
+static void _rtree_serialize_recursive(rt_node_t *node, uint8_t *buffer, size_t *buffer_size, size_t *index);
 #ifdef DEBUG
 static void _rtree_visualize_recursive(rt_node_t *node, uint16_t max_level);
 #endif
@@ -301,42 +301,45 @@ static void _rtree_search_recursive(rt_node_t *node, rt_rect_t *search_rectangle
 	}
 }
 
-RTREE_PUBLIC size_t rtree_serialize(rt_rtree_t *rtree, uint8_t *buffer)
+RTREE_PUBLIC size_t rtree_serialize(rt_rtree_t *rtree, uint8_t **buffer)
 {
-	size_t bytes_written = 0;
+	size_t bytes = 0, size = 0;
 
-	_rtree_serialize_recursive(rtree->root, buffer, &bytes_written);
-	assert(bytes_written == sizeof(*buffer));
+	_rtree_serialize_recursive(rtree->root, *buffer, &size, &bytes);
 
-	return bytes_written;
+	/* Shrink buffer to wrap contents */
+	*buffer = realloc(*buffer, bytes);
+
+	return bytes;
 }
 
-static void _rtree_serialize_recursive(rt_node_t *node, uint8_t *buffer, size_t *index)
+static void _rtree_serialize_recursive(rt_node_t *node, uint8_t *buffer, size_t *buffer_size, size_t *index)
 {
+	uint8_t i;
+
 	if (node_is_leaf(node))
 	{
-		uint8_t i, *entry_buffer;
-		size_t entry_buffer_size = entry_calculate_buffer_size(node->context);
-		
-		entry_buffer = malloc(entry_buffer_size);
-		
 		for (i = 0; i < node->count; i++)
 		{
 			rt_entry_t *entry = (rt_entry_t *)node->entries[i];
-			size_t bytes_written = entry_serialize(entry, entry_buffer, node->context->entry_size);
-			assert(entry_buffer_size == bytes_written);
-			memmove(&buffer[*index], entry_buffer, entry_buffer_size);
-			*index += entry_buffer_size;
+			uint8_t *entry_buffer = NULL;
+			size_t bytes = node->context->serializer(entry, &entry_buffer);
+			if ((*index + bytes) > *buffer_size)
+			{
+				*buffer_size = *index + (bytes * node->count);
+				buffer = realloc(buffer, *buffer_size);
+			}
+			memmove(&buffer[*index], entry_buffer, bytes);
+			*index += bytes;
+			free(entry_buffer);
 		}
-		free(entry_buffer);
 	}
 	else
 	{
-		uint8_t i;
 		for (i = 0; i < node->count; i++)
 		{
 			rt_node_t *entry = (rt_node_t *)node->entries[i];
-			_rtree_serialize_recursive(entry, buffer, index);
+			_rtree_serialize_recursive(entry, buffer, buffer_size, index);
 		}
 	}
 }
@@ -363,11 +366,10 @@ RTREE_PUBLIC rt_rtree_t * rtree_split(rt_rtree_t *rtree)
 #ifdef DEBUG
 RTREE_PUBLIC void rtree_visualize(rt_rtree_t *rtree)
 {
-	printf("RTREE: CONTEXT(m = %u, M = %u, dim = %u, entry_size = %lu, alloc_factor = %3.2f, space = ", 
+	printf("RTREE: CONTEXT(m = %u, M = %u, dim = %u, alloc_factor = %3.2f, space = ", 
 		rtree->context->m, 
 		rtree->context->M,
 		rtree->context->dim,
-		(unsigned long) rtree->context->entry_size,
 		rtree->context->alloc_factor);
 
 	rectangle_print(rtree->context->space);
