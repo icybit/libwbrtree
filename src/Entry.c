@@ -44,13 +44,6 @@ RTREE_PUBLIC void rtree_entry_destroy(rt_entry_t *entry)
 	entry = NULL;
 }
 
-RTREE_LOCAL size_t entry_calculate_buffer_size(rt_ctx_t *context)
-{
-	return (sizeof(rt_entry_t *) +
-		context->entry_size +
-		context->dim * sizeof(float));
-}
-
 RTREE_LOCAL int entry_compare(const void *entry, const void *other, void *cmp_opts)
 {
 	rt_cmp_opts_t *opts = (rt_cmp_opts_t *)cmp_opts;
