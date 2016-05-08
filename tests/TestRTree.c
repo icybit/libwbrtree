@@ -17,7 +17,7 @@
 
 static rt_rect_t * create_rectangle_2d(float low_x, float low_y, float high_x, float high_y);
 static float * initialize_coordinates(float x, float y);
-static size_t serialize(rt_entry_t *entry, uint8_t **buffer);
+static size_t serializer(rt_entry_t *entry, uint8_t **buffer);
 
 /* TODO: Reenable tests once decided: RTree currently does not expose its internal structure for use in tests. */
 
@@ -32,7 +32,7 @@ void _test_rtree_create() {
 	float *high = initialize_coordinates(2.0f, 2.0f);
 
 	rectangle = rtree_rectangle_create(low, high, 2);
-	context = rtree_context_create(m, M, dim, serialize, alloc_factor, rectangle);
+	context = rtree_context_create(m, M, dim, serializer, alloc_factor, rectangle);
 	rtree = rtree_create(context);
 
 	assert_ptr_equal(rtree->context, context);	
@@ -52,7 +52,7 @@ void _test_rtree_insert() {
 	int index, tuples[] = { 1, 2, 3, 4, 5 };	
 
 	space = create_rectangle_2d(1.0f, 1.0f, 25.0f, 25.0f);
-	context = rtree_context_create(m, M, dimension, serialize, alloc_factor, space);
+	context = rtree_context_create(m, M, dimension, serializer, alloc_factor, space);
 	rtree = rtree_create(context);
 	
 	MBR_1 = create_rectangle_2d(6.0f, 3.0f, 8.0f, 5.0f);
@@ -134,7 +134,7 @@ void _test_rtree_delete() {
     float alloc_factor = 4.0f;
 
     space = create_rectangle_2d(0.0f, 0.0f, 20.0f, 11.0f);
-	context = rtree_context_create(m, M, dimension, serialize, alloc_factor, space);
+	context = rtree_context_create(m, M, dimension, serializer, alloc_factor, space);
 	rtree = rtree_create(context);
 
 	MBR_1 = create_rectangle_2d(0.0f, 8.0f, 3.0f, 11.0f);
@@ -215,7 +215,7 @@ void _test_rtree_delete() {
 }
 
 void _test_rtree_destroy() {
-rt_rtree_t *rtree;
+	rt_rtree_t *rtree;
 	rt_ctx_t *context;
 	rt_rect_t *space, *MBR_1, *MBR_2, *MBR_3, *MBR_4, *MBR_5;
 	rt_entry_t *entry_1, *entry_2, *entry_3, *entry_4, *entry_5;
@@ -224,7 +224,7 @@ rt_rtree_t *rtree;
 	int tuples[] = { 1, 2, 3, 4, 5 };	
 
 	space = create_rectangle_2d(1.0f, 1.0f, 25.0f, 25.0f);
-	context = rtree_context_create(m, M, dimension, serialize, alloc_factor, space);
+	context = rtree_context_create(m, M, dimension, serializer, alloc_factor, space);
 	rtree = rtree_create(context);
 	
 	MBR_1 = create_rectangle_2d(6.0f, 3.0f, 8.0f, 5.0f);
@@ -279,7 +279,7 @@ void _test_rtree_try_insert() {
     float alloc_factor = 4.0f;
 
    	space = create_rectangle_2d(0.0f, 0.0f, 20.0f, 11.0f);
-	context = rtree_context_create(m, M, dimension, serialize, alloc_factor, space);
+	context = rtree_context_create(m, M, dimension, serializer, alloc_factor, space);
 	rtree = rtree_create(context);
 
 	MBR_1 = create_rectangle_2d(0.0f, 8.0f, 3.0f, 11.0f);
@@ -308,7 +308,7 @@ void _test_rtree_try_insert() {
 
 	MBR_7 = create_rectangle_2d(12.0f, 8.0f, 15.0f, 11.0f);
 	entry_7 = rtree_entry_create(&tuples[6], MBR_7);
-	optimal_entry = rtree_try_insert(rtree, entry_7);
+	optimal_entry = try_insert(rtree, entry_7);
 
 	for (index = 0; index < dimension; index++)
 	{
@@ -329,7 +329,7 @@ void _test_rtree_split() {
     float alloc_factor = 4.0f;
 
     space = create_rectangle_2d(0.0f, 0.0f, 20.0f, 11.0f);
-	context = rtree_context_create(m, M, dimension, serialize, alloc_factor, space);
+	context = rtree_context_create(m, M, dimension, serializer, alloc_factor, space);
 	rtree = rtree_create(context);
 
 	MBR_1 = create_rectangle_2d(0.0f, 8.0f, 3.0f, 11.0f);
@@ -400,7 +400,7 @@ static float * initialize_coordinates(float x, float y)
  return coords;
 }
 
-static size_t serialize(rt_entry_t *entry, uint8_t **buffer)
+static size_t serializer(rt_entry_t *entry, uint8_t **buffer)
 {
 	size_t index = 0;
 	*buffer = malloc(2 * sizeof(float) + sizeof(uint8_t));

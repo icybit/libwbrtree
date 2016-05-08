@@ -8,31 +8,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-RTREE_PUBLIC rt_rect_t * rtree_rectangle_create(float *low, float *high, uint8_t dimension)
-{
-	rt_rect_t *rectangle;
-
-	assert(low && high);
-
-	rectangle = malloc(sizeof(rt_rect_t));
-
-	rectangle->dim = dimension;
-	rectangle->low = low;
-	rectangle->high = high;
-
-	return rectangle;
-}
-
-RTREE_PUBLIC void rtree_rectangle_destroy(rt_rect_t * rectangle)
-{
-	assert(rectangle);
-
-	free(rectangle->low);
-	free(rectangle->high);
-	free(rectangle);
-	rectangle = NULL;
-}
-
 RTREE_LOCAL double rectangle_area(rt_rect_t *rectangle)
 {
 	double area = 1.0;
@@ -79,6 +54,31 @@ RTREE_LOCAL void rectangle_copy(rt_rect_t *dest, const rt_rect_t *source)
 	memcpy(dest->high, source->high, source->dim * sizeof(float));
 }
 
+RTREE_LOCAL rt_rect_t * rectangle_create(float *low, float *high, uint8_t dimension)
+{
+	rt_rect_t *rectangle;
+
+	assert(low && high);
+
+	rectangle = malloc(sizeof(rt_rect_t));
+
+	rectangle->dim = dimension;
+	rectangle->low = low;
+	rectangle->high = high;
+
+	return rectangle;
+}
+
+RTREE_LOCAL void rectangle_destroy(rt_rect_t * rectangle)
+{
+	assert(rectangle);
+
+	free(rectangle->low);
+	free(rectangle->high);
+	free(rectangle);
+	rectangle = NULL;
+}
+
 RTREE_LOCAL rt_rect_t * rectangle_duplicate(const rt_rect_t *source)
 {
 	rt_rect_t *dest;
@@ -88,7 +88,7 @@ RTREE_LOCAL rt_rect_t * rectangle_duplicate(const rt_rect_t *source)
 
 	low = malloc(source->dim * sizeof(float));
 	high = malloc(source->dim * sizeof(float));
-	dest = rtree_rectangle_create(low, high, source->dim);
+	dest = rectangle_create(low, high, source->dim);
 	rectangle_copy(dest, source);
 	
 	return dest;

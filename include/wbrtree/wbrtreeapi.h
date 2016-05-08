@@ -45,7 +45,6 @@ extern "C" {
 	void rtree_search(rt_rtree_t *rtree, rt_rect_t *search_rectangle, rt_hset_t *results);
 	size_t rtree_serialize(rt_rtree_t *rtree, uint8_t **buffer);
 	rt_rtree_t * rtree_split(rt_rtree_t *rtree);
-
 #ifdef DEBUG
 	void rtree_visualize(rt_rtree_t *rtree);
 #endif

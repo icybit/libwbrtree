@@ -173,8 +173,8 @@ RTREE_LOCAL uint8_t _node_choose_split_index(uint8_t dimension, rt_node_t *node,
 		}
 	}
 
-	rtree_rectangle_destroy(MBR_group_one);
-	rtree_rectangle_destroy(MBR_group_two);
+	rectangle_destroy(MBR_group_one);
+	rectangle_destroy(MBR_group_two);
 
 	return optimal_distribution_index;
 }
@@ -195,7 +195,7 @@ RTREE_LOCAL int node_compare(const void *entry, const void *other, void *cmp_opt
 
 RTREE_LOCAL void node_copy(rt_node_t *dest, const rt_node_t *source)
 {
-	assert(sizeof(*dest) == sizeof(*source));
+	assert(dest && source);
 
 	dest->capacity = source->capacity;
 	dest->context = source->context;
@@ -263,7 +263,7 @@ RTREE_LOCAL void node_delete_entry(rt_node_t *node, void *entry)
 				memmove(temp, node->entries, (node->count - 1) * sizeof(void *));
 			}
 				
-			rtree_entry_destroy(node->entries[i]);
+			entry_destroy(node->entries[i]);
 
 			free(node->entries);
 			node->entries = temp;
@@ -280,13 +280,13 @@ RTREE_LOCAL void node_destroy(rt_node_t *node)
 
 	assert(node);
 
-	rtree_rectangle_destroy(node->MBR);
+	rectangle_destroy(node->MBR);
 	
 	if (node_is_leaf(node)) 
 	{
 		for(index = 0; index < node->count; index++) 
 		{
-			rtree_entry_destroy(node->entries[index]);
+			entry_destroy(node->entries[index]);
 		}
 	}
 
@@ -440,7 +440,7 @@ RTREE_LOCAL rt_node_t * node_split(rt_node_t *node, void *entry)
 	memmove(nentries, sorted_entries[split_axis] + split_index, split_size * sizeof(void *));
 	nnode = node_create(node->context, node->parent, nentries, split_size, MBR_two, node->level);
 
-	rtree_rectangle_destroy(MBR_one);
+	rectangle_destroy(MBR_one);
 
 	for (dim = 0; dim < node->context->dim; dim++)
 	{

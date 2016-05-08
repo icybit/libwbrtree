@@ -7,7 +7,7 @@
 #endif
 
 
-RTREE_PUBLIC rt_ctx_t * rtree_context_create(uint8_t m, uint8_t M, uint8_t dim, size_t(*serialize_fn)(rt_entry_t *, uint8_t **), float alloc_factor, rt_rect_t *space)
+RTREE_LOCAL rt_ctx_t * context_create(uint8_t m, uint8_t M, uint8_t dim, size_t(*serialize_fn)(rt_entry_t *, uint8_t **), float alloc_factor, rt_rect_t *space)
 {
 	rt_ctx_t *ctx;
 
@@ -37,11 +37,11 @@ RTREE_LOCAL void context_copy(rt_ctx_t *dest, const rt_ctx_t *source)
     rectangle_copy(dest->space, source->space);
 }
 
-RTREE_PUBLIC void rtree_context_destroy(rt_ctx_t *ctx)
+RTREE_LOCAL void context_destroy(rt_ctx_t *ctx)
 {
 	assert(ctx);
 
-	rtree_rectangle_destroy(ctx->space);
+	rectangle_destroy(ctx->space);
 	free(ctx);
 	ctx = NULL;
 }
@@ -50,6 +50,6 @@ RTREE_LOCAL rt_ctx_t * context_duplicate(const rt_ctx_t *source)
  {  
  	assert(source);
 
- 	return rtree_context_create(source->m, source->M, source->dim, source->serializer, 
+ 	return context_create(source->m, source->M, source->dim, source->serializer, 
  		source->alloc_factor, rectangle_duplicate(source->space));
 }

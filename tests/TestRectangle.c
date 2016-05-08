@@ -16,11 +16,11 @@ void _test_rectangle_area() {
 	float *low = initialize_coordinates(0.0f, 0.0f);
 	float *high = initialize_coordinates(2.0f, 2.0f);
 
-	rectangle = rtree_rectangle_create(low, high, dimension);
+	rectangle = rectangle_create(low, high, dimension);
 
 	assert_true(fabs(rectangle_area(rectangle) - 4.0) < DBL_EPSILON);
 
-	rtree_rectangle_destroy(rectangle);
+	rectangle_destroy(rectangle);
 }
 
 void _test_rectangle_create() {
@@ -29,7 +29,7 @@ void _test_rectangle_create() {
 	float *low = initialize_coordinates(0.0f, 0.0f);
 	float *high = initialize_coordinates(2.0f, 2.0f);
 
-	rectangle = rtree_rectangle_create(low, high, dimension);
+	rectangle = rectangle_create(low, high, dimension);
 
 	for (index = 0; index < dimension; index++)
 	{
@@ -38,7 +38,7 @@ void _test_rectangle_create() {
 	}
 	assert_int_equal(rectangle->dim, dimension);
 
-	rtree_rectangle_destroy(rectangle);
+	rectangle_destroy(rectangle);
 }
 
 void _test_rectangle_combine() {
@@ -49,8 +49,8 @@ void _test_rectangle_combine() {
 	float *low_b = initialize_coordinates(1.0f, 1.0f);
 	float *high_b = initialize_coordinates(3.0f, 3.0f);
 
-	rectangle_a = rtree_rectangle_create(low_a, high_a, dim);
-	rectangle_b = rtree_rectangle_create(low_b, high_b, dim);
+	rectangle_a = rectangle_create(low_a, high_a, dim);
+	rectangle_b = rectangle_create(low_b, high_b, dim);
 		
 	rectangle_combine(rectangle_a, rectangle_b);
 	
@@ -77,8 +77,8 @@ void _test_rectangle_combine() {
 		assert_true(rectangle_a->high[index] == high_b[index]);
 	}
 
-	rtree_rectangle_destroy(rectangle_a);
-	rtree_rectangle_destroy(rectangle_b);
+	rectangle_destroy(rectangle_a);
+	rectangle_destroy(rectangle_b);
 }
 
 void _test_rectangle_extend_infinitely() {
@@ -87,7 +87,7 @@ void _test_rectangle_extend_infinitely() {
 	float *low = initialize_coordinates(0.0f, 0.0f);
 	float *high = initialize_coordinates(2.0f, 2.0f);
 
-	rectangle = rtree_rectangle_create(low, high, dim);
+	rectangle = rectangle_create(low, high, dim);
 
 	rectangle_extend_infinitely(rectangle);
 	assert_int_equal(rectangle->dim, dim);
@@ -97,7 +97,7 @@ void _test_rectangle_extend_infinitely() {
 		assert_true(rectangle->high[index] == -FLT_MAX);
 	}
 
-	rtree_rectangle_destroy(rectangle);
+	rectangle_destroy(rectangle);
 }
 
 void _test_rectangle_min_distance() {
@@ -108,14 +108,14 @@ void _test_rectangle_min_distance() {
 	float *low_b = initialize_coordinates(5.0f, 6.0f);
 	float *high_b = initialize_coordinates(8.0f, 8.0f);
 
-	rectangle_a = rtree_rectangle_create(low_a, high_a, dim);
-	rectangle_b = rtree_rectangle_create(low_b, high_b, dim);
+	rectangle_a = rectangle_create(low_a, high_a, dim);
+	rectangle_b = rectangle_create(low_b, high_b, dim);
 	
 	assert_int_equal(rectangle_min_distance(rectangle_a, rectangle_b), 5);
 	assert_int_equal(rectangle_min_distance(rectangle_b, rectangle_a), 5);
 
-	rtree_rectangle_destroy(rectangle_a);
-	rtree_rectangle_destroy(rectangle_b);
+	rectangle_destroy(rectangle_a);
+	rectangle_destroy(rectangle_b);
 }
 
 void _test_rectangle_overlaps() {
@@ -128,16 +128,16 @@ void _test_rectangle_overlaps() {
 	float *low_c = initialize_coordinates(3.0f, 3.0f);
 	float *high_c = initialize_coordinates(5.0f, 5.0f);
 
-	rectangle_a = rtree_rectangle_create(low_a, high_a, dim);
-	rectangle_b = rtree_rectangle_create(low_b, high_b, dim);
-	rectangle_c = rtree_rectangle_create(low_c, high_c, dim);
+	rectangle_a = rectangle_create(low_a, high_a, dim);
+	rectangle_b = rectangle_create(low_b, high_b, dim);
+	rectangle_c = rectangle_create(low_c, high_c, dim);
 
 	assert_true(rectangle_overlaps(rectangle_a, rectangle_b));
 	assert_false(rectangle_overlaps(rectangle_a, rectangle_c));
 
-	rtree_rectangle_destroy(rectangle_a);
-	rtree_rectangle_destroy(rectangle_b);
-	rtree_rectangle_destroy(rectangle_c);
+	rectangle_destroy(rectangle_a);
+	rectangle_destroy(rectangle_b);
+	rectangle_destroy(rectangle_c);
 }
 
 void _test_rectangle_compare_low() {
@@ -148,8 +148,8 @@ void _test_rectangle_compare_low() {
 	float *low_b = initialize_coordinates(2.0f, 1.0f);
 	float *high_b = initialize_coordinates(4.0f, 3.0f);
 
-	rectangle_a = rtree_rectangle_create(low_a, high_a, dimensions);
-	rectangle_b = rtree_rectangle_create(low_b, high_b, dimensions);
+	rectangle_a = rectangle_create(low_a, high_a, dimensions);
+	rectangle_b = rectangle_create(low_b, high_b, dimensions);
 	
 	assert_true(rectangle_compare_low(rectangle_a, rectangle_b, &dim[0]) < 0);
 	assert_true(rectangle_compare_low(rectangle_a, rectangle_b, &dim[1]) > 0);
@@ -158,8 +158,8 @@ void _test_rectangle_compare_low() {
 	assert_true(rectangle_compare_low(rectangle_b, rectangle_b, &dim[0]) == 0);
 	assert_true(rectangle_compare_low(rectangle_b, rectangle_b, &dim[1]) == 0);
 
-	rtree_rectangle_destroy(rectangle_a);
-	rtree_rectangle_destroy(rectangle_b);
+	rectangle_destroy(rectangle_a);
+	rectangle_destroy(rectangle_b);
 }
 
 void _test_rectangle_compare_high() {
@@ -170,8 +170,8 @@ void _test_rectangle_compare_high() {
 	float *low_b = initialize_coordinates(2.0f, 1.0f);
 	float *high_b = initialize_coordinates(4.0f, 3.0f);
 
-	rectangle_a = rtree_rectangle_create(low_a, high_a, dimensions);
-	rectangle_b = rtree_rectangle_create(low_b, high_b, dimensions);
+	rectangle_a = rectangle_create(low_a, high_a, dimensions);
+	rectangle_b = rectangle_create(low_b, high_b, dimensions);
 
 	assert_true(rectangle_compare_high(rectangle_a, rectangle_b, &dim[0]) < 0);
 	assert_true(rectangle_compare_high(rectangle_a, rectangle_b, &dim[1]) > 0);
@@ -180,8 +180,8 @@ void _test_rectangle_compare_high() {
 	assert_true(rectangle_compare_high(rectangle_b, rectangle_b, &dim[0]) == 0);
 	assert_true(rectangle_compare_high(rectangle_b, rectangle_b, &dim[1]) == 0);
 
-	rtree_rectangle_destroy(rectangle_a);
-	rtree_rectangle_destroy(rectangle_b);
+	rectangle_destroy(rectangle_a);
+	rectangle_destroy(rectangle_b);
 }
 
 void _test_rectangle_intersection_area() {
@@ -192,14 +192,14 @@ void _test_rectangle_intersection_area() {
 	float *low_b = initialize_coordinates(1.0f, 1.0f);
 	float *high_b = initialize_coordinates(3.0f, 3.0f);
 
-	rectangle_a = rtree_rectangle_create(low_a, high_a, dim);
-	rectangle_b = rtree_rectangle_create(low_b, high_b, dim);
+	rectangle_a = rectangle_create(low_a, high_a, dim);
+	rectangle_b = rectangle_create(low_b, high_b, dim);
 
 	assert_int_equal(rectangle_intersection_area(rectangle_a, rectangle_b), 1);
 	assert_int_equal(rectangle_intersection_area(rectangle_b, rectangle_a), 1);
 
-	rtree_rectangle_destroy(rectangle_a);
-	rtree_rectangle_destroy(rectangle_b);
+	rectangle_destroy(rectangle_a);
+	rectangle_destroy(rectangle_b);
 }
 
 void _test_rectangle_margin() {
@@ -208,11 +208,11 @@ void _test_rectangle_margin() {
 	float *low = initialize_coordinates(0.0f, 0.0f);
 	float *high = initialize_coordinates(2.0f, 3.0f);
 
-	rectangle = rtree_rectangle_create(low, high, dim);
+	rectangle = rectangle_create(low, high, dim);
 	
 	assert_int_equal(rectangle_margin(rectangle), 10);
 
-	rtree_rectangle_destroy(rectangle);
+	rectangle_destroy(rectangle);
 }
 
 void _test_rectangle_margin_value() {
@@ -223,14 +223,14 @@ void _test_rectangle_margin_value() {
 	float *low_b = initialize_coordinates(1.0f, 1.0f);
 	float *high_b = initialize_coordinates(5.0f, 3.0f);
 
-	rectangle_a = rtree_rectangle_create(low_a, high_a, dim);
-	rectangle_b = rtree_rectangle_create(low_b, high_b, dim);
+	rectangle_a = rectangle_create(low_a, high_a, dim);
+	rectangle_b = rectangle_create(low_b, high_b, dim);
 		
 	assert_int_equal(rectangle_margin_value(rectangle_a, rectangle_b), 20);
 	assert_int_equal(rectangle_margin_value(rectangle_b, rectangle_a), 20);
 
-	rtree_rectangle_destroy(rectangle_a);
-	rtree_rectangle_destroy(rectangle_b);
+	rectangle_destroy(rectangle_a);
+	rectangle_destroy(rectangle_b);
 }
 
 void _test_rectangle_copy() {
@@ -241,8 +241,8 @@ void _test_rectangle_copy() {
 	float *low_b = initialize_coordinates(1.0f, 1.0f);
 	float *high_b = initialize_coordinates(5.0f, 3.0f);
 
-	rectangle_a = rtree_rectangle_create(low_a, high_a, dim);
-	rectangle_b = rtree_rectangle_create(low_b, high_b, dim);
+	rectangle_a = rectangle_create(low_a, high_a, dim);
+	rectangle_b = rectangle_create(low_b, high_b, dim);
 
 	rectangle_copy(rectangle_b, rectangle_a);
 	for (index = 0; index < dim; index++) {
@@ -250,8 +250,8 @@ void _test_rectangle_copy() {
 		assert_true(rectangle_a->high[index] == rectangle_b->high[index]);
 	}
 
-	rtree_rectangle_destroy(rectangle_a);
-	rtree_rectangle_destroy(rectangle_b);
+	rectangle_destroy(rectangle_a);
+	rectangle_destroy(rectangle_b);
 }
 
 static float * initialize_coordinates(float x, float y) 

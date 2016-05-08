@@ -16,7 +16,7 @@
 
 static rt_rect_t * create_rectangle_2d(float low_x, float low_y, float high_x, float high_y);
 static float * initialize_coordinates(float x, float y);
-static size_t serialize(rt_entry_t *entry, uint8_t **buffer);
+static size_t serializer(rt_entry_t *entry, uint8_t **buffer);
 
 void _test_context_create() {
 	rt_ctx_t *context;
@@ -24,14 +24,14 @@ void _test_context_create() {
 	uint8_t m = 4, M = 12, dimension = 2;
 	float alloc_factor = 4.0f;
 
-	context = rtree_context_create(m, M, dimension, serialize, alloc_factor, space_MBR);
+	context = context_create(m, M, dimension, serializer, alloc_factor, space_MBR);
 
 	assert_int_equal(context->m, m);
 	assert_int_equal(context->M, M);
 	assert_true(context->alloc_factor == 4.0f);
 	assert_ptr_equal(context->space, space_MBR);
 
-	rtree_context_destroy(context);
+	context_destroy(context);
 }
 
 void _test_entry_create() {	
@@ -41,12 +41,12 @@ void _test_entry_create() {
 
 	*tuple = 4;
 
-	entry = rtree_entry_create(tuple, rectangle);
+	entry = entry_create(tuple, rectangle);
 
 	assert_ptr_equal(entry->tuple, tuple);
 	assert_ptr_equal(entry->MBR, rectangle);
 
-	rtree_entry_destroy(entry);
+	entry_destroy(entry);
 }
 
 /* TODO: Cover node create with more tests */
@@ -58,7 +58,7 @@ void _test_node_create() {
 	uint8_t dim = 2, m = 4, M = 12, level = 0;	
 	float alloc_factor = 4;
 
-	context = rtree_context_create(m, M, dim, serialize, alloc_factor, space_MBR);
+	context = context_create(m, M, dim, serializer, alloc_factor, space_MBR);
 	node = node_create(context, NULL, NULL, 0, rectangle, level);
 		
 	assert_ptr_equal(node->context, context);
@@ -69,7 +69,7 @@ void _test_node_create() {
 	assert_int_equal(node->capacity, MAX(0, NALLOC(context->m, context->M, context->alloc_factor)));
 
 	node_destroy(node);
-	rtree_context_destroy(context);
+	context_destroy(context);
 }
 
 void _test_node_is_leaf() {
@@ -80,7 +80,7 @@ void _test_node_is_leaf() {
 	uint8_t m = 4, M = 12, level = 0, dim = 2;
 	float alloc_factor = 4.0f;
 
-	context = rtree_context_create(m, M, dim, serialize, alloc_factor, space_MBR);
+	context = context_create(m, M, dim, serializer, alloc_factor, space_MBR);
 	node = node_create(context, NULL, NULL, 0, rectangle, level);
 
 	assert_true(node_is_leaf(node));
@@ -90,7 +90,7 @@ void _test_node_is_leaf() {
 	assert_false(node_is_leaf(node));
 
 	node_destroy(node);
-	rtree_context_destroy(context);
+	context_destroy(context);
 }
 
 void _test_node_is_root() {	
@@ -101,7 +101,7 @@ void _test_node_is_root() {
 	uint8_t m = 4, M = 12, level = 0, dim = 2;
 	float alloc_factor = 4.0f;
 
-	context = rtree_context_create(m, M, dim, serialize, alloc_factor, space_MBR);
+	context = context_create(m, M, dim, serializer, alloc_factor, space_MBR);
 	node = node_create(context, NULL, NULL, 0, rectangle, level);
 
 	assert_true(node_is_root(node));
@@ -111,7 +111,7 @@ void _test_node_is_root() {
 	assert_false(node_is_root(node));
 
 	node_destroy(node);
-	rtree_context_destroy(context);
+	context_destroy(context);
 }
 
 void _test_node_add_entry() {
@@ -125,8 +125,8 @@ void _test_node_add_entry() {
 	uint8_t tuple = 4;
 	float alloc_factor = 2.0f;	
 
-	context = rtree_context_create(m, M, dim, serialize, alloc_factor, space_MBR);
-	entry = rtree_entry_create(&tuple, rectangle_b);
+	context = context_create(m, M, dim, serializer, alloc_factor, space_MBR);
+	entry = entry_create(&tuple, rectangle_b);
 	node = node_create(context, NULL, NULL, 0, rectangle_a, level);
 
 	success = node_add_entry(node, entry);
@@ -149,7 +149,7 @@ void _test_node_add_entry() {
 	}
 
 	node_destroy(node);
-	rtree_context_destroy(context);
+	context_destroy(context);
 }
 
 void _test_node_delete_entry() 
@@ -170,11 +170,11 @@ void _test_node_delete_entry()
 		MBRs[index] = create_rectangle_2d(1.0f, 1.0f, 3.0f, 3.0f);
 	}
 
-	context = rtree_context_create(m, M, dim, serialize, alloc_factor, space_MBR);
+	context = context_create(m, M, dim, serializer, alloc_factor, space_MBR);
 	node = node_create(context, NULL, NULL, 0, rectangle, level);
 
 	for (index = 0; index < 4; index++) {
-		entries[index] = rtree_entry_create(tuples[index], MBRs[index]);
+		entries[index] = entry_create(tuples[index], MBRs[index]);
 		node_add_entry(node, entries[index]);
 	}
 
@@ -200,7 +200,7 @@ void _test_node_delete_entry()
 	assert_int_equal(node->count, 0);
 
 	node_destroy(node);	
-	rtree_context_destroy(context);
+	context_destroy(context);
 }
 
 void _test_node_adjust_MBR() {
@@ -215,9 +215,9 @@ void _test_node_adjust_MBR() {
 
 	*tuple = 4;
 
-	context = rtree_context_create(m, M, dim, serialize, alloc_factor, space_MBR);
+	context = context_create(m, M, dim, serializer, alloc_factor, space_MBR);
 	node = node_create(context, NULL, NULL, 0, rectangle_a, level);
-	entry = rtree_entry_create(tuple, rectangle_b);
+	entry = entry_create(tuple, rectangle_b);
 		
 	node_adjust_MBR(node, entry);
 	for (index = 0; index < dim; index++) {
@@ -226,7 +226,7 @@ void _test_node_adjust_MBR() {
 	}
 
 	node_destroy(node);
-	rtree_context_destroy(context);
+	context_destroy(context);
 }
 
 /* TODO: Fix test. Memory gets corrupted when creating nodes and/or adding entries to them.
@@ -247,7 +247,7 @@ void _test_node_choose_optimal_entry() {
 	float alloc_factor = 4.0f;	
 
 	space = create_rectangle_2d(0.0f, 0.0f, 9.0f, 11.0f);
-	context = rtree_context_create(m, M, dim, serialize, alloc_factor, space);	
+	context = context_create(m, M, dim, serializer, alloc_factor, space);	
 
 	MBR_1 = create_rectangle_2d(0.0f, 0.0f, 3.0f, 11.0f);
 	MBR_2 = create_rectangle_2d(6.0f, 4.0f, 9.0f, 11.0f);
@@ -270,7 +270,7 @@ void _test_node_choose_optimal_entry() {
 
 	node_destroy(node);	
 	/*rtree_entry_destroy(entry);*/
-	rtree_context_destroy(context);
+	context_destroy(context);
 }
 
 void _test_entry_compare() {
@@ -285,8 +285,8 @@ void _test_entry_compare() {
 		*tuples[index] = index + 1;
 	}
 
-	entry_1 = rtree_entry_create(tuples[0], rectangle_1);
-	entry_2 = rtree_entry_create(tuples[1], rectangle_2);
+	entry_1 = entry_create(tuples[0], rectangle_1);
+	entry_2 = entry_create(tuples[1], rectangle_2);
 	
 	assert_true(entry_compare(&entry_1, &entry_2, &dim_1) > 0);
 	assert_true(entry_compare(&entry_1, &entry_2, &dim_2) < 0);
@@ -295,8 +295,8 @@ void _test_entry_compare() {
 	assert_true(entry_compare(&entry_2, &entry_2, &dim_1) == 0);
 	assert_true(entry_compare(&entry_2, &entry_2, &dim_2) == 0);
 
-	rtree_entry_destroy(entry_1);
-	rtree_entry_destroy(entry_2);
+	entry_destroy(entry_1);
+	entry_destroy(entry_2);
 }
 
 void _test_node_calculate_MBR_Leaf() {
@@ -311,12 +311,12 @@ void _test_node_calculate_MBR_Leaf() {
 	uint8_t dim = 2, m = 2, M = 4, level = 0, tuples[] = { 1, 2, 3 };
 	float alloc_factor = 4.0f;
 	
-	context = rtree_context_create(m, M, dim, serialize, alloc_factor, space_MBR);
+	context = context_create(m, M, dim, serializer, alloc_factor, space_MBR);
 	node = node_create(context, NULL, NULL, 0, rectangle_0, level);
 
-	entry_1 = rtree_entry_create(&tuples[0], rectangle_1);
-	entry_2 = rtree_entry_create(&tuples[1], rectangle_2);
-	entry_3 = rtree_entry_create(&tuples[2], rectangle_3);
+	entry_1 = entry_create(&tuples[0], rectangle_1);
+	entry_2 = entry_create(&tuples[1], rectangle_2);
+	entry_3 = entry_create(&tuples[2], rectangle_3);
 	
 	node_add_entry(node, entry_1);
 	node_calculate_MBR(node->MBR, node);
@@ -340,7 +340,7 @@ void _test_node_calculate_MBR_Leaf() {
 	assert_true(node->MBR->high[1] == 7);
 
 	node_destroy(node);	
-	rtree_context_destroy(context);
+	context_destroy(context);
 }
 
 /* TODO: Fix segmentation fault */
@@ -366,18 +366,18 @@ void _test_node_calculate_MBR_Non_Leaf() {
 	entries_2 = malloc(sizeof(void *));
 	entries_3 = malloc(sizeof(void *));
 
-	context = rtree_context_create(m, M, dim, serialize, alloc_factor, space_MBR);
+	context = context_create(m, M, dim, serializer, alloc_factor, space_MBR);
 	node = node_create(context, NULL, NULL, 0, rectangle_0, root_level);
 
-	entry_1 = rtree_entry_create(tuples[0], rectangle_1);
+	entry_1 = entry_create(tuples[0], rectangle_1);
 	entries_1[0] = entry_1;
 	node_1 = node_create(context, node, (void **)entries_1, 1, rectangle_1, leaf_level);
 
-	entry_2 = rtree_entry_create(tuples[1], rectangle_2);
+	entry_2 = entry_create(tuples[1], rectangle_2);
 	entries_2[0] = entry_2;
 	node_2 = node_create(context, node, (void **)entries_2, 1, rectangle_2, leaf_level);
 
-	entry_3 = rtree_entry_create(tuples[2], rectangle_3);
+	entry_3 = entry_create(tuples[2], rectangle_3);
 	entries_3[0] = entry_3;
 	node_3 = node_create(context, node, (void **)entries_3, 1, rectangle_3, leaf_level);
 
@@ -406,10 +406,10 @@ void _test_node_calculate_MBR_Non_Leaf() {
 	node_destroy(node_1);
 	node_destroy(node_2);
 	node_destroy(node_3);
-	rtree_entry_destroy(entry_1);
-	rtree_entry_destroy(entry_2);
-	rtree_entry_destroy(entry_3);
-	rtree_context_destroy(context);
+	entry_destroy(entry_1);
+	entry_destroy(entry_2);
+	entry_destroy(entry_3);
+	context_destroy(context);
 }
 
 static rt_rect_t * create_rectangle_2d(float low_x, float low_y, float high_x, float high_y)
@@ -417,7 +417,7 @@ static rt_rect_t * create_rectangle_2d(float low_x, float low_y, float high_x, f
 	float *low = initialize_coordinates(low_x, low_y);
 	float *high = initialize_coordinates(high_x, high_y);
 
-	return rtree_rectangle_create(low, high, 2);
+	return rectangle_create(low, high, 2);
 }
 
 static float * initialize_coordinates(float x, float y) 
@@ -430,7 +430,7 @@ static float * initialize_coordinates(float x, float y)
 	return coords;
 }
 
-static size_t serialize(rt_entry_t *entry, uint8_t **buffer)
+static size_t serializer(rt_entry_t *entry, uint8_t **buffer)
 {
 	size_t index = 0;
 	*buffer = malloc(2 * sizeof(float) + sizeof(uint8_t));
