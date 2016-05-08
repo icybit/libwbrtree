@@ -59,6 +59,8 @@ RTREE_LOCAL void node_calculate_MBR(rt_rect_t *MBR, rt_node_t *node)
 RTREE_LOCAL void _node_calculate_node_MBR(rt_rect_t *MBR, rt_node_t *node)
 {
 	uint8_t i;
+
+	rectangle_extend_infinitely(MBR);
 	for (i = 0; i < node->count; i++)
 	{
 		rectangle_combine(MBR, ((rt_node_t *)(node->entries[i]))->MBR);
@@ -68,6 +70,8 @@ RTREE_LOCAL void _node_calculate_node_MBR(rt_rect_t *MBR, rt_node_t *node)
 RTREE_LOCAL void _node_calculate_leaf_MBR(rt_rect_t *MBR, rt_node_t *leaf)
 {
 	uint8_t i;
+
+	rectangle_extend_infinitely(MBR);
 	for (i = 0; i < leaf->count; i++)
 	{
 		rectangle_combine(MBR, ((rt_entry_t *)(leaf->entries[i]))->MBR);

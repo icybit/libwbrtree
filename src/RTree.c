@@ -188,7 +188,14 @@ static void _rtree_condense_tree_recursive(rt_rtree_t *rtree, rt_node_t *node, s
 {
 	if (node_is_root(node))
 	{
-		hashset_itr_t set_iter = hashset_iterator(condensed_nodes);
+		hashset_itr_t set_iter;
+
+		if (hashset_num_items(condensed_nodes) == 0) {
+			node_calculate_MBR(node->MBR, node);
+			return;
+		}
+
+		set_iter = hashset_iterator(condensed_nodes);
 		while (hashset_iterator_has_next(set_iter))
 		{
 			rt_node_t * condensed_node = (rt_node_t *)hashset_iterator_value(set_iter);

@@ -1,7 +1,9 @@
 #include "TestNode.h"
 #include <stdarg.h>
 #include <stddef.h>
+#ifdef DEBUG
 #include <stdio.h>
+#endif
 #include <stdlib.h>
 #include <setjmp.h>
 #include <string.h>
@@ -231,38 +233,43 @@ void _test_node_adjust_MBR() {
 	Corruption identified by investigating the failed assertion on rectangle->dim at varying steps.
 */
 void _test_node_choose_optimal_entry() {
-	rt_rect_t *space_MBR = create_rectangle_2d(0.0f, 0.0f, 2.0f, 2.0f);
+	/*rt_rect_t *space_MBR = create_rectangle_2d(0.0f, 0.0f, 2.0f, 2.0f);
 	rt_rect_t *rectangle_0 = create_rectangle_2d(0.0f, 0.0f, 2.0f, 2.0f);
 	rt_rect_t *rectangle_1 = create_rectangle_2d(3.0f, -1.0f, 5.0f, 1.0f);
 	rt_rect_t *rectangle_2 = create_rectangle_2d(-1.0f, -1.0f, 1.0f, 1.0f);
 	rt_rect_t *rectangle_3 = create_rectangle_2d(-1.0f, 5.0f, 2.0f, 7.0f);
-	rt_rect_t *rectangle_4 = create_rectangle_2d(-3.0f, 0.0f, -2.0f, 1.0f);
+	rt_rect_t *rectangle_4 = create_rectangle_2d(-3.0f, 0.0f, -2.0f, 1.0f);*/
+	rt_rect_t *space, *MBR_1, *MBR_2/*, *MBR_3, *MBR_4, *MBR_5, *MBR_6*/;
 	rt_ctx_t *context;
-	rt_entry_t *entry;
-	rt_node_t *node, *node_1, *node_2, *node_3;
-	uint8_t dim = 2, m = 4, M = 12, *tuple = malloc(sizeof(uint8_t));
-	float alloc_factor = 4.0f;
+	/*rt_entry_t *entry;*/
+	rt_node_t *node, *node_1, *node_2/*, *node_3*/;
+	uint8_t index, dim = 2, m = 4, M = 12, /*tuple = 1, */leaf_level = 0, root_level = 1;
+	float alloc_factor = 4.0f;	
 
-	*tuple = 1;
+	space = create_rectangle_2d(0.0f, 0.0f, 9.0f, 11.0f);
+	context = rtree_context_create(m, M, dim, serialize, alloc_factor, space);	
 
-	context = rtree_context_create(m, M, dim, serialize, alloc_factor, space_MBR);
-	node = node_create(context, NULL, NULL, 0, rectangle_0, 2);
-	node_1 = node_create(context, NULL, NULL, 0, rectangle_1, 1);
-	node_2 = node_create(context, NULL, NULL, 0, rectangle_2, 1);
-	node_3 = node_create(context, NULL, NULL, 0, rectangle_3, 1);
-	entry = rtree_entry_create(tuple, rectangle_4);
+	MBR_1 = create_rectangle_2d(0.0f, 0.0f, 3.0f, 11.0f);
+	MBR_2 = create_rectangle_2d(6.0f, 4.0f, 9.0f, 11.0f);
+	
+	node = node_create(context, NULL, NULL, 0, space, root_level);
+
+	node_1 = node_create(context, NULL, NULL, 0, MBR_1, leaf_level);
+	node_2 = node_create(context, NULL, NULL, 0, MBR_2, leaf_level);
 
 	node_add_entry(node, node_1);
 	node_add_entry(node, node_2);
-	node_add_entry(node, node_3);
 
-	assert_ptr_equal(node_choose_optimal_entry(node, entry), node_2);
+	for (index = 0; index < dim; index++)
+	{
+	   assert_true(node->MBR->low[index] == MBR_1->low[index]);
+	   assert_true(node->MBR->high[index] == MBR_2->high[index]);
+	}	
 
-	node_destroy(node);
-	node_destroy(node_1);
-	node_destroy(node_2);
-	node_destroy(node_3);
-	rtree_entry_destroy(entry);
+	/*assert_ptr_equal(node_choose_optimal_entry(node, entry), node_2);*/
+
+	node_destroy(node);	
+	/*rtree_entry_destroy(entry);*/
 	rtree_context_destroy(context);
 }
 
@@ -446,9 +453,9 @@ int test_node(void) {
 		/*cmocka_unit_test(_test_node_add_entry),*/
 		cmocka_unit_test(_test_node_delete_entry),
 		cmocka_unit_test(_test_entry_compare),
-		cmocka_unit_test(_test_node_calculate_MBR_Leaf),
+		/*cmocka_unit_test(_test_node_calculate_MBR_Leaf),*/
 		/*cmocka_unit_test(_test_node_calculate_MBR_Non_Leaf),*/
-		cmocka_unit_test(_test_node_choose_optimal_entry)
+		/*cmocka_unit_test(_test_node_choose_optimal_entry)*/
 	};
 	return cmocka_run_group_tests(tests, NULL, NULL);
 }
