@@ -19,9 +19,6 @@ static rt_rect_t * create_rectangle_2d(float low_x, float low_y, float high_x, f
 static float * initialize_coordinates(float x, float y);
 static size_t serializer(rt_entry_t *entry, uint8_t **buffer);
 
-/* TODO: Reenable tests once decided: RTree currently does not expose its internal structure for use in tests. */
-
-
 void _test_rtree_create() {
 	rt_rtree_t *rtree;
 	rt_ctx_t *context;
@@ -200,7 +197,7 @@ void _test_rtree_delete() {
 	   assert_true(((rt_node_t *)rtree->root->entries[1])->MBR->low[index] == MBR_4->low[index]);
 	   assert_true(((rt_node_t *)rtree->root->entries[1])->MBR->high[index] == MBR_2->high[index]);
 	}
-
+	
 	rtree_delete(rtree, entry_4);
 
 	for (index = 0; index < dimension; index++)
@@ -417,8 +414,8 @@ int test_rtree(void) {
 		cmocka_unit_test(_test_rtree_create),
 		cmocka_unit_test(_test_rtree_insert),
 		cmocka_unit_test(_test_rtree_try_insert),
-		cmocka_unit_test(_test_rtree_split)
-		/*cmocka_unit_test(_test_rtree_delete)*/
+		cmocka_unit_test(_test_rtree_split),
+		cmocka_unit_test(_test_rtree_delete)
 		/*cmocka_unit_test(_test_rtree_destroy)*/
 	};
 

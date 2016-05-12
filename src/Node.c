@@ -262,9 +262,7 @@ RTREE_LOCAL void node_delete_entry(rt_node_t *node, void *entry)
 			{
 				memmove(temp, node->entries, (node->count - 1) * sizeof(void *));
 			}
-				
-			entry_destroy(node->entries[i]);
-
+			
 			free(node->entries);
 			node->entries = temp;
 			node->count--;

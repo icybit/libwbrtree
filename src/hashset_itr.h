@@ -25,7 +25,7 @@ extern "C" {
 
 struct hashset_itr_st {
   hashset_t set;
-  size_t index;
+  int index;
 };
 
 typedef struct hashset_itr_st *hashset_itr_t;

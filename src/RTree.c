@@ -82,6 +82,7 @@ RTREE_LOCAL int delete(rt_rtree_t *rtree, rt_entry_t *entry)
 	if (leaf != NULL)
 	{
 		node_delete_entry(leaf, entry);
+		entry_destroy(entry);
 		_condense_tree(rtree, leaf);
 		if (rtree->root->count == 1)
 		{
@@ -198,13 +199,15 @@ static void _condense_tree_recursive(rt_rtree_t *rtree, rt_node_t *node, struct 
 		set_iter = hashset_iterator(condensed_nodes);
 		while (hashset_iterator_has_next(set_iter))
 		{
-			rt_node_t * condensed_node = (rt_node_t *)hashset_iterator_value(set_iter);
+			rt_node_t * condensed_node = (rt_node_t *)hashset_iterator_value(set_iter);	
+
 			if (node_is_leaf(condensed_node))
 			{
 				uint8_t i;
 				for (i = 0; i < condensed_node->count; i++)
 				{
 					insert(rtree, (rt_entry_t *)condensed_node->entries[i]);
+					node_delete_entry(condensed_node, condensed_node->entries[i]);
 				}
 				node_destroy(condensed_node);
 			}

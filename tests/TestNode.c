@@ -37,19 +37,16 @@ void _test_context_create() {
 void _test_entry_create() {	
 	rt_rect_t *rectangle = create_rectangle_2d(0.0f, 0.0f, 2.0f, 2.0f);
 	rt_entry_t *entry;
-	uint8_t *tuple = malloc(sizeof(uint8_t));
+	uint8_t tuple = 4;	
 
-	*tuple = 4;
+	entry = entry_create(&tuple, rectangle);
 
-	entry = entry_create(tuple, rectangle);
-
-	assert_ptr_equal(entry->tuple, tuple);
+	assert_ptr_equal(entry->tuple, &tuple);
 	assert_ptr_equal(entry->MBR, rectangle);
 
 	entry_destroy(entry);
 }
 
-/* TODO: Cover node create with more tests */
 void _test_node_create() {
 	rt_rect_t *space_MBR = create_rectangle_2d(0.0f, 0.0f, 2.0f, 2.0f);
 	rt_rect_t *rectangle = create_rectangle_2d(0.0f, 0.0f, 2.0f, 2.0f);
@@ -121,7 +118,7 @@ void _test_node_add_entry() {
 	rt_ctx_t *context;
 	rt_node_t *node;
 	rt_entry_t *entry;
-	uint8_t index, success = 0, dim = 2, m = 4, M = 12, level = 0;
+	uint8_t index, dim = 2, m = 4, M = 12, level = 0;
 	uint8_t tuple = 4;
 	float alloc_factor = 2.0f;	
 
@@ -129,24 +126,13 @@ void _test_node_add_entry() {
 	entry = entry_create(&tuple, rectangle_b);
 	node = node_create(context, NULL, NULL, 0, rectangle_a, level);
 
-	success = node_add_entry(node, entry);
-	assert_true(success);
+	assert_true(node_add_entry(node, entry));
 	assert_ptr_equal(node->entries[0], entry);
 
 	for (index = 0; index < dim; index++) {
 		assert_true(node->MBR->low[index] == rectangle_a->low[index]);
 		assert_true(node->MBR->high[index] == rectangle_b->high[index]);
-	}
-
-	for (index = 0; index < node->capacity; index++) {
-		if (index < M - 1) {
-			assert_true(node_add_entry(node, entry));
-			assert_ptr_equal(node->entries[index], entry);
-		}
-		else {
-			assert_false(node_add_entry(node, entry));
-		}		
-	}
+	}	
 
 	node_destroy(node);
 	context_destroy(context);
@@ -160,13 +146,11 @@ void _test_node_delete_entry()
 	rt_ctx_t *context;
 	rt_entry_t *entries[4];
 	rt_node_t *node;
-	uint8_t index, dim = 2, m = 4, M = 12, level = 0, *tuples[4];
+	uint8_t index, dim = 2, m = 4, M = 12, level = 0, tuples[] = { 1, 2, 3, 4 };
 	float alloc_factor = 2.0f;
 
 	for (index = 0; index < 4; index++)
 	{
-		tuples[index] = malloc(sizeof(uint8_t));
-		*tuples[index] = index + 1;
 		MBRs[index] = create_rectangle_2d(1.0f, 1.0f, 3.0f, 3.0f);
 	}
 
@@ -174,7 +158,7 @@ void _test_node_delete_entry()
 	node = node_create(context, NULL, NULL, 0, rectangle, level);
 
 	for (index = 0; index < 4; index++) {
-		entries[index] = entry_create(tuples[index], MBRs[index]);
+		entries[index] = entry_create(&tuples[index], MBRs[index]);
 		node_add_entry(node, entries[index]);
 	}
 
@@ -201,6 +185,11 @@ void _test_node_delete_entry()
 
 	node_destroy(node);	
 	context_destroy(context);
+
+	for (index = 0; index < 4; index++)
+	{
+		entry_destroy(entries[index]);
+	}
 }
 
 void _test_node_adjust_MBR() {
@@ -210,14 +199,12 @@ void _test_node_adjust_MBR() {
 	rt_ctx_t *context;
 	rt_node_t *node;
 	rt_entry_t *entry;
-	uint8_t index, dim = 2, m = 4, M = 12, level = 0, *tuple = malloc(sizeof(uint8_t));
-	float alloc_factor = 4.0f;
-
-	*tuple = 4;
+	uint8_t index, dim = 2, m = 4, M = 12, level = 0, tuple = 4;
+	float alloc_factor = 4.0f;	
 
 	context = context_create(m, M, dim, serializer, alloc_factor, space_MBR);
 	node = node_create(context, NULL, NULL, 0, rectangle_a, level);
-	entry = entry_create(tuple, rectangle_b);
+	entry = entry_create(&tuple, rectangle_b);
 		
 	node_adjust_MBR(node, entry);
 	for (index = 0; index < dim; index++) {
@@ -226,50 +213,74 @@ void _test_node_adjust_MBR() {
 	}
 
 	node_destroy(node);
+	entry_destroy(entry);
 	context_destroy(context);
 }
 
-/* TODO: Fix test. Memory gets corrupted when creating nodes and/or adding entries to them.
-	Corruption identified by investigating the failed assertion on rectangle->dim at varying steps.
-*/
-void _test_node_choose_optimal_entry() {
-	/*rt_rect_t *space_MBR = create_rectangle_2d(0.0f, 0.0f, 2.0f, 2.0f);
-	rt_rect_t *rectangle_0 = create_rectangle_2d(0.0f, 0.0f, 2.0f, 2.0f);
-	rt_rect_t *rectangle_1 = create_rectangle_2d(3.0f, -1.0f, 5.0f, 1.0f);
-	rt_rect_t *rectangle_2 = create_rectangle_2d(-1.0f, -1.0f, 1.0f, 1.0f);
-	rt_rect_t *rectangle_3 = create_rectangle_2d(-1.0f, 5.0f, 2.0f, 7.0f);
-	rt_rect_t *rectangle_4 = create_rectangle_2d(-3.0f, 0.0f, -2.0f, 1.0f);*/
-	rt_rect_t *space, *MBR_1, *MBR_2/*, *MBR_3, *MBR_4, *MBR_5, *MBR_6*/;
+void _test_node_choose_optimal_entry() {	
+	rt_rect_t *space, *entry_MBRs[6], *node_MBRs[3];
 	rt_ctx_t *context;
-	/*rt_entry_t *entry;*/
-	rt_node_t *node, *node_1, *node_2/*, *node_3*/;
-	uint8_t index, dim = 2, m = 4, M = 12, /*tuple = 1, */leaf_level = 0, root_level = 1;
-	float alloc_factor = 4.0f;	
+	rt_entry_t *entries[6], **node_entries_1, **node_entries_2, **node_entries_3;
+
+	rt_node_t *node, *node_1, *node_2;
+	uint8_t index, dim = 2, m = 4, M = 12, tuples[6], leaf_level = 0, root_level = 1;
+	float alloc_factor = 4.0f;
+
+	for (index = 0; index < 6; index++) 
+	{
+		tuples[index] = index + 1;
+	}	
+
+	node_entries_1 = malloc(sizeof(void *) * 2);
+	node_entries_2 = malloc(sizeof(void *) * 3);
+	node_entries_3 = malloc(sizeof(void *) * 2);
 
 	space = create_rectangle_2d(0.0f, 0.0f, 9.0f, 11.0f);
 	context = context_create(m, M, dim, serializer, alloc_factor, space);	
 
-	MBR_1 = create_rectangle_2d(0.0f, 0.0f, 3.0f, 11.0f);
-	MBR_2 = create_rectangle_2d(6.0f, 4.0f, 9.0f, 11.0f);
+	node_MBRs[0] = create_rectangle_2d(0.0f, 0.0f, 0.0f, 0.0f);
+	entry_MBRs[0] = create_rectangle_2d(0.0f, 8.0f, 3.0f, 11.0f);
+	entry_MBRs[1] = create_rectangle_2d(6.0f, 8.0f, 9.0f, 11.0f);
+	entry_MBRs[2] = create_rectangle_2d(0.0f, 4.0f, 3.0f, 7.0f);
+	entry_MBRs[3] = create_rectangle_2d(6.0f, 4.0f, 9.0f, 7.0f);
+	entry_MBRs[4] = create_rectangle_2d(0.0f, 0.0f, 3.0f, 3.0f);
+	entry_MBRs[5] = create_rectangle_2d(6.0f, 0.0f, 9.0f, 3.0f);
+
+	node_MBRs[1] = create_rectangle_2d(0.0f, 0.0f, 0.0f, 0.0f);
+	node_MBRs[2] = create_rectangle_2d(0.0f, 0.0f, 0.0f, 0.0f);
+
+	for (index = 0; index < 6; index++)
+	{
+		entries[index] = entry_create(&tuples[index], entry_MBRs[index]);
+	}	
 	
-	node = node_create(context, NULL, NULL, 0, space, root_level);
+	node_entries_2[0] = entries[0];
+	node_entries_2[1] = entries[2];
+	node_entries_2[2] = entries[4];
 
-	node_1 = node_create(context, NULL, NULL, 0, MBR_1, leaf_level);
-	node_2 = node_create(context, NULL, NULL, 0, MBR_2, leaf_level);
+	node_entries_3[0] = entries[1];
+	node_entries_3[1] = entries[3];
 
-	node_add_entry(node, node_1);
-	node_add_entry(node, node_2);
+	node_1 = node_create(context, NULL, (void **)node_entries_2, 3, node_MBRs[1], leaf_level);
+	node_2 = node_create(context, NULL, (void **)node_entries_3, 2, node_MBRs[2], leaf_level);
+
+	node_entries_1[0] = (void *)node_1;
+	node_entries_1[1] = (void *)node_2;
+
+	node = node_create(context, NULL, (void **)node_entries_1, 2, node_MBRs[0], root_level);		
 
 	for (index = 0; index < dim; index++)
 	{
-	   assert_true(node->MBR->low[index] == MBR_1->low[index]);
-	   assert_true(node->MBR->high[index] == MBR_2->high[index]);
+	   assert_true(node->MBR->low[index] == entry_MBRs[4]->low[index]);
+	   assert_true(node->MBR->high[index] == entry_MBRs[1]->high[index]);
 	}	
 
-	/*assert_ptr_equal(node_choose_optimal_entry(node, entry), node_2);*/
+	assert_ptr_equal(node_choose_optimal_entry(node, entries[5]), node_2);
 
 	node_destroy(node);	
-	/*rtree_entry_destroy(entry);*/
+	node_destroy(node_1);	
+	node_destroy(node_2);	
+	rtree_entry_destroy(entries[5]);
 	context_destroy(context);
 }
 
@@ -277,16 +288,10 @@ void _test_entry_compare() {
 	rt_rect_t *rectangle_1 = create_rectangle_2d(1.0f, 1.0f, 3.0f, 3.0f);
 	rt_rect_t *rectangle_2 = create_rectangle_2d(0.0f, 2.0f, 4.0f, 2.0f);
 	rt_entry_t *entry_1, *entry_2;
-	uint8_t index, dim_1 = 0, dim_2 = 1, *tuples[2];
+	uint8_t dim_1 = 0, dim_2 = 1, tuples[] = { 1, 2 };
 
-	for (index = 0; index < 2; index++)
-	{
-		tuples[index] = malloc(sizeof(uint8_t));
-		*tuples[index] = index + 1;
-	}
-
-	entry_1 = entry_create(tuples[0], rectangle_1);
-	entry_2 = entry_create(tuples[1], rectangle_2);
+	entry_1 = entry_create(&tuples[0], rectangle_1);
+	entry_2 = entry_create(&tuples[1], rectangle_2);
 	
 	assert_true(entry_compare(&entry_1, &entry_2, &dim_1) > 0);
 	assert_true(entry_compare(&entry_1, &entry_2, &dim_2) < 0);
@@ -320,17 +325,17 @@ void _test_node_calculate_MBR_Leaf() {
 	
 	node_add_entry(node, entry_1);
 	node_calculate_MBR(node->MBR, node);
-	assert_true(node->MBR->low[0] == 0);
+	assert_true(node->MBR->low[0] == 3);
 	assert_true(node->MBR->low[1] == -1);
 	assert_true(node->MBR->high[0] == 5);
-	assert_true(node->MBR->high[1] == 2);
+	assert_true(node->MBR->high[1] == 1);
 
 	node_add_entry(node, entry_2);
 	node_calculate_MBR(node->MBR, node);
 	assert_true(node->MBR->low[0] == -1);
 	assert_true(node->MBR->low[1] == -1);
 	assert_true(node->MBR->high[0] == 5);
-	assert_true(node->MBR->high[1] == 2);
+	assert_true(node->MBR->high[1] == 1);
 
 	node_add_entry(node, entry_3);
 	node_calculate_MBR(node->MBR, node);
@@ -343,72 +348,78 @@ void _test_node_calculate_MBR_Leaf() {
 	context_destroy(context);
 }
 
-/* TODO: Fix segmentation fault */
 void _test_node_calculate_MBR_Non_Leaf() {
 	rt_rect_t *space_MBR = create_rectangle_2d(0.0f, 0.0f, 2.0f, 2.0f);
-	rt_rect_t *rectangle_0 = create_rectangle_2d(0.0f, 0.0f, 2.0f, 2.0f);
-	rt_rect_t *rectangle_1 = create_rectangle_2d(3.0f, -1.0f, 5.0f, 1.0f);
-	rt_rect_t *rectangle_2 = create_rectangle_2d(-1.0f, -1.0f, 1.0f, 1.0f);
-	rt_rect_t *rectangle_3 = create_rectangle_2d(-1.0f, 5.0f, 2.0f, 7.0f);
+	rt_rect_t *node_MBRs[4];
+	rt_rect_t *entry_MBRs[6];		
 	rt_ctx_t *context;
-	rt_entry_t *entry_1, *entry_2, *entry_3, **entries_1, **entries_2, **entries_3;
+	rt_entry_t *entries[6], **node_entries_1, **node_entries_2, **node_entries_3;
 	rt_node_t *node, *node_1, *node_2, *node_3;
-	uint8_t index, dim = 2, m = 2, M = 4, leaf_level = 0, root_level = 1, *tuples[3];
-	float alloc_factor = 4.0f;
+	uint8_t index, dim = 2, m = 2, M = 4, leaf_level = 0, root_level = 1, tuples[6];
+	float alloc_factor = 4.0f;	
 
-	for (index = 0; index < 3; index++)
+	for (index = 0; index < 6; index++)
 	{
-		tuples[index] = malloc(sizeof(uint8_t));
-		*tuples[index] = index + 1;
+		tuples[index] = index + 1;
+	}
+	
+	for (index = 0; index < 4; index++)
+	{
+		node_MBRs[index] = create_rectangle_2d(0.0f, 0.0f, 0.0f, 0.0f);
 	}
 
-	entries_1 = malloc(sizeof(void *));
-	entries_2 = malloc(sizeof(void *));
-	entries_3 = malloc(sizeof(void *));
+	entry_MBRs[0] = create_rectangle_2d(3.0f, -1.0f, 5.0f, 1.0f);
+	entry_MBRs[1] = create_rectangle_2d(-1.0f, -1.0f, 1.0f, 1.0f);
+	entry_MBRs[2] = create_rectangle_2d(-1.0f, 5.0f, 2.0f, 7.0f);
+	entry_MBRs[3] = create_rectangle_2d(5.0f, 2.0f, 7.0f, 4.0f);
+	entry_MBRs[4] = create_rectangle_2d(4.0f, 7.0f, 6.0f, 9.0f);
+	entry_MBRs[5] = create_rectangle_2d(-2.0f, 2.0f, 0.0f, 4.0f);
+
+	node_entries_1 = malloc(sizeof(void *) * 2);
+	node_entries_2 = malloc(sizeof(void *) * 2);
+	node_entries_3 = malloc(sizeof(void *) * 2);
 
 	context = context_create(m, M, dim, serializer, alloc_factor, space_MBR);
-	node = node_create(context, NULL, NULL, 0, rectangle_0, root_level);
+	node = node_create(context, NULL, NULL, 0, node_MBRs[0], root_level);
 
-	entry_1 = entry_create(tuples[0], rectangle_1);
-	entries_1[0] = entry_1;
-	node_1 = node_create(context, node, (void **)entries_1, 1, rectangle_1, leaf_level);
+	for (index = 0; index < 6; index++)
+	{
+		entries[index] = entry_create(&tuples[index], entry_MBRs[index]);
+	}
+	
+	node_entries_1[0] = entries[0];
+	node_entries_1[1] = entries[1];
+	node_entries_2[0] = entries[2];
+	node_entries_2[1] = entries[3];
+	node_entries_3[0] = entries[4];
+	node_entries_3[1] = entries[5];
 
-	entry_2 = entry_create(tuples[1], rectangle_2);
-	entries_2[0] = entry_2;
-	node_2 = node_create(context, node, (void **)entries_2, 1, rectangle_2, leaf_level);
-
-	entry_3 = entry_create(tuples[2], rectangle_3);
-	entries_3[0] = entry_3;
-	node_3 = node_create(context, node, (void **)entries_3, 1, rectangle_3, leaf_level);
+	node_1 = node_create(context, node, (void **)node_entries_1, 2, node_MBRs[1], leaf_level);
+	node_2 = node_create(context, node, (void **)node_entries_2, 2, node_MBRs[2], leaf_level);
+	node_3 = node_create(context, node, (void **)node_entries_3, 2, node_MBRs[3], leaf_level);
 
 	node_add_entry(node, node_1);
 	node_calculate_MBR(node->MBR, node);
-	assert_true(node->MBR->low[0] == 0);
+	assert_true(node->MBR->low[0] == -1);
 	assert_true(node->MBR->low[1] == -1);
 	assert_true(node->MBR->high[0] == 5);
-	assert_true(node->MBR->high[1] == 2);
+	assert_true(node->MBR->high[1] == 1);
 
 	node_add_entry(node, node_2);
 	node_calculate_MBR(node->MBR, node);
 	assert_true(node->MBR->low[0] == -1);
 	assert_true(node->MBR->low[1] == -1);
-	assert_true(node->MBR->high[0] == 5);
-	assert_true(node->MBR->high[1] == 2);
+	assert_true(node->MBR->high[0] == 7);
+	assert_true(node->MBR->high[1] == 7);
 
 	node_add_entry(node, node_3);
 	node_calculate_MBR(node->MBR, node);
-	assert_true(node->MBR->low[0] == -1);
+	assert_true(node->MBR->low[0] == -2);
 	assert_true(node->MBR->low[1] == -1);
-	assert_true(node->MBR->high[0] == 5);
-	assert_true(node->MBR->high[1] == 7);
+	assert_true(node->MBR->high[0] == 7);
+	assert_true(node->MBR->high[1] == 9);
 
-	node_destroy(node);
-	node_destroy(node_1);
-	node_destroy(node_2);
-	node_destroy(node_3);
-	entry_destroy(entry_1);
-	entry_destroy(entry_2);
-	entry_destroy(entry_3);
+	node_destroy(node);	
 	context_destroy(context);
 }
 
@@ -450,12 +461,12 @@ int test_node(void) {
 		cmocka_unit_test(_test_node_is_leaf),
 		cmocka_unit_test(_test_node_is_root),
 		cmocka_unit_test(_test_node_adjust_MBR),
-		/*cmocka_unit_test(_test_node_add_entry),*/
+		cmocka_unit_test(_test_node_add_entry),
 		cmocka_unit_test(_test_node_delete_entry),
 		cmocka_unit_test(_test_entry_compare),
-		/*cmocka_unit_test(_test_node_calculate_MBR_Leaf),*/
-		/*cmocka_unit_test(_test_node_calculate_MBR_Non_Leaf),*/
-		/*cmocka_unit_test(_test_node_choose_optimal_entry)*/
+		cmocka_unit_test(_test_node_calculate_MBR_Leaf),
+		cmocka_unit_test(_test_node_calculate_MBR_Non_Leaf),
+		cmocka_unit_test(_test_node_choose_optimal_entry)
 	};
 	return cmocka_run_group_tests(tests, NULL, NULL);
 }
