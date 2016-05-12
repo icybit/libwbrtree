@@ -1,5 +1,3 @@
-#define _GNU_SOURCE
-
 #include "Node.h"
 #include <assert.h>
 #include <float.h>
@@ -14,6 +12,7 @@
 #include "Context.h"
 #include "Entry.h"
 #include "Rectangle.h"
+#include "stdlib_qsort.h"
 
 typedef struct Comparator_Opts {
 	uint8_t dim;
@@ -307,7 +306,7 @@ RTREE_LOCAL void _node_entry_sort(rt_node_t *node, void *entry, void ***sorted_e
 		sorted_entries[dim] = malloc((node->context->M + 1) * sizeof(void *));
 		memcpy(sorted_entries[dim], node->entries, node->count * sizeof(void *));
 		sorted_entries[dim][node->context->M] = entry;
-		qsort_r(sorted_entries[dim], node->context->M + 1, sizeof(void *), comparator, &opts);
+		rt_qsort_r_fn(sorted_entries[dim], node->context->M + 1, sizeof(void *), comparator, &opts);
 	}
 
 	/* Perform ASC sort of MBR high points */
@@ -319,7 +318,7 @@ RTREE_LOCAL void _node_entry_sort(rt_node_t *node, void *entry, void ***sorted_e
 		sorted_entries[order_shift] = malloc((node->context->M + 1) * sizeof(void *));
 		memcpy(sorted_entries[order_shift], node->entries, node->count * sizeof(void *));
 		sorted_entries[order_shift][node->context->M] = entry;
-		qsort_r(sorted_entries[order_shift], node->context->M + 1, sizeof(void *), comparator, &opts);
+		rt_qsort_r_fn(sorted_entries[order_shift], node->context->M + 1, sizeof(void *), comparator, &opts);
 	}
 }
 
