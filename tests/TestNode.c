@@ -31,7 +31,7 @@ void _test_context_create() {
 	assert_true(context->alloc_factor == 4.0f);
 	assert_ptr_equal(context->space, space_MBR);
 
-	context_destroy(context);
+	context_destroy(&context);
 }
 
 void _test_entry_create() {	
@@ -44,7 +44,7 @@ void _test_entry_create() {
 	assert_ptr_equal(entry->tuple, &tuple);
 	assert_ptr_equal(entry->MBR, rectangle);
 
-	entry_destroy(entry);
+	entry_destroy(&entry);
 }
 
 void _test_node_create() {
@@ -65,8 +65,8 @@ void _test_node_create() {
 	assert_non_null(node->entries);
 	assert_int_equal(node->capacity, MAX(0, NALLOC(context->m, context->M, context->alloc_factor)));
 
-	node_destroy(node);
-	context_destroy(context);
+	node_destroy(&node);
+	context_destroy(&context);
 }
 
 void _test_node_is_leaf() {
@@ -86,8 +86,8 @@ void _test_node_is_leaf() {
 
 	assert_false(node_is_leaf(node));
 
-	node_destroy(node);
-	context_destroy(context);
+	node_destroy(&node);
+	context_destroy(&context);
 }
 
 void _test_node_is_root() {	
@@ -107,8 +107,8 @@ void _test_node_is_root() {
 
 	assert_false(node_is_root(node));
 
-	node_destroy(node);
-	context_destroy(context);
+	node_destroy(&node);
+	context_destroy(&context);
 }
 
 void _test_node_add_entry() {
@@ -134,8 +134,8 @@ void _test_node_add_entry() {
 		assert_true(node->MBR->high[index] == rectangle_b->high[index]);
 	}	
 
-	node_destroy(node);
-	context_destroy(context);
+	node_destroy(&node);
+	context_destroy(&context);
 }
 
 void _test_node_delete_entry() 
@@ -183,12 +183,12 @@ void _test_node_delete_entry()
 	node_delete_entry(node, entries[2]);
 	assert_int_equal(node->count, 0);
 
-	node_destroy(node);	
-	context_destroy(context);
+	node_destroy(&node);	
+	context_destroy(&context);
 
 	for (index = 0; index < 4; index++)
 	{
-		entry_destroy(entries[index]);
+		entry_destroy(&(entries[index]));
 	}
 }
 
@@ -212,9 +212,9 @@ void _test_node_adjust_MBR() {
 		assert_true(node->MBR->high[index] == rectangle_b->high[index]);
 	}
 
-	node_destroy(node);
-	entry_destroy(entry);
-	context_destroy(context);
+	node_destroy(&node);
+	entry_destroy(&entry);
+	context_destroy(&context);
 }
 
 void _test_node_choose_optimal_entry() {	
@@ -277,11 +277,11 @@ void _test_node_choose_optimal_entry() {
 
 	assert_ptr_equal(node_choose_optimal_entry(node, entries[5]), node_2);
 
-	node_destroy(node);	
-	node_destroy(node_1);	
-	node_destroy(node_2);	
-	rtree_entry_destroy(entries[5]);
-	context_destroy(context);
+	node_destroy(&node);	
+	node_destroy(&node_1);	
+	node_destroy(&node_2);	
+	rtree_entry_destroy(&(entries[5]));
+	context_destroy(&context);
 }
 
 void _test_entry_compare() {
@@ -300,8 +300,8 @@ void _test_entry_compare() {
 	assert_true(entry_compare(&entry_2, &entry_2, &dim_1) == 0);
 	assert_true(entry_compare(&entry_2, &entry_2, &dim_2) == 0);
 
-	entry_destroy(entry_1);
-	entry_destroy(entry_2);
+	entry_destroy(&entry_1);
+	entry_destroy(&entry_2);
 }
 
 void _test_node_calculate_MBR_Leaf() {
@@ -344,8 +344,8 @@ void _test_node_calculate_MBR_Leaf() {
 	assert_true(node->MBR->high[0] == 5);
 	assert_true(node->MBR->high[1] == 7);
 
-	node_destroy(node);	
-	context_destroy(context);
+	node_destroy(&node);	
+	context_destroy(&context);
 }
 
 void _test_node_calculate_MBR_Non_Leaf() {
@@ -419,8 +419,56 @@ void _test_node_calculate_MBR_Non_Leaf() {
 	assert_true(node->MBR->high[0] == 7);
 	assert_true(node->MBR->high[1] == 9);
 
-	node_destroy(node);	
-	context_destroy(context);
+	node_destroy(&node);	
+	context_destroy(&context);
+}
+
+void _test_node_destroy()
+{
+	rt_rect_t *space_MBR = create_rectangle_2d(1.0f, 1.0f, 3.0f, 3.0f); 
+	rt_rect_t *rectangle_a = create_rectangle_2d(0.0f, 0.0f, 2.0f, 2.0f); 
+	rt_rect_t *rectangle_b = create_rectangle_2d(1.0f, 1.0f, 3.0f, 3.0f);
+	rt_ctx_t *context;
+	rt_node_t *node;
+	rt_entry_t *entry;
+	uint8_t dim = 2, m = 4, M = 12, level = 0;
+	uint8_t tuple = 4;
+	float alloc_factor = 2.0f;	
+
+	context = context_create(m, M, dim, serializer, alloc_factor, space_MBR);
+	entry = entry_create(&tuple, rectangle_b);
+	node = node_create(context, NULL, NULL, 0, rectangle_a, level);
+
+	node_add_entry(node, entry);	
+
+	node_destroy(&node);
+	assert_null(node);
+
+	context_destroy(&context);
+}
+
+void _test_context_destroy() 
+{
+	rt_ctx_t *context;
+	rt_rect_t *space_MBR = create_rectangle_2d(0.0f, 0.0f, 2.0f, 2.0f);
+	uint8_t m = 4, M = 12, dimension = 2;
+	float alloc_factor = 4.0f;
+
+	context = context_create(m, M, dimension, serializer, alloc_factor, space_MBR);	
+
+	context_destroy(&context);
+	assert_null(context);
+}
+
+void _test_entry_destroy() {	
+	rt_rect_t *rectangle = create_rectangle_2d(0.0f, 0.0f, 2.0f, 2.0f);
+	rt_entry_t *entry;
+	uint8_t tuple = 4;	
+
+	entry = entry_create(&tuple, rectangle);	
+
+	entry_destroy(&entry);
+	assert_null(entry);
 }
 
 static rt_rect_t * create_rectangle_2d(float low_x, float low_y, float high_x, float high_y)
@@ -466,7 +514,10 @@ int test_node(void) {
 		cmocka_unit_test(_test_entry_compare),
 		cmocka_unit_test(_test_node_calculate_MBR_Leaf),
 		cmocka_unit_test(_test_node_calculate_MBR_Non_Leaf),
-		cmocka_unit_test(_test_node_choose_optimal_entry)
+		cmocka_unit_test(_test_node_choose_optimal_entry),
+		cmocka_unit_test(_test_node_destroy),
+		cmocka_unit_test(_test_context_destroy),
+		cmocka_unit_test(_test_entry_destroy)
 	};
 	return cmocka_run_group_tests(tests, NULL, NULL);
 }

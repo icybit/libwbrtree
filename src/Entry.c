@@ -41,13 +41,13 @@ RTREE_LOCAL rt_entry_t * entry_create(void *tuple, rt_rect_t *MBR)
 	return entry;
 }
 
-RTREE_LOCAL void entry_destroy(rt_entry_t *entry)
+RTREE_LOCAL void entry_destroy(rt_entry_t **entry)
 {
-	assert(entry);
+	assert(*entry);
 
-	rectangle_destroy(entry->MBR);
-	free(entry);
-	entry = NULL;
+	rectangle_destroy(&((*entry)->MBR));
+	free(*entry);
+	*entry = NULL;
 }
 
 RTREE_LOCAL void * entry_get_tuple(rt_entry_t *entry)

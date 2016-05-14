@@ -172,8 +172,8 @@ RTREE_LOCAL uint8_t _node_choose_split_index(uint8_t dimension, rt_node_t *node,
 		}
 	}
 
-	rectangle_destroy(MBR_group_one);
-	rectangle_destroy(MBR_group_two);
+	rectangle_destroy(&MBR_group_one);
+	rectangle_destroy(&MBR_group_two);
 
 	return optimal_distribution_index;
 }
@@ -271,25 +271,25 @@ RTREE_LOCAL void node_delete_entry(rt_node_t *node, void *entry)
 	}
 }
 
-RTREE_LOCAL void node_destroy(rt_node_t *node)
+RTREE_LOCAL void node_destroy(rt_node_t **node)
 {
 	uint8_t index;
 
-	assert(node);
+	assert(*node);
 
-	rectangle_destroy(node->MBR);
+	rectangle_destroy(&((*node)->MBR));
 	
-	if (node_is_leaf(node)) 
+	if (node_is_leaf(*node)) 
 	{
-		for(index = 0; index < node->count; index++) 
+		for(index = 0; index < (*node)->count; index++) 
 		{
-			entry_destroy(node->entries[index]);
+			entry_destroy((rt_entry_t **)(&((*node)->entries[index])));
 		}
 	}
 
-	free(node->entries);
-	free(node);
-	node = NULL;
+	free((*node)->entries);
+	free(*node);
+	*node = NULL;
 }
 
 RTREE_LOCAL void _node_entry_sort(rt_node_t *node, void *entry, void ***sorted_entries)
@@ -437,7 +437,7 @@ RTREE_LOCAL rt_node_t * node_split(rt_node_t *node, void *entry)
 	memmove(nentries, sorted_entries[split_axis] + split_index, split_size * sizeof(void *));
 	nnode = node_create(node->context, node->parent, nentries, split_size, MBR_two, node->level);
 
-	rectangle_destroy(MBR_one);
+	rectangle_destroy(&MBR_one);
 
 	for (dim = 0; dim < node->context->dim; dim++)
 	{

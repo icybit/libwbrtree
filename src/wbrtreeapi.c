@@ -11,7 +11,7 @@ RTREE_PUBLIC rt_ctx_t * rtree_context_create(uint8_t m, uint8_t M, uint8_t dim, 
 	return context_create(m, M, dim, serialize_fn, alloc_factor, space);
 }
 
-RTREE_PUBLIC void rtree_context_destroy(rt_ctx_t *ctx)
+RTREE_PUBLIC void rtree_context_destroy(rt_ctx_t **ctx)
 {
 	context_destroy(ctx);
 }
@@ -28,7 +28,7 @@ RTREE_PUBLIC void * rtree_entry_get_tuple(rt_entry_t *entry)
 	return entry_get_tuple(entry);
 }
 
-RTREE_PUBLIC void rtree_entry_destroy(rt_entry_t *entry)
+RTREE_PUBLIC void rtree_entry_destroy(rt_entry_t **entry)
 {
 	entry_destroy(entry);
 }
@@ -40,7 +40,7 @@ RTREE_PUBLIC rt_rect_t * rtree_rectangle_create(float *low, float *high, uint8_t
 	return rectangle_create(low, high, dimension);
 }
 
-RTREE_PUBLIC void rtree_rectangle_destroy(rt_rect_t * rectangle)
+RTREE_PUBLIC void rtree_rectangle_destroy(rt_rect_t **rectangle)
 {
 	rectangle_destroy(rectangle);
 }
@@ -67,7 +67,7 @@ RTREE_PUBLIC int rtree_delete(rt_rtree_t *rtree, rt_entry_t *entry)
 	return delete(rtree, entry);
 }
 
-RTREE_PUBLIC void rtree_destroy(rt_rtree_t *rtree)
+RTREE_PUBLIC void rtree_destroy(rt_rtree_t **rtree)
 {
 	destroy(rtree);
 }

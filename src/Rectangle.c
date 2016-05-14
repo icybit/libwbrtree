@@ -69,14 +69,14 @@ RTREE_LOCAL rt_rect_t * rectangle_create(float *low, float *high, uint8_t dimens
 	return rectangle;
 }
 
-RTREE_LOCAL void rectangle_destroy(rt_rect_t * rectangle)
+RTREE_LOCAL void rectangle_destroy(rt_rect_t **rectangle)
 {
-	assert(rectangle);
+	assert(*rectangle);
 
-	free(rectangle->low);
-	free(rectangle->high);
-	free(rectangle);
-	rectangle = NULL;
+	free((*rectangle)->low);
+	free((*rectangle)->high);
+	free(*rectangle);
+	*rectangle = NULL;
 }
 
 RTREE_LOCAL rt_rect_t * rectangle_duplicate(const rt_rect_t *source)

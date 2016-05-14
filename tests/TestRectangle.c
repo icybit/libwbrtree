@@ -20,7 +20,7 @@ void _test_rectangle_area() {
 
 	assert_true(fabs(rectangle_area(rectangle) - 4.0) < DBL_EPSILON);
 
-	rectangle_destroy(rectangle);
+	rectangle_destroy(&rectangle);
 }
 
 void _test_rectangle_create() {
@@ -38,7 +38,7 @@ void _test_rectangle_create() {
 	}
 	assert_int_equal(rectangle->dim, dimension);
 
-	rectangle_destroy(rectangle);
+	rectangle_destroy(&rectangle);
 }
 
 void _test_rectangle_combine() {
@@ -77,8 +77,8 @@ void _test_rectangle_combine() {
 		assert_true(rectangle_a->high[index] == high_b[index]);
 	}
 
-	rectangle_destroy(rectangle_a);
-	rectangle_destroy(rectangle_b);
+	rectangle_destroy(&rectangle_a);
+	rectangle_destroy(&rectangle_b);
 }
 
 void _test_rectangle_extend_infinitely() {
@@ -97,7 +97,7 @@ void _test_rectangle_extend_infinitely() {
 		assert_true(rectangle->high[index] == -FLT_MAX);
 	}
 
-	rectangle_destroy(rectangle);
+	rectangle_destroy(&rectangle);
 }
 
 void _test_rectangle_min_distance() {
@@ -114,8 +114,8 @@ void _test_rectangle_min_distance() {
 	assert_int_equal(rectangle_min_distance(rectangle_a, rectangle_b), 5);
 	assert_int_equal(rectangle_min_distance(rectangle_b, rectangle_a), 5);
 
-	rectangle_destroy(rectangle_a);
-	rectangle_destroy(rectangle_b);
+	rectangle_destroy(&rectangle_a);
+	rectangle_destroy(&rectangle_b);
 }
 
 void _test_rectangle_overlaps() {
@@ -135,9 +135,9 @@ void _test_rectangle_overlaps() {
 	assert_true(rectangle_overlaps(rectangle_a, rectangle_b));
 	assert_false(rectangle_overlaps(rectangle_a, rectangle_c));
 
-	rectangle_destroy(rectangle_a);
-	rectangle_destroy(rectangle_b);
-	rectangle_destroy(rectangle_c);
+	rectangle_destroy(&rectangle_a);
+	rectangle_destroy(&rectangle_b);
+	rectangle_destroy(&rectangle_c);
 }
 
 void _test_rectangle_compare_low() {
@@ -158,8 +158,8 @@ void _test_rectangle_compare_low() {
 	assert_true(rectangle_compare_low(rectangle_b, rectangle_b, &dim[0]) == 0);
 	assert_true(rectangle_compare_low(rectangle_b, rectangle_b, &dim[1]) == 0);
 
-	rectangle_destroy(rectangle_a);
-	rectangle_destroy(rectangle_b);
+	rectangle_destroy(&rectangle_a);
+	rectangle_destroy(&rectangle_b);
 }
 
 void _test_rectangle_compare_high() {
@@ -180,8 +180,8 @@ void _test_rectangle_compare_high() {
 	assert_true(rectangle_compare_high(rectangle_b, rectangle_b, &dim[0]) == 0);
 	assert_true(rectangle_compare_high(rectangle_b, rectangle_b, &dim[1]) == 0);
 
-	rectangle_destroy(rectangle_a);
-	rectangle_destroy(rectangle_b);
+	rectangle_destroy(&rectangle_a);
+	rectangle_destroy(&rectangle_b);
 }
 
 void _test_rectangle_intersection_area() {
@@ -198,8 +198,8 @@ void _test_rectangle_intersection_area() {
 	assert_int_equal(rectangle_intersection_area(rectangle_a, rectangle_b), 1);
 	assert_int_equal(rectangle_intersection_area(rectangle_b, rectangle_a), 1);
 
-	rectangle_destroy(rectangle_a);
-	rectangle_destroy(rectangle_b);
+	rectangle_destroy(&rectangle_a);
+	rectangle_destroy(&rectangle_b);
 }
 
 void _test_rectangle_margin() {
@@ -212,7 +212,7 @@ void _test_rectangle_margin() {
 	
 	assert_int_equal(rectangle_margin(rectangle), 10);
 
-	rectangle_destroy(rectangle);
+	rectangle_destroy(&rectangle);
 }
 
 void _test_rectangle_margin_value() {
@@ -229,8 +229,8 @@ void _test_rectangle_margin_value() {
 	assert_int_equal(rectangle_margin_value(rectangle_a, rectangle_b), 20);
 	assert_int_equal(rectangle_margin_value(rectangle_b, rectangle_a), 20);
 
-	rectangle_destroy(rectangle_a);
-	rectangle_destroy(rectangle_b);
+	rectangle_destroy(&rectangle_a);
+	rectangle_destroy(&rectangle_b);
 }
 
 void _test_rectangle_copy() {
@@ -250,8 +250,20 @@ void _test_rectangle_copy() {
 		assert_true(rectangle_a->high[index] == rectangle_b->high[index]);
 	}
 
-	rectangle_destroy(rectangle_a);
-	rectangle_destroy(rectangle_b);
+	rectangle_destroy(&rectangle_a);
+	rectangle_destroy(&rectangle_b);
+}
+
+void _test_rectangle_destroy() {
+	rt_rect_t *rectangle;
+	uint8_t dimension = 2;
+	float *low = initialize_coordinates(0.0f, 0.0f);
+	float *high = initialize_coordinates(2.0f, 2.0f);
+
+	rectangle = rectangle_create(low, high, dimension);
+
+	rectangle_destroy(&rectangle);
+	assert_null(rectangle);
 }
 
 static float * initialize_coordinates(float x, float y) 
@@ -277,7 +289,8 @@ int test_rectangle(void) {
 		cmocka_unit_test(_test_rectangle_margin_value),
 		cmocka_unit_test(_test_rectangle_compare_low),
 		cmocka_unit_test(_test_rectangle_compare_high),
-		cmocka_unit_test(_test_rectangle_copy)
+		cmocka_unit_test(_test_rectangle_copy),
+		cmocka_unit_test(_test_rectangle_destroy)
 	};
 
 	return cmocka_run_group_tests(tests, NULL, NULL);

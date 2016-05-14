@@ -13,7 +13,7 @@ struct Entry {
 
 int entry_compare(const void *entry, const void *other, void *cmp_opts);
 rt_entry_t * entry_create(void *tuple, rt_rect_t *MBR);
-void entry_destroy(rt_entry_t *entry);
+void entry_destroy(rt_entry_t **entry);
 void * entry_get_tuple(rt_entry_t *entry);
 #ifdef DEBUG
 void entry_print(rt_entry_t *entry);

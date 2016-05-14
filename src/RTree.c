@@ -82,12 +82,12 @@ RTREE_LOCAL int delete(rt_rtree_t *rtree, rt_entry_t *entry)
 	if (leaf != NULL)
 	{
 		node_delete_entry(leaf, entry);
-		entry_destroy(entry);
+		entry_destroy(&entry);
 		_condense_tree(rtree, leaf);
 		if (rtree->root->count == 1)
 		{
 			rt_node_t *root = (rt_node_t *)rtree->root->entries[0];
-			node_destroy(rtree->root);
+			node_destroy(&(rtree->root));
 			rtree->root = root;
 		}
 		return 1;
@@ -95,14 +95,14 @@ RTREE_LOCAL int delete(rt_rtree_t *rtree, rt_entry_t *entry)
 	return 0;
 }
 
-RTREE_LOCAL void destroy(rt_rtree_t *rtree)
+RTREE_LOCAL void destroy(rt_rtree_t **rtree)
 {
-	assert(rtree);
+	assert(*rtree);
 
-	_destroy_recursive(rtree->root);
-	context_destroy(rtree->context);
-	free(rtree);
-	rtree = NULL;
+	_destroy_recursive((*rtree)->root);
+	context_destroy(&((*rtree)->context));
+	free(*rtree);
+	*rtree = NULL;
 }
 
 static void _destroy_recursive(rt_node_t *node)
@@ -115,7 +115,7 @@ static void _destroy_recursive(rt_node_t *node)
 			_destroy_recursive((rt_node_t *)node->entries[i]);
 		}
 	}
-	node_destroy(node);
+	node_destroy(&node);
 }
 
 static void _adjust_tree(rt_rtree_t *rtree, rt_node_t *node, rt_node_t *nnode)
@@ -209,7 +209,7 @@ static void _condense_tree_recursive(rt_rtree_t *rtree, rt_node_t *node, struct 
 					insert(rtree, (rt_entry_t *)condensed_node->entries[i]);
 					node_delete_entry(condensed_node, condensed_node->entries[i]);
 				}
-				node_destroy(condensed_node);
+				node_destroy(&condensed_node);
 			}
 			else
 			{
@@ -368,7 +368,7 @@ RTREE_LOCAL rt_rtree_t * split(rt_rtree_t *rtree)
     other->root = rtree->root->entries[1];
 	rtree->root = rtree->root->entries[0];
 
-    node_destroy(root);
+    node_destroy(&root);
 
     return other;
 }

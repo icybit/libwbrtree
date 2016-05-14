@@ -37,13 +37,13 @@ RTREE_LOCAL void context_copy(rt_ctx_t *dest, const rt_ctx_t *source)
     rectangle_copy(dest->space, source->space);
 }
 
-RTREE_LOCAL void context_destroy(rt_ctx_t *ctx)
+RTREE_LOCAL void context_destroy(rt_ctx_t **ctx)
 {
-	assert(ctx);
+	assert(*ctx);
 
-	rectangle_destroy(ctx->space);
-	free(ctx);
-	ctx = NULL;
+	rectangle_destroy(&((*ctx)->space));
+	free(*ctx);
+	*ctx = NULL;
 }
 
 RTREE_LOCAL rt_ctx_t * context_duplicate(const rt_ctx_t *source)
