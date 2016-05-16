@@ -36,12 +36,34 @@ RTREE_LOCAL void rectangle_combine(rt_rect_t *rectangle, rt_rect_t *other)
 
 RTREE_LOCAL int rectangle_compare_low(const rt_rect_t *rectangle, const rt_rect_t *other, uint8_t *dimension)
 {
-	return (int)(rectangle->low[*dimension] - other->low[*dimension]);
+	if (fabs(rectangle->low[*dimension] - other->low[*dimension]) < FLT_EPSILON) 
+	{
+		return 0;
+	}
+	else if ((rectangle->low[*dimension] - FLT_EPSILON) > other->low[*dimension]) 
+	{
+		return 1;
+	}
+	else
+	{
+		return -1;
+	}
 }
 
 RTREE_LOCAL int rectangle_compare_high(const rt_rect_t *rectangle, const rt_rect_t *other, uint8_t *dimension)
 {
-	return (int)(rectangle->high[*dimension] - other->high[*dimension]);
+	if (fabs(rectangle->high[*dimension] - other->high[*dimension]) < FLT_EPSILON)
+	{
+		return 0;
+	}
+	else if ((rectangle->high[*dimension] - FLT_EPSILON) > other->high[*dimension])
+	{
+		return 1;
+	}
+	else
+	{
+		return -1;
+	}
 }
 
 RTREE_LOCAL void rectangle_copy(rt_rect_t *dest, const rt_rect_t *source)
