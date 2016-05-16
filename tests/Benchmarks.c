@@ -28,7 +28,6 @@ void read_data(rt_coords_t *coords, int dataset_size)
 
 	while (getline(&line, &length, file) != -1 && index < dataset_size)
 	{
-		/*coords[index] = malloc(sizeof(rt_coords_t *));*/
 		coords[index].lat = atof(strsep(&line, ","));
 		coords[index].lng = atof(strsep(&line, ","));
 		index++;
@@ -38,7 +37,7 @@ void read_data(rt_coords_t *coords, int dataset_size)
 	free(line);
 }
 
-void benchmark_rtree_insert(rt_coords_t *coords, rt_bench_params_t *params)
+float benchmark_rtree_insert(rt_coords_t *coords, rt_bench_params_t *params)
 {
 	const float step = 0.0001;
 	
@@ -58,7 +57,7 @@ void benchmark_rtree_insert(rt_coords_t *coords, rt_bench_params_t *params)
 	tuples = malloc(params->dataset_size * sizeof(int));
 	entries = malloc(params->dataset_size * sizeof(rt_entry_t *));
 
-	printf("Bechmarking rtree_insert operation:\n\n");
+	/*printf("Bechmarking rtree_insert operation:\n\n");*/
 	
 	for (index = 0; index < params->dataset_size; index++)
 	{	 		
@@ -82,24 +81,30 @@ void benchmark_rtree_insert(rt_coords_t *coords, rt_bench_params_t *params)
 			delta_time = end_time - start_time;
 			sum_time += delta_time;
 			inserts_count++;
-			printf("Insert time: %fms\n", delta_time * 1000);
+			/*printf("Insert time: %fms\n", delta_time * 1000);*/
 		} else {
 			insert(rtree, entries[index]);		
 		}
 		
 	}
 
-	printf("Average insert time: %f ms\n", (sum_time * 1000) / inserts_count);
-	printf("Average inserts per second: %d\n", (int)(1000 / ((sum_time * 1000) / inserts_count)));
+	/*printf("Average insert time: %f ms\n", (sum_time * 1000) / inserts_count);
+	printf("Average inserts per second: %d\n", (int)(1000 / ((sum_time * 1000) / inserts_count)));*/
 	
 
 	destroy(&rtree);
 	free(entries);
 	free(rectangles);
 	free(tuples);	
+	return (sum_time * 1000) / inserts_count;
 }
 
-void params_initialize(rt_bench_params_t *dest, uint8_t m, uint8_t M, float alloc_factor, int dataset_size)
+/*float benchmark_rtree_delete(rt_coords_t *coords, rt_bench_params_t *params)
+{
+	
+}*/
+
+void benchmarks_set_params(rt_bench_params_t *dest, uint8_t m, uint8_t M, float alloc_factor, int dataset_size)
 {
 	assert(m > 1 && M > 3 && ((M / 2) >= m));
 
@@ -109,18 +114,61 @@ void params_initialize(rt_bench_params_t *dest, uint8_t m, uint8_t M, float allo
 	dest->dataset_size = dataset_size;
 }
 
-void benchmarks_run(rt_bench_params_t *params)
+void benchmarks_run()
 {
-	/*int index;*/
-	rt_coords_t *coords = malloc(params->dataset_size * sizeof(rt_coords_t));
-	read_data(coords, params->dataset_size);
+	uint8_t iterations = 20;
+	float sum_time = 0;
+	rt_bench_params_t params;	
+	int index;
+	rt_coords_t *coords;
+
+	benchmarks_set_params(&params, 8, 16, 8.0f, 100000);
+	coords = malloc(params.dataset_size * sizeof(rt_coords_t));
+	
+	read_data(coords, params.dataset_size);
 
 	/*for (index = 0; index < params->dataset_size; index++)
 	{
 		printf("%s %d %f %f\n", "Index:", index, coords[index].lat, coords[index].lng);
 	}*/
 
-	benchmark_rtree_insert(coords, params);
+	/*Insert time with 100 entries*/
+	params.dataset_size = 100;
+	for (index = 0; index < iterations; index++)
+	{
+		sum_time += benchmark_rtree_insert(coords, &params);
+	}
+	printf("100: %f\n", sum_time / iterations);
+
+	/*Insert time with 1000 entries*/
+	sum_time = 0;
+	params.dataset_size = 1000;
+
+	for (index = 0; index < iterations; index++)
+	{
+		sum_time += benchmark_rtree_insert(coords, &params);
+	}
+	printf("1000: %f\n", sum_time / iterations);
+
+	/*Insert time with 10000 entries*/
+	sum_time = 0;
+	params.dataset_size = 10000;
+
+	for (index = 0; index < iterations; index++)
+	{
+		sum_time += benchmark_rtree_insert(coords, &params);
+	}
+	printf("10000: %f\n", sum_time / iterations);
+
+	/*Insert time with 100000 entries*/
+	sum_time = 0;
+	params.dataset_size = 100000;
+
+	for (index = 0; index < iterations; index++)
+	{
+		sum_time += benchmark_rtree_insert(coords, &params);
+	}
+	printf("100000: %f\n", sum_time / iterations);	
 
 	free(coords);
 }

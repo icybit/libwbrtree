@@ -6,8 +6,7 @@
 
 int main(int argc, char *argv[])
 {
-	rt_bench_params_t params;
-	params_initialize(&params, 2, 4, 4.0f, 117000);
+	
 
 	/*puts("Running Rectangle Tests...\n");	
 	test_rectangle();
@@ -15,7 +14,7 @@ int main(int argc, char *argv[])
 	test_node();
 	puts("Running RTree Tests...\n");	
 	test_rtree();*/
-	benchmarks_run(&params);
+	benchmarks_run();
 
 	return 0;
 }
