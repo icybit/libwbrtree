@@ -24,7 +24,7 @@ static void _condense_tree(rt_rtree_t *rtree, rt_node_t *node);
 static void _condense_tree_recursive(rt_rtree_t *rtree, rt_node_t *node, struct hashset_st *condensed_nodes);
 static rt_node_t * _find_leaf(rt_node_t *node, rt_entry_t *entry);
 static rt_node_t * _find_leaf_recursive(rt_node_t *node, rt_entry_t *entry);
-static void _search_recursive(rt_node_t *node, rt_rect_t *search_rectangle, struct hashset_st *results);
+static void _search_recursive(rt_node_t *node, rt_rect_t *search_rectangle, rt_hset_t *results);
 static void _serialize_recursive(rt_node_t *node, uint8_t *buffer, size_t *buffer_size, size_t *index);
 #ifdef DEBUG
 static void _visualize_recursive(rt_node_t *node, uint16_t max_level);
@@ -86,13 +86,60 @@ RTREE_LOCAL int delete(rt_rtree_t *rtree, rt_entry_t *entry)
 		_condense_tree(rtree, leaf);
 		if (rtree->root->count == 1)
 		{
-			rt_node_t *root = (rt_node_t *)rtree->root->entries[0];
+			rt_node_t *root = (rt_node_t *)rtree->root->entries[0];			
 			node_destroy(&(rtree->root));
 			rtree->root = root;
+			rtree->root->parent = NULL;
 		}
 		return 1;
 	}
 	return 0;
+}
+
+RTREE_LOCAL int delete_area(rt_rtree_t *rtree, rt_rect_t *MBR)
+{	
+	rt_hset_t *entries;
+	int deleted_entries = 0;
+	hashset_itr_t itr;
+
+	assert(MBR->dim == rtree->context->dim);
+	
+	entries = hashset_create();
+
+	search(rtree, MBR, entries);
+
+	if (!hashset_num_items(entries))
+	{
+		return 0;
+	}
+
+	itr = hashset_iterator(entries);
+	while(hashset_iterator_has_next(itr))
+	{		
+		rt_entry_t *entry;		
+		uint8_t dim, should_delete = 1;
+
+		hashset_iterator_next(itr);
+		entry = (rt_entry_t *)hashset_iterator_value(itr);
+		
+		for(dim = 0; dim < MBR->dim; dim++)
+		{
+			if(rectangle_compare_low(MBR, entry->MBR, &dim) > 0
+				|| rectangle_compare_high(MBR, entry->MBR, &dim) < 0)
+			{
+				should_delete = 0;
+				break;
+			}
+		}
+
+		if (should_delete)
+		{
+			deleted_entries += delete(rtree, entry);
+		}
+	}
+
+	hashset_destroy(entries);
+	return deleted_entries;	
 }
 
 RTREE_LOCAL void destroy(rt_rtree_t **rtree)
@@ -180,6 +227,7 @@ static rt_node_t * _choose_leaf_recursive(rt_node_t *node, rt_entry_t *entry)
 
 static void _condense_tree(rt_rtree_t *rtree, rt_node_t *node)
 {
+	
 	hashset_t condensed_nodes = hashset_create();
 	_condense_tree_recursive(rtree, node, condensed_nodes);
 	hashset_destroy(condensed_nodes);
@@ -283,7 +331,7 @@ RTREE_LOCAL void search(rt_rtree_t *rtree, rt_rect_t *search_rectangle, rt_hset_
 	_search_recursive(rtree->root, search_rectangle, results);
 }
 
-static void _search_recursive(rt_node_t *node, rt_rect_t *search_rectangle, struct hashset_st *results)
+static void _search_recursive(rt_node_t *node, rt_rect_t *search_rectangle, rt_hset_t *results)
 {
 	if (node_is_leaf(node))
 	{

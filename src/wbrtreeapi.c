@@ -67,6 +67,11 @@ RTREE_PUBLIC int rtree_delete(rt_rtree_t *rtree, rt_entry_t *entry)
 	return delete(rtree, entry);
 }
 
+RTREE_PUBLIC int rtree_delete_area(rt_rtree_t *rtree, rt_rect_t *MBR)
+{
+	return delete_area(rtree, MBR);
+}
+
 RTREE_PUBLIC void rtree_destroy(rt_rtree_t **rtree)
 {
 	destroy(rtree);
