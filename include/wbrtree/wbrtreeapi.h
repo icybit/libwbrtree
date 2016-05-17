@@ -41,6 +41,7 @@ extern "C" {
 	rt_entry_t * rtree_try_insert(rt_rtree_t *rtree, rt_entry_t *entry);
 	rt_rtree_t * rtree_create(rt_ctx_t *context);
 	int rtree_delete(rt_rtree_t *rtree, rt_entry_t *entry);
+	int rtree_delete_area(rt_rtree_t *rtree, rt_rect_t *MBR);
 	void rtree_destroy(rt_rtree_t **rtree);
 	void rtree_search(rt_rtree_t *rtree, rt_rect_t *search_rectangle, rt_hset_t *results);
 	size_t rtree_serialize(rt_rtree_t *rtree, uint8_t **buffer);

@@ -9,6 +9,8 @@ void _test_rtree_insert();
 
 void _test_rtree_delete();
 
+void _test_rtree_delete_area();
+
 void _test_rtree_destroy();
 
 void _test_rtree_search();

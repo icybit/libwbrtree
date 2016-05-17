@@ -15,6 +15,7 @@ void insert(rt_rtree_t *rtree, rt_entry_t *entry);
 rt_entry_t * try_insert(rt_rtree_t *rtree, rt_entry_t *entry);
 rt_rtree_t * create(rt_ctx_t *context);
 int delete(rt_rtree_t *rtree, rt_entry_t *entry);
+int delete_area(rt_rtree_t *rtree, rt_rect_t *MBR);
 void destroy(rt_rtree_t **rtree);
 void search(rt_rtree_t *rtree, rt_rect_t *search_rectangle, rt_hset_t *results);
 size_t serialize(rt_rtree_t *rtree, uint8_t **buffer);

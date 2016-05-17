@@ -36,8 +36,15 @@ RTREE_LOCAL int node_add_entry(rt_node_t *node, void *entry)
 			node->capacity = NALLOC(node->capacity, node->context->M, node->context->alloc_factor);
 			node->entries = realloc(node->entries, node->capacity * sizeof(void *));
 		}
+
+		if (!node_is_leaf(node))
+		{
+			((rt_node_t *)entry)->parent = node;
+		}
+
 		node->entries[node->count++] = entry;
 		node_adjust_MBR(node, entry);
+
 		return 1;
 	}
 	return 0;

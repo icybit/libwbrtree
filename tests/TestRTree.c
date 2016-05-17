@@ -212,6 +212,74 @@ void _test_rtree_delete() {
 	rtree_destroy(&rtree);
 }
 
+void _test_rtree_delete_area() {
+	rt_rtree_t *rtree;
+    rt_ctx_t *context;
+ 	rt_rect_t *space, *MBR_1, *MBR_2, *MBR_3, *MBR_4, *MBR_5, *MBR_6, *delete_MBR;
+    rt_entry_t *entry_1, *entry_2, *entry_3, *entry_4, *entry_5, *entry_6;
+    uint8_t dimension = 2, m = 2, M = 4;
+    int index, tuples[] = { 1, 2, 3, 4, 5, 6};
+    float alloc_factor = 4.0f;
+
+    space = create_rectangle_2d(0.0f, 0.0f, 20.0f, 11.0f);
+	context = rtree_context_create(m, M, dimension, serializer, alloc_factor, space);
+	rtree = rtree_create(context);
+
+	delete_MBR = create_rectangle_2d(0.0f, 0.0f, 9.0f, 7.0f);
+
+	MBR_1 = create_rectangle_2d(0.0f, 8.0f, 3.0f, 11.0f);
+	entry_1 = rtree_entry_create(&tuples[0], MBR_1);
+	rtree_insert(rtree, entry_1);
+
+	MBR_2 = create_rectangle_2d(6.0f, 8.0f, 9.0f, 11.0f);
+	entry_2 = rtree_entry_create(&tuples[1], MBR_2);
+	rtree_insert(rtree, entry_2);
+
+	MBR_3 = create_rectangle_2d(0.0f, 4.0f, 3.0f, 7.0f);
+	entry_3 = rtree_entry_create(&tuples[2], MBR_3);
+	rtree_insert(rtree, entry_3);
+
+	MBR_4 = create_rectangle_2d(6.0f, 4.0f, 9.0f, 7.0f);
+	entry_4 = rtree_entry_create(&tuples[3], MBR_4);
+	rtree_insert(rtree, entry_4);
+
+	MBR_5 = create_rectangle_2d(0.0f, 0.0f, 3.0f, 3.0f);
+	entry_5 = rtree_entry_create(&tuples[4], MBR_5);
+	rtree_insert(rtree, entry_5);
+
+	MBR_6 = create_rectangle_2d(6.0f, 0.0f, 9.0f, 3.0f);
+	entry_6 = rtree_entry_create(&tuples[5], MBR_6);
+	rtree_insert(rtree, entry_6);
+
+	for (index = 0; index < dimension; index++)
+	{
+	   assert_true(rtree->root->MBR->low[index] == MBR_5->low[index]);
+	   assert_true(rtree->root->MBR->high[index] == MBR_2->high[index]);
+
+   	   assert_true(((rt_node_t *)rtree->root->entries[0])->MBR->low[index] == MBR_5->low[index]);
+	   assert_true(((rt_node_t *)rtree->root->entries[0])->MBR->high[index] == MBR_1->high[index]);
+
+	   assert_true(((rt_node_t *)rtree->root->entries[1])->MBR->low[index] == MBR_6->low[index]);
+	   assert_true(((rt_node_t *)rtree->root->entries[1])->MBR->high[index] == MBR_2->high[index]);
+	}
+
+	rtree_delete_area(rtree, delete_MBR);
+
+	for (index = 0; index < dimension; index++)
+	{
+	   assert_true(rtree->root->MBR->low[index] == MBR_1->low[index]);
+	   assert_true(rtree->root->MBR->high[index] == MBR_2->high[index]);
+
+   	   assert_true(((rt_entry_t *)rtree->root->entries[0])->MBR->low[index] == MBR_2->low[index]);
+	   assert_true(((rt_entry_t *)rtree->root->entries[0])->MBR->high[index] == MBR_2->high[index]);
+
+	   assert_true(((rt_entry_t *)rtree->root->entries[1])->MBR->low[index] == MBR_1->low[index]);
+	   assert_true(((rt_entry_t *)rtree->root->entries[1])->MBR->high[index] == MBR_1->high[index]);
+	}
+
+	rtree_destroy(&rtree);
+}
+
 void _test_rtree_destroy() {
 	rt_rtree_t *rtree;
 	rt_ctx_t *context;
@@ -474,6 +542,7 @@ int test_rtree(void) {
 		cmocka_unit_test(_test_rtree_search),
 		cmocka_unit_test(_test_rtree_destroy),
 		/*cmocka_unit_test(_test_rtree_serialize)*/
+		cmocka_unit_test(_test_rtree_delete_area)
 	};
 
 	return cmocka_run_group_tests(tests, NULL, NULL);
