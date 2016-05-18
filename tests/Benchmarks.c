@@ -57,7 +57,7 @@ float benchmark_rtree_insert(rt_coords_t *coords, rt_bench_params_t *params)
 	tuples = malloc(params->dataset_size * sizeof(int));
 	entries = malloc(params->dataset_size * sizeof(rt_entry_t *));
 
-	srand(time(NULL));
+	srand(1123);
 
 	/*printf("Bechmarking rtree_insert operation:\n\n");*/
 	
@@ -118,7 +118,7 @@ float benchmark_rtree_delete(rt_coords_t *coords, rt_bench_params_t *params)
 	tuples = malloc(params->dataset_size * sizeof(int));
 	entries = malloc(params->dataset_size * sizeof(rt_entry_t *));
 
-	srand(time(NULL));
+	srand(1123);
 
 	/*printf("Bechmarking rtree_insert operation:\n\n");*/
 	
@@ -132,6 +132,12 @@ float benchmark_rtree_delete(rt_coords_t *coords, rt_bench_params_t *params)
 		rectangles[index] = create_rectangle_2d(low_lat, low_lng, high_lat, high_lng);
 		tuples[index] = index + 1;
 		entries[index] = entry_create(&tuples[index], rectangles[index]);
+		/*printf("Entry: %f %f %f %f\n", 
+			entries[index]->MBR->low[0],
+			entries[index]->MBR->low[1],
+			entries[index]->MBR->high[0],
+			entries[index]->MBR->high[1]
+			);*/
 		
 		insert(rtree, entries[index]);
 	}
@@ -142,7 +148,13 @@ float benchmark_rtree_delete(rt_coords_t *coords, rt_bench_params_t *params)
 		float start_time, 
 			  end_time;
 
-	  	printf("Index: %d\n", index);
+	  	printf("Index: %d Entry: %f %f %f %f\n", 
+	  		index, 
+	  		entries[index]->MBR->low[0],
+	  		entries[index]->MBR->low[1],
+	  		entries[index]->MBR->high[0],
+	  		entries[index]->MBR->high[1]
+	  		);
 		start_time = (float)clock() / CLOCKS_PER_SEC;
 		delete(rtree, entries[index]);
 		end_time = (float)clock() / CLOCKS_PER_SEC;
@@ -152,7 +164,6 @@ float benchmark_rtree_delete(rt_coords_t *coords, rt_bench_params_t *params)
 
 	printf("Average delete time: %f ms\n", (sum_time * 1000) / deletes_count);
 	printf("Average deletes per second: %d\n", (int)(1000 / ((sum_time * 1000) / deletes_count)));
-	
 
 	destroy(&rtree);
 	free(entries);
@@ -179,7 +190,7 @@ void benchmarks_run()
 	int index;
 	rt_coords_t *coords;
 
-	benchmarks_set_params(&params, 8, 16, 8.0f, 100000);
+	benchmarks_set_params(&params, 8, 16, 4.0f, 100000);
 	coords = malloc(params.dataset_size * sizeof(rt_coords_t));
 	
 	read_data(coords, params.dataset_size);
@@ -225,7 +236,7 @@ void benchmarks_run()
 	{
 		sum_time += benchmark_rtree_insert(coords, &params);
 	}
-	printf("100000: %f\n", sum_time / iterations);	
+	printf("100000: %f\n", 1000/ (sum_time / iterations));	
 
 	/*benchmark_rtree_delete(coords, &params);*/
 

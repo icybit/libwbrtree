@@ -301,9 +301,11 @@ static rt_node_t * _find_leaf_recursive(rt_node_t *node, rt_entry_t *entry)
 		{
 			if ((rt_entry_t *)node->entries[i] == entry)
 			{
+				printf("RETURN STUFF MOFO!!!\n");
 				return node;
-			}
+			}			
 		}
+		printf("NOT FOUND\n");
 	}
 	else
 	{
