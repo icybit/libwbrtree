@@ -6,13 +6,13 @@
 
 int main(int argc, char *argv[])
 {
-	/*puts("Running Rectangle Tests...\n");	
+	puts("Running Rectangle Tests...\n");	
 	test_rectangle();
 	puts("Running Node Tests...\n");	
 	test_node();
 	puts("Running RTree Tests...\n");	
-	test_rtree();*/
-	benchmarks_run();
+	test_rtree();
+	/*benchmarks_run();*/
 
 	return 0;
 }
