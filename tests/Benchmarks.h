@@ -16,6 +16,7 @@ struct Params
 	uint8_t M;
 	float alloc_factor;
 	int dataset_size;
+	int entry_count;
 };
 
 typedef struct Coords rt_coords_t;
@@ -27,6 +28,6 @@ float benchmark_rtree_insert(rt_coords_t *coords, rt_bench_params_t *params);
 void read_data(rt_coords_t *coords, int dataset_size);
 void benchmarks_run();
 
-void benchmarks_set_params(rt_bench_params_t *dest, uint8_t m, uint8_t M, float alloc_factor, int dataset_size);
+void benchmarks_set_params(rt_bench_params_t *dest, uint8_t m, uint8_t M, float alloc_factor, int dataset_size, int entry_count);
 
 #endif

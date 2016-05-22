@@ -9,6 +9,7 @@
 #include "Benchmarks.h"
 #include "../src/Rectangle.h"
 #include "../src/Entry.h"
+#include "../src/Node.h"
 #include "../src/RTree.h"
 #include "../src/Context.h"
 
@@ -39,10 +40,9 @@ void read_data(rt_coords_t *coords, int dataset_size)
 
 float benchmark_rtree_insert(rt_coords_t *coords, rt_bench_params_t *params)
 {
-	const float step = 0.0001;
-	
-	int index, *tuples, inserts_count = 0;	
-	float sum_time = 0.0f;	
+	const float step = 0.0001;	
+	int index, coord_index, *tuples, inserts_count = 0;	
+	float sum_time = 0.0f,  big_step = 0.0f;	
 	uint8_t dim = 2;
 	rt_rect_t *space, **rectangles;
 	rt_entry_t **entries;
@@ -53,20 +53,20 @@ float benchmark_rtree_insert(rt_coords_t *coords, rt_bench_params_t *params)
 	context = context_create(params->m, params->M, dim, serializer, params->alloc_factor, space);
 	rtree = create(context);
 
-	rectangles = malloc(params->dataset_size * sizeof(rt_rect_t *));
-	tuples = malloc(params->dataset_size * sizeof(int));
-	entries = malloc(params->dataset_size * sizeof(rt_entry_t *));
+	rectangles = malloc(params->entry_count * sizeof(rt_rect_t *));
+	tuples = malloc(params->entry_count * sizeof(int));
+	entries = malloc(params->entry_count * sizeof(rt_entry_t *));
 
 	srand(1123);
 
 	/*printf("Bechmarking rtree_insert operation:\n\n");*/
-	
-	for (index = 0; index < params->dataset_size; index++)
+	coord_index = 0;
+	for (index = 0; index < params->entry_count; index++)
 	{	 		
 		float start_time, 
 			  end_time, 
-			  low_lat = coords[index].lat, 
-			  low_lng = coords[index].lng,
+			  low_lat = coords[coord_index].lat, 
+			  low_lng = coords[coord_index].lng + big_step,
 			  high_lat = low_lat + (((float)(rand() % 10)) / 10000) + step, 
 			  high_lng = low_lng + (((float)(rand() % 10)) / 10000) + step;
 					  
@@ -74,7 +74,7 @@ float benchmark_rtree_insert(rt_coords_t *coords, rt_bench_params_t *params)
 		tuples[index] = index + 1;
 		entries[index] = entry_create(&tuples[index], rectangles[index]);
 
-		if (index >= params->dataset_size * 0.9 - 1)
+		if (index >= params->entry_count * 0.9 - 1)
 		{
 			start_time = (float)clock() / CLOCKS_PER_SEC;
 			insert(rtree, entries[index]);		
@@ -84,16 +84,27 @@ float benchmark_rtree_insert(rt_coords_t *coords, rt_bench_params_t *params)
 		} else {
 			insert(rtree, entries[index]);		
 		}
-		
+
+		coord_index++;
+		/*printf("Coords: %f %f\n", coords[coord_index].lat, coords[coord_index].lng);*/
+		/*printf("Index: %d\n", index);*/
+		if (coord_index == params->dataset_size - 1)
+		{
+			big_step = rtree->root->MBR->high[1] - rtree->root->MBR->low[1] + step;
+			/*big_step += 1;*/
+			coord_index = 0;
+			/*printf("Big step: %f\n", big_step);*/
+		}
 	}
 
 	/*printf("Average insert time: %f ms\n", (sum_time * 1000) / inserts_count);
 	printf("Average inserts per second: %d\n", (int)(1000 / ((sum_time * 1000) / inserts_count)));*/
 	
 
+	
 	destroy(&rtree);
 	free(entries);
-	free(rectangles);
+	free(rectangles);	
 	free(tuples);	
 	return (sum_time * 1000) / inserts_count;
 }
@@ -172,7 +183,7 @@ float benchmark_rtree_delete(rt_coords_t *coords, rt_bench_params_t *params)
 	return (sum_time * 1000) / deletes_count;
 }
 
-void benchmarks_set_params(rt_bench_params_t *dest, uint8_t m, uint8_t M, float alloc_factor, int dataset_size)
+void benchmarks_set_params(rt_bench_params_t *dest, uint8_t m, uint8_t M, float alloc_factor, int dataset_size, int entry_count)
 {
 	assert(m > 1 && M > 3 && ((M / 2) >= m));
 
@@ -180,17 +191,18 @@ void benchmarks_set_params(rt_bench_params_t *dest, uint8_t m, uint8_t M, float 
 	dest->M = M;
 	dest->alloc_factor = (alloc_factor > 1.0f ? alloc_factor : 2.0f);
 	dest->dataset_size = dataset_size;
+	dest->entry_count = entry_count;
 }
 
 void benchmarks_run()
 {
-	uint8_t iterations = 20;
+	uint8_t iterations = 2;
 	float sum_time = 0;
 	rt_bench_params_t params;	
 	int index;
 	rt_coords_t *coords;
 
-	benchmarks_set_params(&params, 8, 16, 4.0f, 100000);
+	benchmarks_set_params(&params, 8, 16, 4.0f, 100000, 1000000);
 	coords = malloc(params.dataset_size * sizeof(rt_coords_t));
 	
 	read_data(coords, params.dataset_size);
@@ -201,43 +213,62 @@ void benchmarks_run()
 	}*/
 
 	/*Insert time with 100 entries*/
-	params.dataset_size = 100;
+	params.entry_count = 100;
 	for (index = 0; index < iterations; index++)
 	{
 		sum_time += benchmark_rtree_insert(coords, &params);
 	}
-	printf("100: %f\n", sum_time / iterations);
+	printf("%f\n", sum_time / iterations);
 
 	/*Insert time with 1000 entries*/
 	sum_time = 0;
-	params.dataset_size = 1000;
+	params.entry_count = 1000;
 
 	for (index = 0; index < iterations; index++)
 	{
 		sum_time += benchmark_rtree_insert(coords, &params);
 	}
-	printf("1000: %f\n", sum_time / iterations);
+	printf("%f\n", sum_time / iterations);
 
 	/*Insert time with 10000 entries*/
 	sum_time = 0;
-	params.dataset_size = 10000;
+	params.entry_count = 10000;
 
 	for (index = 0; index < iterations; index++)
 	{
 		sum_time += benchmark_rtree_insert(coords, &params);
 	}
-	printf("10000: %f\n", sum_time / iterations);
+	printf("%f\n", sum_time / iterations);
 
 	/*Insert time with 100000 entries*/
 	sum_time = 0;
-	params.dataset_size = 100000;
+	params.entry_count = 100000;
 
 	for (index = 0; index < iterations; index++)
 	{
 		sum_time += benchmark_rtree_insert(coords, &params);
 	}
-	printf("100000: %f\n", 1000/ (sum_time / iterations));	
+	printf("%f\n", sum_time / iterations);
 
+	/*Insert time with 1000000 entries*/
+	sum_time = 0;
+	params.entry_count = 1000000;
+
+	for (index = 0; index < iterations; index++)
+	{
+		sum_time += benchmark_rtree_insert(coords, &params);
+	}
+	printf("%f\n", sum_time / iterations);		
+
+	/*Insert time with 10000000 entries*/
+	sum_time = 0;
+	params.entry_count = 10000000;
+
+	for (index = 0; index < iterations; index++)
+	{
+		sum_time += benchmark_rtree_insert(coords, &params);
+	}
+	printf("%f\n", sum_time / iterations);	
 	/*benchmark_rtree_delete(coords, &params);*/
 
 	free(coords);

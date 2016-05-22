@@ -6,8 +6,6 @@
 
 int main(int argc, char *argv[])
 {
-	
-
 	/*puts("Running Rectangle Tests...\n");	
 	test_rectangle();
 	puts("Running Node Tests...\n");	
