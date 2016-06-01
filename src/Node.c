@@ -95,9 +95,8 @@ RTREE_LOCAL void * node_choose_optimal_entry(rt_node_t *node, rt_entry_t *entry)
 	{
 		void *current_entry = node->entries[i];
 		rt_rect_t *current_entry_MBR = _node_get_entry_MBR(node, current_entry);
-
 		double distance = rectangle_min_distance(current_entry_MBR, entry->MBR);
-		
+
 		if (distance < optimal_distance)
 		{
 			optimal_distance = distance;
@@ -199,23 +198,10 @@ RTREE_LOCAL int node_compare(const void *entry, const void *other, void *cmp_opt
 	}
 }
 
-RTREE_LOCAL void node_copy(rt_node_t *dest, const rt_node_t *source)
-{
-	assert(dest && source);
-
-	dest->capacity = source->capacity;
-	dest->context = source->context;
-	dest->count = source->count;
-	dest->entries = source->entries;
-	dest->level = source->level;
-	dest->parent = source->parent;
-	rectangle_copy(dest->MBR, source->MBR);
-}
-
 RTREE_LOCAL rt_node_t * node_create(rt_ctx_t *context, rt_node_t *parent, void **entries, uint8_t entry_count, rt_rect_t *MBR, uint16_t level)
 {
-	rt_node_t *node;
-	uint8_t count;
+	rt_node_t *node = NULL;
+	uint8_t index, count;
 
 	assert(context && MBR);
 
@@ -230,11 +216,24 @@ RTREE_LOCAL rt_node_t * node_create(rt_ctx_t *context, rt_node_t *parent, void *
 
 	node->count = count;
 	node->capacity = MAX(count, NALLOC(context->m, context->M, context->alloc_factor));
+	node->level = level;
 	node->context = context;
 	node->parent = parent;
-	node->entries = entries;
-	node->level = level;
 
+	if (!node_is_leaf(node))
+	{
+		for (index = 0; index < count; index++)
+		{			
+			printf("\n");
+			printf("Pre Change Entry: %p\n",  (void*)(((rt_node_t *)entries[index])->parent));
+			((rt_node_t *)entries[index])->parent = node;
+			printf("Post Change Entry: %p\n",  (void*)(((rt_node_t *)entries[index])->parent));
+			printf("\n");
+		}
+	}
+
+	node->entries = entries;
+	
 	if (node->capacity > node->count)
 	{
 		node->entries = realloc(node->entries, node->capacity * sizeof(void *));

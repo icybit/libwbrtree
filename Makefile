@@ -9,7 +9,7 @@ LIB_H_PATH := /usr/include
 
 CC := gcc
 DEBUG := -g
-CFLAGS := -Wall -Werror -pedantic $(DEBUG) -fvisibility=hidden -DWB_RTREE_COMPILATION=1
+CFLAGS := -Wall -Werror -pedantic $(DEBUG) -fvisibility=hidden -DWB_RTREE_COMPILATION=1 -DDEBUG=1
 LDFLAGS := -Wl,-soname,$(LIB_NAME).$(LIB_VER_MAJOR).$(LIB_VER_MINOR)
 SRCEXT := c
 

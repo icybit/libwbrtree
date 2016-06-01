@@ -84,7 +84,7 @@ RTREE_LOCAL int delete(rt_rtree_t *rtree, rt_entry_t *entry)
 		node_delete_entry(leaf, entry);
 		entry_destroy(&entry);
 		_condense_tree(rtree, leaf);
-		if (rtree->root->count == 1)
+		if (rtree->root->count == 1 && !node_is_leaf(rtree->root))
 		{
 			rt_node_t *root = (rt_node_t *)rtree->root->entries[0];			
 			node_destroy(&(rtree->root));
@@ -251,11 +251,11 @@ static void _condense_tree_recursive(rt_rtree_t *rtree, rt_node_t *node, struct 
 
 			if (node_is_leaf(condensed_node))
 			{
-				uint8_t i;
-				for (i = 0; i < condensed_node->count; i++)
+				while (condensed_node->count > 0)
 				{
-					insert(rtree, (rt_entry_t *)condensed_node->entries[i]);
-					node_delete_entry(condensed_node, condensed_node->entries[i]);
+					insert(rtree, (rt_entry_t *)condensed_node->entries[0]);
+					node_delete_entry(condensed_node, condensed_node->entries[0]);
+					
 				}
 				node_destroy(&condensed_node);
 			}

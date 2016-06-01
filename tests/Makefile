@@ -2,7 +2,7 @@
 
 CC := gcc
 DEBUG := -g
-CFLAGS := -Wall -Werror -pedantic $(DEBUG) -DWB_RTREE_COMPILATION=1
+CFLAGS := -Wall -Werror -pedantic $(DEBUG) -DWB_RTREE_COMPILATION=1 -DDEBUG=1
 LDFLAGS :=
 SRCEXT := c
 
